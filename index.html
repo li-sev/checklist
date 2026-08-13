@@ -99,11 +99,56 @@
     100%{transform:scale(1.04);opacity:0}
   }
 
+  /* ── 朝廷 / 内库：抬头一行把国库和朝纲摆平，底下切页签 ── */
+  .ih .ihtop{display:flex;align-items:center;gap:12px;margin-bottom:7px}
+  .ih .ihv{display:flex;align-items:baseline;gap:5px;line-height:1}
+  .ih .ihv .l{font-size:11px;letter-spacing:3px;color:var(--dim);flex:none}
+  .ih .ihv b{font-family:ui-monospace,Consolas,monospace;font-size:25px;font-weight:700;color:var(--gold)}
+  .ih .ihv .u{font-size:12px;color:var(--dim)}
+  .ih .ihv.r{margin-left:auto}
+  .ih .ihv.r b{font-family:inherit;font-size:16px;letter-spacing:3px;color:var(--accent)}
+  .ih.owe .ihv b{color:var(--accent)}
+  .sfx{width:30px;height:30px;flex:none;border-radius:50%;border:1px solid var(--line);
+    background:var(--card);font-size:12px;color:var(--dim);letter-spacing:0;padding:0}
+  .sfx.on{border-color:var(--gold);color:var(--gold)}
+  .tabs{display:flex;margin:11px 0;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+  .tab{flex:1;min-height:40px;border:0;background:var(--card);font-size:15px;letter-spacing:5px;
+    color:var(--dim);padding:0}
+  .tab+.tab{border-left:1px solid var(--line)}
+  .tab.on{background:var(--accent);color:#fdf3e0;font-weight:700}
+  .pane{display:none}
+  .pane.on{display:block;animation:panein .16s ease-out}
+  @keyframes panein{0%{opacity:0;transform:translateY(5px)}100%{opacity:1;transform:none}}
+  .pane .hint{font-size:11.5px;color:var(--dim);letter-spacing:1px;margin:6px 0 0}
+  .ranktip.tight{margin:10px 0 0}
+  .sheet label small{color:var(--dim);font-weight:400}
+  .sheet label.first{margin-top:0}
+
+  /* ── 打击感：按下去就陷，松开弹回来 ── */
+  .btn,.good,.tab,.icon,.sfx,.pen,.dots{
+    transition:transform .08s cubic-bezier(.3,.9,.3,1),background .12s,border-color .12s,color .12s}
+  .btn:active,.good:active,.tab:active,.icon:active,.sfx:active,.pen:active,.dots:active{transform:scale(.93)}
+  .btn.pri:active{transform:translateY(2px) scale(.985);box-shadow:0 0 0 rgba(90,20,12,.25)}
+  li .bx:active{transform:scale(.84) rotate(-12deg)}
+  li.ok .bx:active{transform:scale(.84) rotate(-12deg)}
+  @keyframes hit{0%{transform:scale(.86)}42%{transform:scale(1.08)}100%{transform:scale(1)}}
+  .hit{animation:hit .23s cubic-bezier(.2,1.5,.35,1)}
+  /* 用 outline 不用 box-shadow：省得把 .good.cur 的内框冲掉 */
+  @keyframes ring{
+    0%{outline:2px solid rgba(155,45,32,.6);outline-offset:0}
+    100%{outline:2px solid rgba(155,45,32,0);outline-offset:13px}
+  }
+  .ring{animation:hit .23s cubic-bezier(.2,1.5,.35,1), ring .5s ease-out}
+  @media (prefers-reduced-motion:reduce){
+    .hit,.ring,.pane.on{animation:none}
+    .btn:active,.good:active,.tab:active,.icon:active,.sfx:active,.pen:active,.dots:active{transform:none}
+  }
+
   /* 内务府 */
   .rankbar{margin:2px 0 4px;height:7px;border-radius:4px;background:var(--soft);overflow:hidden}
   .rankbar i{display:block;height:100%;background:var(--accent);border-radius:4px;transition:width .5s}
-  .ranktip{font-size:12.5px;color:var(--dim);margin-bottom:14px;letter-spacing:1px}
-  .goods{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px;margin-bottom:6px}
+  .ranktip{font-size:12.5px;color:var(--dim);margin-bottom:0;letter-spacing:1px}
+  .goods{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:7px}
   .good{border:1px solid var(--line);border-radius:5px;padding:9px 7px;background:var(--card);
     display:flex;flex-direction:column;align-items:center;gap:6px;font-size:13px;line-height:1.3}
   .good:hover{border-color:var(--accent)}
@@ -120,26 +165,28 @@
   .good.cur::after{content:"在用";font-size:11px;letter-spacing:2px;color:var(--accent)}
   .good.poor{opacity:.5}
   /* 六部 */
-  .mini{border:1px solid var(--line);border-radius:5px;padding:9px 11px;margin-bottom:7px;background:var(--card)}
+  .mis{display:grid;gap:6px}
+  @media (min-width:520px){ .mis{grid-template-columns:1fr 1fr} }
+  .mini{border:1px solid var(--line);border-radius:5px;padding:8px 10px;background:var(--card)}
   .mini.sick{border-color:#b3402c;background:rgba(179,64,44,.07)}
   .mini.good{border-color:var(--gold);background:rgba(169,134,63,.08)}
-  .mih{display:flex;align-items:baseline;gap:8px;margin-bottom:7px;flex-wrap:wrap}
+  .mih{display:flex;align-items:baseline;gap:7px;margin-bottom:5px;flex-wrap:wrap}
   .mih b{font-size:16px;letter-spacing:2px}
   .mih .mid{font-size:12px;color:var(--dim);letter-spacing:1px}
   .mih .mn{margin-left:auto;font:12px/1 ui-monospace,Consolas,monospace;color:var(--gold);flex:none}
-  .mirow{display:flex;align-items:center;gap:8px;margin:3px 0}
+  .mirow{display:flex;align-items:center;gap:8px;margin:2px 0}
   .mirow .mk{font-size:12px;color:var(--dim);letter-spacing:2px;flex:none;width:32px}
   .mbar{flex:1;height:8px;border-radius:4px;background:var(--soft);overflow:hidden}
   .mbar i{display:block;height:100%;border-radius:4px;transition:width .45s}
   .mbar i.e{background:var(--link)}
   .mbar i.l{background:var(--accent)}
   .mirow .mv{font:12px/1 ui-monospace,Consolas,monospace;color:var(--dim);flex:none;width:24px;text-align:right}
-  .mib{display:flex;gap:7px;margin-top:8px}
-  .mib .btn{flex:1;padding:6px 4px;font-size:12.5px;letter-spacing:1px}
+  .mib{display:flex;gap:6px;margin-top:7px}
+  .mib .btn{flex:1;min-height:34px;padding:5px 4px;font-size:12.5px;letter-spacing:1px}
   .gh .mtag{flex:none;font-size:11px;letter-spacing:1px;color:var(--gold);border:1px solid var(--line);
     border-radius:3px;padding:2px 5px;line-height:1.2}
 
-  .meds{display:flex;flex-wrap:wrap;gap:7px}
+  .meds{display:flex;flex-wrap:wrap;gap:6px}
   .med{border:1px solid var(--line);border-radius:4px;padding:6px 9px;font-size:12.5px;letter-spacing:1px;
     color:var(--dim);background:var(--card)}
   .med.got{border-color:var(--gold);color:var(--gold);background:rgba(169,134,63,.09);font-weight:700}
@@ -336,7 +383,7 @@
     width:100%;max-width:560px;max-height:88vh;overflow:auto;box-shadow:var(--shadow)}
   .dlg h2{margin:0 0 12px;font-size:19px;letter-spacing:3px;color:var(--accent)}
   .dlg textarea{height:180px;resize:vertical;line-height:1.6}
-  .sheet label{display:block;font-size:13px;color:var(--dim);margin:14px 0 5px}
+  .sheet label{display:block;font-size:13px;color:var(--dim);margin:12px 0 5px}
   .sheet textarea{height:84px}
   .hint{font-size:13px;color:var(--dim);margin:10px 0 0;line-height:1.7}
   .hint summary{cursor:pointer;color:var(--accent);margin-top:6px}
@@ -530,27 +577,35 @@
 </div></div>
 
 <!-- 内务府 -->
-<div class="mask" id="mask6"><div class="dlg sheet">
-  <h2>朝廷</h2>
-  <label>朝纲</label>
-  <div style="font-size:20px;font-weight:700;letter-spacing:4px;color:var(--accent)" id="ihRank">四海承平</div>
+<div class="mask" id="mask6"><div class="dlg sheet ih" id="ihBox">
+  <div class="ihtop">
+    <div class="ihv"><span class="l">国库</span><b id="ihAgN">0</b><span class="u">两</span></div>
+    <div class="ihv r"><span class="l">朝纲</span><b class="rk" id="ihRank">四海承平</b></div>
+    <button class="sfx on" id="ihSfx" title="点下去的响动">响</button>
+  </div>
   <div class="rankbar"><i id="ihBar" style="width:0"></i></div>
   <div class="ranktip" id="ihTip"></div>
 
-  <label>国库</label>
-  <div class="ranktip" id="ihAg" style="margin-bottom:14px"></div>
+  <div class="tabs" id="ihTabs">
+    <button class="tab on" data-tab="court">朝廷</button>
+    <button class="tab" data-tab="store">内库</button>
+  </div>
 
-  <label>六部 <small style="color:var(--dim);font-weight:400">（每一卷折子归一个部办，久不派差人心就散）</small></label>
-  <div id="ihMi" style="margin-bottom:6px"></div>
+  <div class="pane on" data-pane="court">
+    <div class="mis" id="ihMi"></div>
+    <div class="hint">每一卷折子归一个部办，久不派差人心就散</div>
+    <label>治绩 <small>不卖，只能挣</small></label>
+    <div class="meds" id="ihMed"></div>
+    <div class="ranktip tight" id="ihAg"></div>
+  </div>
 
-  <label style="margin-top:12px">印章 <small style="color:var(--dim);font-weight:400">（批过的那一方印）</small></label>
-  <div class="goods" id="ihSeal"></div>
-
-  <label style="margin-top:12px">纸色</label>
-  <div class="goods" id="ihPaper"></div>
-
-  <label style="margin-top:12px">治绩 <small style="color:var(--dim);font-weight:400">（不卖，只能挣）</small></label>
-  <div class="meds" id="ihMed"></div>
+  <div class="pane" data-pane="store">
+    <label class="first">印章 <small>批过的那一方印</small></label>
+    <div class="goods" id="ihSeal"></div>
+    <label>纸色</label>
+    <div class="goods" id="ihPaper"></div>
+    <div class="hint">买过的就一直在，随时换回来。库银在上头那一行</div>
+  </div>
 
   <div class="btns">
     <button class="btn" id="ihReset">重开一局</button>
@@ -627,6 +682,7 @@ const SEED_MD = `
 /* 存储 key 与前两版一致，老数据直接接管 */
 const KEY = "checklist_v1";
 const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
 
 let D = null, hideDone = false, filter = "";
@@ -902,6 +958,7 @@ $("#body").addEventListener("click", e => {
     it.done = !it.done; li.classList.toggle("ok", it.done);
     const seal = li.querySelector(".bx");                 // 盖印的动作，只在真点的时候放
     if (it.done && seal){ seal.classList.remove("stamp"); void seal.offsetWidth; seal.classList.add("stamp"); }
+    punch(null, it.done ? "big" : "");             // 盖印一记闷响，撤回轻一点
     scoreTick(it, it.done, seal, miOf(g));
     if (it.done && allDone(g)) scoreGroup(g);
     paint(); save(); return;
@@ -926,7 +983,10 @@ function stampAll(g){
   if (!all){                                   // 一枚一枚落印，看着像批折子
     const sec = document.querySelector(`[data-g="${g.id}"]`);
     if (sec) sec.querySelectorAll(".bx").forEach((b, k) =>
-      setTimeout(() => { b.classList.remove("stamp"); void b.offsetWidth; b.classList.add("stamp"); }, k * 55));
+      setTimeout(() => {
+        b.classList.remove("stamp"); void b.offsetWidth; b.classList.add("stamp");
+        if (k < 8) thud("");                       // 连着响八下就够，一卷几十件不至于吵
+      }, k * 55));
   }
   toast(all ? "整卷朱批已撤" : `整卷已批 ${g.items.length} 件`);
 }
@@ -1277,7 +1337,7 @@ const MEDALS = [
   {id:"note10",n:"御笔亲批", d:"写下十条朱批"},
 ];
 const miDef = () => Object.fromEntries(MINISTRY.map(m => [m.id, {e:50, l:60, d:""}]));
-const GDEF = () => ({ag:0, owe:0, tot:0, cnt:0, nc:0, day:"", tn:0, run:0, best:0,
+const GDEF = () => ({ag:0, owe:0, tot:0, cnt:0, nc:0, day:"", tn:0, run:0, best:0, sfx:1,
                      own:["zhun","xuan"], seal:"zhun", paper:"xuan", med:[],
                      mi:miDef(), mday:""});
 function G(){
@@ -1315,6 +1375,36 @@ const ymd = t => { const d = new Date(t); const p = n => String(n).padStart(2,"0
                    return d.getFullYear() + "-" + p(d.getMonth()+1) + "-" + p(d.getDate()); };
 
 /* 入库的银子飘一下。el 给了就从它头上起飞，没给就从国库牌起飞 */
+/* ── 打击感：按下去要有回响。响动是现算的，不引外部音频文件 ── */
+let AC = null;
+function thud(kind){
+  if (!G().sfx || silent) return;
+  try{
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    if (AC.state === "suspended") AC.resume();
+    const t = AC.currentTime, big = kind === "big";
+    const o = AC.createOscillator(), gn = AC.createGain();
+    o.type = "triangle";
+    const f = big ? 168 : 300;                    // 落印是脆的一记，出银是闷一点的一记
+    o.frequency.setValueAtTime(f, t);
+    o.frequency.exponentialRampToValueAtTime(f * .42, t + (big ? .11 : .07));
+    gn.gain.setValueAtTime(.0001, t);
+    gn.gain.exponentialRampToValueAtTime(big ? .2 : .12, t + .005);
+    gn.gain.exponentialRampToValueAtTime(.0001, t + (big ? .28 : .15));
+    o.connect(gn).connect(AC.destination);
+    o.start(t); o.stop(t + .32);
+  }catch(e){}                                     // 浏览器不给放就算了，不影响用
+}
+/* 手上、眼里、耳朵里各给一下 */
+function punch(el, kind){
+  if (el){
+    const c = kind === "big" ? "ring" : "hit";
+    el.classList.remove("hit", "ring"); void el.offsetWidth; el.classList.add(c);
+  }
+  if (!silent){ try { navigator.vibrate && navigator.vibrate(kind === "big" ? 18 : 9); } catch(e){} }
+  thud(kind);
+}
+
 let silent = 0;                                   // 整卷一次批完时先攒着，末了只飘一个总数
 function coin(n, el){
   if (!n || silent) return;
@@ -1568,11 +1658,16 @@ function paintShop(){
   const g = G(), sc = courtScore(), c = courtOf(sc);
   $("#ihRank").textContent = c[1];
   $("#ihBar").style.width = sc + "%";
-  $("#ihTip").textContent = `六部均分 ${sc} · 历年岁入 ${g.tot} 两`;
+  $("#ihTip").textContent = g.owe
+    ? `国库空虚，尚欠 ${g.owe} 两 · 六部均分 ${sc}`
+    : `六部均分 ${sc} · 历年岁入 ${g.tot} 两`;
+  $("#ihAgN").textContent = g.owe ? "-" + g.owe : g.ag;
+  $("#ihBox").classList.toggle("owe", !!g.owe);
+  $("#ihTip").classList.toggle("owe", !!g.owe);
+  $("#ihSfx").classList.toggle("on", !!g.sfx);
+  $("#ihSfx").textContent = g.sfx ? "响" : "静";
   $("#ihAg").textContent =
-    (g.owe ? `国库空虚，尚欠 ${g.owe} 两` : `国库 ${g.ag} 两`) +
-    ` · 批过 ${g.cnt} 件 · 朱批 ${g.nc} 条 · 勤政 ${g.run} 日（最长 ${g.best} 日）`;
-  $("#ihAg").classList.toggle("owe", !!g.owe);
+    `批过 ${g.cnt} 件 · 朱批 ${g.nc} 条 · 勤政 ${g.run} 日（最长 ${g.best} 日）`;
   // 每个部手上还压着多少件没批的
   const load = Object.fromEntries(MINISTRY.map(m => [m.id, 0]));
   for (const l of D.lists) for (const gg of l.groups){
@@ -1585,6 +1680,21 @@ function paintShop(){
   $("#ihMed").innerHTML = MEDALS.map(m =>
     `<span class="med${g.med.includes(m.id)?" got":""}">${m.n}<small>${m.d}</small></span>`).join("");
 }
+/* 朝廷 / 内库分两页，省得一长条摊到底 */
+$("#ihTabs").addEventListener("click", e => {
+  const b = e.target.closest(".tab"); if (!b || b.classList.contains("on")) return;
+  $$("#ihTabs .tab").forEach(x => x.classList.toggle("on", x === b));
+  $$("#mask6 .pane").forEach(p => p.classList.toggle("on", p.dataset.pane === b.dataset.tab));
+  punch(b);
+  mask6.querySelector(".dlg").scrollTop = 0;
+});
+$("#ihSfx").onclick = () => {
+  const g = G(); g.sfx = g.sfx ? 0 : 1;
+  $("#ihSfx").classList.toggle("on", !!g.sfx);
+  $("#ihSfx").textContent = g.sfx ? "响" : "静";
+  if (g.sfx) punch($("#ihSfx"));
+  save(true);
+};
 function openShop(){ paintShop(); mask6.classList.add("on"); }
 mask6.addEventListener("click", e => { if (e.target === mask6) mask6.classList.remove("on"); });
 $("#ihClose").onclick = () => mask6.classList.remove("on");
@@ -1594,6 +1704,7 @@ $("#purse").onclick = openShop;
 mask6.addEventListener("click", e => {
   const b = e.target.closest("[data-mi]"); if (!b) return;
   const g = G(), m = MI[b.dataset.id];
+  punch(b.closest(".mini"), "big");
   if (b.dataset.mi === "give"){
     if (g.owe) return toast(`国库尚欠 ${g.owe} 两，先把亏空填上`);
     if (g.ag < 40) return toast(`国库只剩 ${g.ag} 两，赏不动`);
@@ -1612,6 +1723,7 @@ mask6.addEventListener("click", e => {
   const b = e.target.closest("[data-buy]"); if (!b) return;
   const g = G(), k = b.dataset.buy, kind = b.dataset.kind;
   const v = (kind === "seal" ? SEALS : PAPERS)[k];
+  punch(b, g.own.includes(k) ? "" : "big");
   if (!g.own.includes(k)){
     if (g.ag < v.p) return toast(`还差 ${v.p - g.ag + (g.owe || 0)} 两${g.owe ? "（含亏空）" : ""}`);
     g.ag -= v.p; g.own.push(k);
