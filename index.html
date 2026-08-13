@@ -341,6 +341,7 @@
 
 <div class="toast" id="toast"></div>
 <div class="newver" id="newver"><span>新版已到</span><button id="nvGo">换上</button><button class="x" id="nvNo">待会儿</button></div>
+<div class="newver" id="backup"><span><b id="backupDays">14</b> 天没存档了</span><button id="bkGo">存一份</button><button class="x" id="bkNo">知道了</button></div>
 
 <script>
 /* ============ 首次打开的自带清单 ============ */
@@ -826,7 +827,7 @@ menu.addEventListener("click", e => {
     D.lists = D.lists.filter(x => x.id !== L.id); D.cur = D.lists[0].id;
     render(); save(true); toast("已焚");
   }
-  else if (m === "exp"){ download("奏事处存档.json", JSON.stringify(D, null, 1), "application/json"); toast("已存档，拷到别的设备「呈进」即可"); }
+  else if (m === "exp"){ doExport(); }
   else if (m === "imp"){ pickFile(".json,.txt,.md,.markdown,text/*,application/json", (txt, name) => {
       if (/^\s*\{/.test(txt)){                     // 导出的文件：合并进来，勾不会丢
         try { mergeData(JSON.parse(txt)); render(); save(true); toast("已呈进，朱批照旧"); }
@@ -890,6 +891,31 @@ function download(name, text, type){
   a.download = name; a.click(); URL.revokeObjectURL(a.href);
 }
 
+/* ── 存档，兼记下时间，好在久不存档时提醒 ─────────────────── */
+const EXPKEY = KEY + "_lastexp";
+function doExport(){
+  const d = new Date(), p = n => String(n).padStart(2, "0");
+  download(`奏事处存档_${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}.json`,
+           JSON.stringify(D, null, 1), "application/json");
+  try { localStorage.setItem(EXPKEY, String(Date.now())); } catch(e){}
+  $("#backup").classList.remove("on");
+  toast("已存档，拷到别的设备「呈进」即可");
+}
+
+/* 超过 14 天没存过档就冒一条。只提醒，不自动传任何地方。 */
+function checkBackup(){
+  let n = 0;
+  for (const l of D.lists) for (const g of l.groups) n += g.items.length;
+  if (n < 5) return;                                   // 没什么内容就别烦人
+  let last = 0;
+  try { last = +(localStorage.getItem(EXPKEY) || 0); } catch(e){}
+  if (!last){ try { localStorage.setItem(EXPKEY, String(Date.now())); } catch(e){} return; }
+  const days = Math.floor((Date.now() - last) / 864e5);
+  if (days < 14) return;
+  $("#backupDays").textContent = days;
+  $("#backup").classList.add("on");
+}
+
 /* ============ 启动 ============ */
 try { D = JSON.parse(localStorage.getItem(KEY) || "null"); } catch(e){ D = null; }
 if (!D || !Array.isArray(D.lists) || !D.lists.length){
@@ -898,6 +924,21 @@ if (!D || !Array.isArray(D.lists) || !D.lists.length){
 }
 if (!D.lists.find(l => l.id === D.cur)) D.cur = D.lists[0].id;
 render();
+
+/* ── 让浏览器把这份数据标成「持久」，别在清存储时顺手清掉 ─────
+   支持的浏览器（含新版 iOS）会把本站存储列为 persistent，不参与自动回收。
+   不支持的当没这回事，静默跳过。 */
+if (navigator.storage && navigator.storage.persist){
+  navigator.storage.persisted().then(ok => { if (!ok) navigator.storage.persist(); }).catch(() => {});
+}
+
+$("#bkGo").onclick = doExport;
+$("#bkNo").onclick = () => {
+  $("#backup").classList.remove("on");
+  // 按掉就再宽限 7 天：把上次存档时间往后挪，别天天弹
+  try { localStorage.setItem(EXPKEY, String(Date.now() - 7 * 864e5)); } catch(e){}
+};
+setTimeout(checkBackup, 1200);
 
 /* ── 离线缓存 ────────────────────────────────────────────────
    只在 https 下注册。本地双击打开（file://）时浏览器不给用 Service Worker，

@@ -5,7 +5,7 @@
  *      真有新版本时通知页面弹一条「新版已到」，由用户点了才换，
  *      不在你批折子批到一半的时候把页面刷掉。
  */
-const VERSION = "v1";
+const VERSION = "v2";
 const CACHE = "zoushichu-" + VERSION;
 
 const CORE = [
