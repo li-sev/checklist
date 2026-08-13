@@ -68,6 +68,10 @@
   .purse .dot{width:6px;height:6px;border-radius:50%;background:var(--gold);padding:0;margin-right:8px;
     display:none;animation:blink 1.4s ease-in-out infinite}
   .purse.buyable .dot{display:block}
+  /* 亏空：库银那格转成朱色，一眼看见欠着账 */
+  .purse.owe .ag{color:var(--accent)}
+  .purse.owe .dot{display:none}
+  .ranktip.owe{color:var(--accent)}
 
   /* 打勾时从印上飘起来的赏银 */
   .coin{position:fixed;z-index:95;pointer-events:none;font-weight:700;font-size:15px;letter-spacing:1px;
@@ -982,7 +986,11 @@ $("#itOk").onclick = () => {
   const it = findItem(editingId), src = findGroupOf(editingId);
   if (!it){ closeItem(); return; }
   const t = $("#itText").value.trim();
-  if (!t){ src.items = src.items.filter(x => x.id !== it.id); closeItem(); render(); save(true); return; }
+  if (!t){                                         // 事由清空 = 删掉这一件，一样要退库
+    if (it.p) refund([{...src, items:[it], pg:0}], curList());
+    src.items = src.items.filter(x => x.id !== it.id);
+    closeItem(); render(); save(true); return;
+  }
   if (t !== it.t) it.mt = Date.now();            // 记下改动时刻，同步时按新的算
   it.t = t;
   let target = $("#itGroup").value;
@@ -999,8 +1007,14 @@ $("#itOk").onclick = () => {
 };
 $("#itDel").onclick = () => {
   const src = findGroupOf(editingId);
-  if (src) src.items = src.items.filter(x => x.id !== editingId);
-  closeItem(); render(); save(true); toast("此件已删");
+  let back = 0;
+  if (src){
+    const it = src.items.find(x => x.id === editingId);
+    if (it && it.p) back = refund([{...src, items:[it], pg:0}], curList());
+    src.items = src.items.filter(x => x.id !== editingId);
+  }
+  closeItem(); render(); save(true);
+  toast(back ? `此件已删，退库 ${back} 两` : "此件已删");
 };
 
 /* ============ 朱批面板 ============
@@ -1086,8 +1100,10 @@ $("#gDel").onclick = () => {
   const L = curList(), g = L.groups.find(x => x.id === editingG);
   if (!g) return closeGroup();
   if (g.items.length && !confirm(`撤掉「${g.title || "未归卷"}」这一卷，连同卷内 ${g.items.length} 件？`)) return;
+  const back = refund([g], L);
   L.groups = L.groups.filter(x => x.id !== editingG);
-  closeGroup(); render(); save(true); toast("此卷已撤");
+  closeGroup(); render(); save(true);
+  toast(back ? `此卷已撤，退库 ${back} 两` : "此卷已撤");
 };
 
 $("#btnNewGroup").onclick = () => {
@@ -1123,8 +1139,10 @@ menu.addEventListener("click", e => {
   else if (m === "dellist"){
     if (D.lists.length === 1) return toast("只剩这一本了，焚不得");
     if (!confirm(`焚掉整本「${L.name}」？动手前先「存档」为宜。`)) return;
+    const back = refund(L.groups, L);
     D.lists = D.lists.filter(x => x.id !== L.id); D.cur = D.lists[0].id;
-    render(); save(true); toast("已焚");
+    render(); save(true);
+    toast(back ? `已焚，退库 ${back} 两` : "已焚");
   }
   else if (m === "sync"){ openSync(); }
   else if (m === "exp"){ doExport(); }
@@ -1259,7 +1277,7 @@ const MEDALS = [
   {id:"note10",n:"御笔亲批", d:"写下十条朱批"},
 ];
 const miDef = () => Object.fromEntries(MINISTRY.map(m => [m.id, {e:50, l:60, d:""}]));
-const GDEF = () => ({ag:0, tot:0, cnt:0, nc:0, day:"", tn:0, run:0, best:0,
+const GDEF = () => ({ag:0, owe:0, tot:0, cnt:0, nc:0, day:"", tn:0, run:0, best:0,
                      own:["zhun","xuan"], seal:"zhun", paper:"xuan", med:[],
                      mi:miDef(), mday:""});
 function G(){
@@ -1323,13 +1341,45 @@ function herald(k, v, d){
   })();
 }
 
-/* 入库 / 出库。退回时累计岁入一起退，不然反复勾撤就能刷 */
+/* 入库 / 出库。
+   出库时国库不够扣的记成【亏空】，往后入库先抵亏空、抵完才进国库。
+   —— 不这么记的话：批几件、把银子花光、再把那几件撤回，扣不动就当没扣，
+      如此往复便是无本生利。欠的账得留在账上。 */
 function earn(n, el){
   const g = G();
-  g.ag  = Math.max(0, g.ag + n);
+  g.owe = Math.max(0, g.owe || 0);
+  if (n < 0){
+    let d = -n;
+    const from = Math.min(g.ag, d);                 // 先动国库
+    g.ag -= from; d -= from;
+    if (d > 0) g.owe += d;                          // 国库空了，剩下的挂账
+  } else if (n > 0){
+    const pay = Math.min(g.owe, n);                 // 先抵亏空
+    g.owe -= pay; g.ag += n - pay;
+  }
   g.tot = Math.max(0, g.tot + n);
   coin(n, el);
   paintPurse();
+}
+/* 撤掉折子 = 把它挣来的库银和部里的功劳一并退回去。
+   不退的话，「建一卷 → 全批 → 删掉这一卷 → 再建一卷」就是一台印钞机，
+   比反复勾撤还快。退成负的就挂亏空，见 earn。 */
+function refund(groups, L){
+  const g = G();
+  let back = 0, n = 0;
+  for (const gg of groups){
+    const mid = miOf(gg, L);
+    let k = 0;
+    for (const it of gg.items) if (it.p){ back += (typeof it.p === "number" ? it.p : 2); k++; }
+    n += k;
+    let de = k * 2, dl = k;
+    if (gg.pg){ back += 10; de += 6; dl += 5; }     // 整卷的赏也要吐出来
+    if (de) bump(mid, -de, -dl);
+  }
+  if (!n && !back) return 0;
+  g.cnt = Math.max(0, (g.cnt || 0) - n);
+  if (back) earn(-back);
+  return back;
 }
 /* 某个部办了差：效率和忠诚都涨；退回时照数扣 */
 function bump(mid, de, dl){
@@ -1354,9 +1404,8 @@ function medal(id){
   const g = G(); if (g.med.includes(id)) return;
   const m = MEDALS.find(x => x.id === id); if (!m) return;
   g.med.push(id);
-  g.ag += 20; g.tot += 20;                        // 每件治绩入库二十两
+  earn(20);                                       // 每件治绩入库二十两（有亏空先抵）
   herald("载入实录", m.n, m.d + " · 入库二十两");
-  paintPurse();
 }
 /* 今天头一回批折：结算连批天数，返回该给的加赏 */
 function touchDay(){
@@ -1373,10 +1422,11 @@ function scoreTick(it, on, el, mid){
   const g = G();
   if (on){
     if (it.p) return;                             // 这一件已经入过库，不重复计
-    it.p = 1; g.cnt = (g.cnt || 0) + 1;
+    g.cnt = (g.cnt || 0) + 1;
     const bonus = touchDay();
     g.tn = (g.tn || 0) + 1;
-    earn(2 + bonus, el);
+    it.p = 2 + bonus;                             // 记下这一件到底入了几两，撤回时照数退
+    earn(it.p, el);
     if (mid) bump(mid, 2, 1);
     if (bonus) toast(`勤政第 ${g.run} 日，加征 ${bonus} 两`);
     if (g.cnt === 1) medal("first");
@@ -1388,8 +1438,9 @@ function scoreTick(it, on, el, mid){
     if (MINISTRY.every(m => g.mi[m.id].d)) medal("six");
   } else {
     if (!it.p) return;
+    const paid = typeof it.p === "number" ? it.p : 2;   // 老存档里 it.p 是个 1 的记号
     delete it.p; g.cnt = Math.max(0, (g.cnt || 0) - 1); g.tn = Math.max(0, (g.tn || 0) - 1);
-    earn(-2, el);
+    earn(-paid, el);
     if (mid) bump(mid, -2, -1);
   }
 }
@@ -1431,7 +1482,7 @@ function backpay(){
   if (g.tot || g.cnt) return;                      // 已经开过局，别重复发
   let n = 0;
   for (const l of D.lists) for (const gg of l.groups) for (const it of gg.items)
-    if (it.done && !it.p){ it.p = 1; n++; }
+    if (it.done && !it.p){ it.p = 2; n++; }
   if (!n) return;
   g.cnt = n; g.ag += n * 2; g.tot += n * 2;
   // 此前批过的件，按所属的部把效率忠诚一并记上
@@ -1450,6 +1501,7 @@ function mergeGame(f){
   if (!f || typeof f !== "object") return;
   const g = G();
   for (const k of ["ag","tot","cnt","nc","best"]) g[k] = Math.max(g[k] || 0, f[k] || 0);
+  g.owe = Math.max(g.owe || 0, f.owe || 0);       // 亏空取大的，免得同步一下账就赖掉了
   if ((f.day || "") > (g.day || "")){ g.day = f.day; g.run = f.run || 0; g.tn = f.tn || 0; }
   else if ((f.day || "") === (g.day || "")){ g.run = Math.max(g.run || 0, f.run || 0); g.tn = Math.max(g.tn || 0, f.tn || 0); }
   g.own = [...new Set([...(g.own || []), ...(f.own || [])])].filter(k => SEALS[k] || PAPERS[k]);
@@ -1467,7 +1519,8 @@ function mergeGame(f){
 
 function paintPurse(){
   const g = G();
-  $("#pAg").textContent = g.ag;
+  $("#pAg").textContent = g.owe ? "亏 " + g.owe : g.ag;
+  $("#purse").classList.toggle("owe", !!g.owe);
   $("#pRank").textContent = courtOf(courtScore())[1];
   const run = $("#pRun");
   const live = g.day === ymd(Date.now());
@@ -1517,7 +1570,9 @@ function paintShop(){
   $("#ihBar").style.width = sc + "%";
   $("#ihTip").textContent = `六部均分 ${sc} · 历年岁入 ${g.tot} 两`;
   $("#ihAg").textContent =
-    `国库 ${g.ag} 两 · 批过 ${g.cnt} 件 · 朱批 ${g.nc} 条 · 勤政 ${g.run} 日（最长 ${g.best} 日）`;
+    (g.owe ? `国库空虚，尚欠 ${g.owe} 两` : `国库 ${g.ag} 两`) +
+    ` · 批过 ${g.cnt} 件 · 朱批 ${g.nc} 条 · 勤政 ${g.run} 日（最长 ${g.best} 日）`;
+  $("#ihAg").classList.toggle("owe", !!g.owe);
   // 每个部手上还压着多少件没批的
   const load = Object.fromEntries(MINISTRY.map(m => [m.id, 0]));
   for (const l of D.lists) for (const gg of l.groups){
@@ -1540,6 +1595,7 @@ mask6.addEventListener("click", e => {
   const b = e.target.closest("[data-mi]"); if (!b) return;
   const g = G(), m = MI[b.dataset.id];
   if (b.dataset.mi === "give"){
+    if (g.owe) return toast(`国库尚欠 ${g.owe} 两，先把亏空填上`);
     if (g.ag < 40) return toast(`国库只剩 ${g.ag} 两，赏不动`);
     g.ag -= 40; bump(m.id, 2, 12);
     toast(`赏${m.n}银四十两，上下感戴`);
@@ -1557,7 +1613,7 @@ mask6.addEventListener("click", e => {
   const g = G(), k = b.dataset.buy, kind = b.dataset.kind;
   const v = (kind === "seal" ? SEALS : PAPERS)[k];
   if (!g.own.includes(k)){
-    if (g.ag < v.p) return toast(`还差 ${v.p - g.ag} 两`);
+    if (g.ag < v.p) return toast(`还差 ${v.p - g.ag + (g.owe || 0)} 两${g.owe ? "（含亏空）" : ""}`);
     g.ag -= v.p; g.own.push(k);
     toast(`内务府已备下「${v.n}」`);
   }
