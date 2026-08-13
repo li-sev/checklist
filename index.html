@@ -156,7 +156,7 @@
   section.grp.collapsed ul,section.grp.collapsed .addrow{display:none}
 
   ul{list-style:none;margin:0;padding:0}
-  li{display:flex;gap:11px;align-items:flex-start;padding:9px 8px;border-top:1px dotted var(--line)}
+  li{display:flex;flex-wrap:wrap;gap:11px;align-items:flex-start;padding:9px 8px;border-top:1px dotted var(--line)}
   li:hover{background:var(--soft);border-radius:5px}
   /* 御印：没批是空印格，批了盖一方朱印「准」 */
   li .bx{width:28px;height:28px;border:1.5px dashed var(--line);border-radius:3px;flex:none;margin-top:1px;
@@ -182,6 +182,24 @@
   li .dots{opacity:.5;width:34px;height:34px;font-size:16px}
   li:hover .dots{opacity:1}
   li.hide{display:none}
+  /* 朱批：写在事由底下的一段朱笔小字 */
+  .note{flex-basis:100%;width:100%;margin:2px 0 1px 39px;padding:7px 11px;cursor:pointer;
+    background:rgba(155,45,32,.06);border-left:2px solid var(--accent);border-radius:0 4px 4px 0;
+    color:var(--accent);font-size:14.5px;line-height:1.6;white-space:normal;word-break:break-word}
+  .note:hover{background:rgba(155,45,32,.11)}
+  li.ok .note{opacity:.6}
+  .note a{color:var(--accent);text-decoration:underline}
+  @media (prefers-color-scheme: dark){ .note{background:rgba(207,90,73,.1)} }
+  /* 同步：⋯ 按钮上那颗小点 */
+  .menuwrap{position:relative}
+  #syncDot{position:absolute;right:5px;top:5px;width:7px;height:7px;border-radius:50%;
+    background:var(--gold);display:none;pointer-events:none}
+  #syncDot.on{display:block}
+  #syncDot.bad{background:#c0392b}
+  #syncDot.go{animation:blink 1s ease-in-out infinite}
+  @keyframes blink{50%{opacity:.25}}
+  .syncstate{margin:2px 0 8px;padding:8px 11px;background:var(--soft);border-radius:4px;
+    font-size:14px;color:var(--dim);border-left:3px solid var(--line)}
 
   .addrow{display:flex;align-items:center;gap:11px;width:100%;min-height:44px;padding:0 8px;
     color:var(--dim);font-size:15px;border-top:1px dotted var(--line);text-align:left}
@@ -254,7 +272,7 @@
       <select id="listSel" title="换一本折子"></select>
     </div>
     <div class="menuwrap">
-      <button class="icon" id="btnMenu" title="其他">⋯</button>
+      <button class="icon" id="btnMenu" title="其他">⋯</button><i id="syncDot"></i>
       <div class="menu" id="menu">
         <button data-m="search">🔍 查档（搜索）</button>
         <button data-m="hide">👁 隐去已批 <b id="mHide"></b></button>
@@ -267,6 +285,9 @@
           <small>带到别的设备呈进，批过的朱笔都在</small></span></button>
         <button data-m="imp"><span class="ml">⬆ 呈进（读一个文件）
           <small>存档文件、或者一段文字稿都收</small></span></button>
+        <hr>
+        <button data-m="sync"><span class="ml">☁ 驿传（两处同步） <b id="mSync"></b>
+          <small>手机和电脑批的，合成同一份</small></span></button>
       </div>
     </div>
   </div>
@@ -310,6 +331,8 @@
   <h2>批这一件</h2>
   <label>事由</label>
   <textarea id="itText"></textarea>
+  <label>朱批 <small style="color:var(--dim);font-weight:400">（备注，可空。卡在哪、看到几分几秒、问谁）</small></label>
+  <textarea id="itNote" placeholder="写点什么，回头自己看得懂就行"></textarea>
   <label>归在哪一卷</label>
   <select id="itGroup"></select>
   <label>顺序</label>
@@ -336,6 +359,39 @@
   <div class="btns">
     <button class="btn" id="gDel">🗑 撤了整卷</button>
     <button class="btn pri" id="gOk">批毕</button>
+  </div>
+</div></div>
+
+<!-- 驿传（同步） -->
+<div class="mask" id="mask4"><div class="dlg sheet">
+  <h2>驿传</h2>
+  <div class="syncstate" id="syState">未设</div>
+  <div class="hint" style="margin-bottom:10px">
+    把折子存进你自己的一个 <b>私有</b> GitHub 仓库，手机和电脑各自读写同一份。
+    合并照老规矩：<b>任一边批过的勾都留着</b>，谁也覆盖不掉谁。
+    事由和朱批按改动时刻取新的；<b>删条目不同步</b>——另一台还留着的话，它下次会自己回来，
+    要删干净就两台都删一遍。
+    <details><summary>令牌怎么弄（点开）</summary>
+      github.com → Settings → Developer settings → <b>Fine-grained tokens</b> → Generate new token<br>
+      Repository access 选 <b>Only select repositories</b>，只挑下面填的那一个<br>
+      Permissions → Repository permissions → <b>Contents 改成 Read and write</b>，别的都不用给<br>
+      令牌只存在这台设备上，<b>不会写进存档文件</b>，也不发去别处。
+    </details>
+  </div>
+  <label>仓库（用户名/仓库名）</label>
+  <input type="text" id="syRepo" placeholder="li-sev/checklist-data" autocapitalize="off" spellcheck="false">
+  <label>存成哪个文件</label>
+  <input type="text" id="syPath" placeholder="data.json" autocapitalize="off" spellcheck="false">
+  <label>令牌</label>
+  <input type="password" id="syTok" placeholder="github_pat_… 或 ghp_…" autocapitalize="off" spellcheck="false">
+  <div class="btns" style="margin-top:0">
+    <button class="btn" id="syPull">⬇ 这就取回</button>
+    <button class="btn" id="syPush">⬆ 这就送去</button>
+  </div>
+  <div class="btns">
+    <button class="btn" id="syOff">断了驿传</button>
+    <button class="btn" id="syCancel">关掉</button>
+    <button class="btn pri" id="syOk">接上</button>
   </div>
 </div></div>
 
@@ -449,7 +505,10 @@ function md(s){
 let saveTimer = null;
 function save(now){
   clearTimeout(saveTimer);
-  const go = () => { try { localStorage.setItem(KEY, JSON.stringify(D)); } catch(e){} };
+  const go = () => {
+    try { localStorage.setItem(KEY, JSON.stringify(D)); } catch(e){}
+    schedulePush();                                // 接了驿传就顺手往云上送一趟
+  };
   if (now) go(); else saveTimer = setTimeout(go, 400);
 }
 function mergeData(from){                       // 任一边打过勾就算勾上，只增不减
@@ -462,7 +521,14 @@ function mergeData(from){                       // 任一边打过勾就算勾�
       if (!mg){ mine.groups.push(ig); continue; }
       for (const it of ig.items || []){
         const mi = mg.items.find(x => x.id === it.id) || mg.items.find(x => x.t === it.t);
-        if (!mi) mg.items.push(it); else if (it.done) mi.done = true;
+        if (!mi){ mg.items.push(it); continue; }
+        if (it.done) mi.done = true;                  // 勾只增不减，两边任一边批过就算批过
+        if ((it.mt || 0) > (mi.mt || 0)){             // 事由和朱批：谁改得晚听谁的
+          mi.t = it.t; mi.mt = it.mt;
+          if (it.n) mi.n = it.n; else delete mi.n;
+        } else if (it.n && !mi.n){                    // 对面有朱批这边没有，直接拿过来，不算冲突
+          mi.n = it.n;
+        }
       }
     }
   }
@@ -476,11 +542,13 @@ function newList(name, groups){
 }
 const allDone = g => g.items.length > 0 && g.items.every(i => i.done);
 const gtHTML = g => g.title ? md(g.title) : '<span style="color:var(--dim)">未归卷</span>';
+const mdN = s => s.split(/\n/).map(md).join("<br>");     // 朱批是多行的，逐行渲染再接起来
 const liHTML = it => `
   <li data-i="${it.id}" class="${it.done?"ok":""}">
     <span class="bx" data-act="tick">准</span>
     <span class="tx" data-act="tick">${md(it.t)}</span>
-    <button class="dots" data-act="more" title="改事由 / 换卷 / 删去">⋮</button>
+    <button class="dots" data-act="more" title="改事由 / 写朱批 / 换卷 / 删去">⋮</button>
+    ${it.n ? `<div class="note" data-act="more">${mdN(it.n)}</div>` : ""}
   </li>`;
 
 function render(){
@@ -577,11 +645,12 @@ function paint(){
   renderSide();
   applyFilter();
 }
+const iHit = (i, q) => (i.t + "\n" + (i.n || "")).toLowerCase().includes(q);   // 朱批里的字也搜得到
 const hits = (l, q) => {                       // 某个清单里有多少条命中（分组名命中就算整组）
   let n = 0;
   for (const g of l.groups){
     if ((g.title || "").toLowerCase().includes(q)) n += g.items.length;
-    else n += g.items.filter(i => i.t.toLowerCase().includes(q)).length;
+    else n += g.items.filter(i => iHit(i, q)).length;
   }
   return n;
 };
@@ -619,10 +688,12 @@ function applyFilter(){
     let any = false;
     s.querySelectorAll("li").forEach(li => {
       const it = findItem(li.dataset.i); if (!it) return;
-      const show = (!q || gHit || it.t.toLowerCase().includes(q)) && !(hideDone && it.done);
+      const show = (!q || gHit || iHit(it, q)) && !(hideDone && it.done);
       li.classList.toggle("hide", !show);
       const tx = li.querySelector(".tx");
       if (tx){ tx.innerHTML = md(it.t); if (show && q) highlight(tx, q); }
+      const nt = li.querySelector(".note");
+      if (nt && it.n){ nt.innerHTML = mdN(it.n); if (show && q) highlight(nt, q); }
       if (show){ any = true; shown++; }
     });
     s.style.display = (any || (!q && !hideDone)) ? "" : "none";
@@ -715,6 +786,7 @@ function openItem(id){
   const it = findItem(id); if (!it) return;
   editingId = id;
   $("#itText").value = it.t;
+  $("#itNote").value = it.n || "";
   $("#itGroup").innerHTML =
     curList().groups.map(g => `<option value="${g.id}">${esc(g.title || "未归卷")}</option>`).join("")
     + '<option value="__new">＋ 另立一卷…</option>';
@@ -739,7 +811,10 @@ $("#itOk").onclick = () => {
   if (!it){ closeItem(); return; }
   const t = $("#itText").value.trim();
   if (!t){ src.items = src.items.filter(x => x.id !== it.id); closeItem(); render(); save(true); return; }
+  const n = $("#itNote").value.trim();
+  if (t !== it.t || n !== (it.n || "")) it.mt = Date.now();   // 记下改动时刻，同步时按新的算
   it.t = t;
+  if (n) it.n = n; else delete it.n;
   let target = $("#itGroup").value;
   if (target === "__new"){
     const n = prompt("这一卷叫什么？", "");
@@ -827,6 +902,7 @@ menu.addEventListener("click", e => {
     D.lists = D.lists.filter(x => x.id !== L.id); D.cur = D.lists[0].id;
     render(); save(true); toast("已焚");
   }
+  else if (m === "sync"){ openSync(); }
   else if (m === "exp"){ doExport(); }
   else if (m === "imp"){ pickFile(".json,.txt,.md,.markdown,text/*,application/json", (txt, name) => {
       if (/^\s*\{/.test(txt)){                     // 导出的文件：合并进来，勾不会丢
@@ -916,6 +992,149 @@ function checkBackup(){
   $("#backup").classList.add("on");
 }
 
+/* ============ 驿传：拿 GitHub 一个私有仓库当中转 ============
+   没有服务器，两台设备各自读写同一个 json。合并还是老规矩（勾只增不减），
+   事由和朱批按改动时刻取新的。令牌只落在本机 localStorage，
+   跟正文分开存 —— 所以「存档」导出的文件里没有令牌。 */
+const SYKEY = KEY + "_sync";
+let SY = null, pushTimer = null, syncing = false, dirty = false;
+
+try { SY = JSON.parse(localStorage.getItem(SYKEY) || "null"); } catch(e){ SY = null; }
+const syOn = () => !!(SY && SY.on && SY.repo && SY.token);
+function saveSY(){ try { localStorage.setItem(SYKEY, JSON.stringify(SY)); } catch(e){} }
+
+/* btoa 只吃 latin1，中文得先转字节；一次 push 太多字符会爆栈，分段来 */
+function b64e(str){
+  const b = new TextEncoder().encode(str);
+  let s = "";
+  for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000));
+  return btoa(s);
+}
+function b64d(b64){
+  const bin = atob(String(b64).replace(/\s/g, ""));
+  const arr = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return new TextDecoder().decode(arr);
+}
+
+const ghURL = () => `https://api.github.com/repos/${SY.repo}/contents/${encodeURI(SY.path || "data.json")}`;
+const ghHead = () => ({Authorization:"token " + SY.token, Accept:"application/vnd.github+json"});
+
+async function ghGet(){
+  const r = await fetch(ghURL() + "?ref=HEAD&t=" + Date.now(), {headers:ghHead(), cache:"no-store"});
+  if (r.status === 404) return null;                      // 云上还没这个文件，第一次送过去就有了
+  if (r.status === 401 || r.status === 403) throw new Error("令牌不认，或者没给 Contents 写权限");
+  if (!r.ok) throw new Error("取回失败（" + r.status + "）");
+  return r.json();
+}
+async function ghPut(text, sha){
+  const body = {message:"奏事处 " + new Date().toLocaleString("zh-CN"), content:b64e(text)};
+  if (sha) body.sha = sha;
+  const r = await fetch(ghURL(), {method:"PUT", headers:ghHead(), body:JSON.stringify(body)});
+  if (r.status === 409 || r.status === 422) throw new Error("云上刚被改过，再送一次");
+  if (!r.ok) throw new Error("送去失败（" + r.status + "）");
+  return r.json();
+}
+
+function syUI(msg, kind){
+  const dot = $("#syncDot");
+  dot.className = syOn() ? "on" + (kind === "bad" ? " bad" : kind === "go" ? " go" : "") : "";
+  $("#mSync").textContent = syOn() ? "开" : "";
+  const box = $("#syState"); if (!box) return;
+  if (msg) { box.textContent = msg; return; }
+  if (!syOn()){ box.textContent = "未接。填好下面三样再点「接上」。"; return; }
+  const ago = SY.last ? Math.round((Date.now() - SY.last) / 60000) : null;
+  box.textContent = "已接 " + SY.repo + " · "
+    + (ago === null ? "还没传过" : ago < 1 ? "刚刚同步" : ago < 60 ? ago + " 分钟前同步" : Math.round(ago/60) + " 小时前同步");
+}
+
+function schedulePush(){
+  if (!syOn()) return;
+  dirty = true;
+  clearTimeout(pushTimer);
+  pushTimer = setTimeout(() => syncPush(true), 4000);     // 停手 4 秒再送，别一勾一趟
+}
+
+async function syncPull(auto){
+  if (!syOn() || syncing) return;
+  syncing = true; syUI("取回中…", "go");
+  let empty = false;
+  try {
+    const cur = await ghGet();
+    if (!cur){ empty = true; }
+    else {
+      mergeData(JSON.parse(b64d(cur.content)));
+      SY.sha = cur.sha; SY.last = Date.now(); saveSY();
+      try { localStorage.setItem(KEY, JSON.stringify(D)); } catch(e){}
+      render();
+    }
+    syUI(empty ? "云上还是空的，送一份上去就成了" : null);
+    if (!auto && !empty) toast("已取回并合并");
+  } catch(e){
+    syUI("取回没成：" + e.message, "bad");
+    if (!auto) toast(e.message);
+  } finally { syncing = false; }
+  if (empty && !auto) await syncPush(false);
+}
+
+async function syncPush(auto){
+  if (!syOn() || syncing) return;
+  syncing = true; syUI("送去中…", "go");
+  try {
+    const cur = await ghGet();
+    if (cur && cur.sha !== SY.sha){                        // 另一台改过：先并进来，再一起送
+      mergeData(JSON.parse(b64d(cur.content)));
+      try { localStorage.setItem(KEY, JSON.stringify(D)); } catch(e){}
+      render();
+    }
+    const res = await ghPut(JSON.stringify(D), cur ? cur.sha : null);
+    SY.sha = res.content.sha; SY.last = Date.now(); saveSY();
+    dirty = false;
+    syUI(null);
+    if (!auto) toast("已送去");
+  } catch(e){
+    syUI("送去没成：" + e.message, "bad");
+    if (!auto) toast(e.message);
+  } finally { syncing = false; }
+}
+
+/* 面板 */
+const mask4 = $("#mask4");
+function openSync(){
+  $("#syRepo").value = (SY && SY.repo) || "";
+  $("#syPath").value = (SY && SY.path) || "data.json";
+  $("#syTok").value  = (SY && SY.token) || "";
+  syUI(null);
+  mask4.classList.add("on");
+}
+mask4.addEventListener("click", e => { if (e.target === mask4) mask4.classList.remove("on"); });
+$("#syCancel").onclick = () => mask4.classList.remove("on");
+$("#syOk").onclick = async () => {
+  const repo = $("#syRepo").value.trim().replace(/^https?:\/\/github\.com\//, "").replace(/\/+$/, "");
+  const tok  = $("#syTok").value.trim();
+  if (!/^[^/\s]+\/[^/\s]+$/.test(repo)) return toast("仓库要写成「用户名/仓库名」");
+  if (!tok) return toast("令牌还没填");
+  SY = {on:true, repo, path:$("#syPath").value.trim() || "data.json", token:tok,
+        sha:(SY && SY.repo === repo) ? SY.sha : null, last:(SY && SY.repo === repo) ? SY.last : 0};
+  saveSY(); syUI(null);
+  await syncPull(false);                 // 接上先取回，云上是空的会自动送一份
+  if (syOn()) toast("驿传已接");
+};
+$("#syPull").onclick = () => syncPull(false);
+$("#syPush").onclick = () => syncPush(false);
+$("#syOff").onclick = () => {
+  if (!confirm("断了驿传，并把这台设备上存的令牌删掉？折子本身不动。")) return;
+  SY = null;
+  try { localStorage.removeItem(SYKEY); } catch(e){}
+  syUI(null); toast("已断，令牌已删");
+};
+
+/* 切走/关掉之前，把没送出去的补送一趟 */
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden" && dirty){ clearTimeout(pushTimer); syncPush(true); }
+  if (document.visibilityState === "visible" && syOn() && !dirty) syncPull(true);
+});
+
 /* ============ 启动 ============ */
 try { D = JSON.parse(localStorage.getItem(KEY) || "null"); } catch(e){ D = null; }
 if (!D || !Array.isArray(D.lists) || !D.lists.length){
@@ -939,6 +1158,11 @@ $("#bkNo").onclick = () => {
   try { localStorage.setItem(EXPKEY, String(Date.now() - 7 * 864e5)); } catch(e){}
 };
 setTimeout(checkBackup, 1200);
+
+/* ── 驿传：接上了就开机取一趟 ───────────────────────────────
+   放在 render() 之后，取回来合并完会自己再 render 一次。 */
+syUI(null);
+if (syOn()) setTimeout(() => syncPull(true), 600);
 
 /* ── 离线缓存 ────────────────────────────────────────────────
    只在 https 下注册。本地双击打开（file://）时浏览器不给用 Service Worker，
