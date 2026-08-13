@@ -4,7 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="奏事处">
 <meta name="theme-color" content="#9b2d20">
+<meta name="description" content="一本随身的折子，批完就走。离线可用，内容只存在本机。">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png" type="image/png">
 <title>奏事处</title>
 <style>
   :root{
@@ -210,6 +216,15 @@
     transition:opacity .25s;max-width:90vw;text-align:center;letter-spacing:1px;
     border-left:4px solid var(--accent)}
   .toast.on{opacity:.96}
+  /* 新版本到了才冒出来的一条，点了才换，不打断你批折子 */
+  .newver{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:61;display:none;
+    align-items:center;gap:12px;background:var(--card);color:var(--ink);border:1px solid var(--line);
+    border-left:4px solid var(--accent);border-radius:4px;padding:10px 14px;box-shadow:var(--shadow);
+    font-size:15px;max-width:92vw}
+  .newver.on{display:flex}
+  .newver button{border:1px solid var(--accent);background:var(--accent);color:#fdf3e0;border-radius:3px;
+    padding:7px 12px;font:inherit;font-size:15px;cursor:pointer;letter-spacing:1px;flex:none}
+  .newver .x{background:transparent;color:var(--dim);border-color:transparent;padding:7px 4px}
   body.drag::after{content:"松手，此件即刻收进来";position:fixed;inset:12px;border:3px dashed var(--accent);
     border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:19px;
     letter-spacing:3px;color:var(--accent);background:rgba(155,45,32,.08);z-index:50;pointer-events:none}
@@ -325,6 +340,7 @@
 </div></div>
 
 <div class="toast" id="toast"></div>
+<div class="newver" id="newver"><span>新版已到</span><button id="nvGo">换上</button><button class="x" id="nvNo">待会儿</button></div>
 
 <script>
 /* ============ 首次打开的自带清单 ============ */
@@ -882,6 +898,38 @@ if (!D || !Array.isArray(D.lists) || !D.lists.length){
 }
 if (!D.lists.find(l => l.id === D.cur)) D.cur = D.lists[0].id;
 render();
+
+/* ── 离线缓存 ────────────────────────────────────────────────
+   只在 https 下注册。本地双击打开（file://）时浏览器不给用 Service Worker，
+   会抛异常，所以先判协议，别让它把后面的代码带崩。 */
+if ("serviceWorker" in navigator && location.protocol === "https:"){
+  const bar = $("#newver");
+  let waiting = null;
+  const offer = w => { waiting = w; bar.classList.add("on"); };
+
+  navigator.serviceWorker.register("sw.js").then(reg => {
+    if (reg.waiting && navigator.serviceWorker.controller) offer(reg.waiting);
+    reg.addEventListener("updatefound", () => {
+      const nw = reg.installing; if (!nw) return;
+      nw.addEventListener("statechange", () => {
+        // controller 存在才说明是「换版本」，首次装不弹
+        if (nw.state === "installed" && navigator.serviceWorker.controller) offer(nw);
+      });
+    });
+  }).catch(() => {});
+
+  let reloading = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (reloading) return; reloading = true; location.reload();
+  });
+
+  $("#nvGo").onclick = () => {
+    bar.classList.remove("on");
+    save(true);                                  // 换版前先把手上的写盘
+    if (waiting) waiting.postMessage({type:"skipWaiting"}); else location.reload();
+  };
+  $("#nvNo").onclick = () => bar.classList.remove("on");
+}
 </script>
 </body>
 </html>
