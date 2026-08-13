@@ -54,7 +54,7 @@
     border:2.5px solid var(--accent);color:var(--accent);border-radius:5px;
     padding:5px 7px;font-size:16px;font-weight:700;line-height:1.15;letter-spacing:1px;
     text-align:center;opacity:.9}
-  /* 俸银牌：抬头底下一条，点开是内务府 */
+  /* 国库牌：抬头底下一条，点开是朝廷 */
   .purse{display:inline-flex;align-items:center;gap:0;margin-top:9px;padding:0;
     border:1px solid var(--line);border-radius:5px;background:var(--card);
     font:13px/1 inherit;color:var(--ink);overflow:hidden}
@@ -78,7 +78,7 @@
     18%{transform:translateY(-8px) scale(1.12);opacity:1}
     100%{transform:translateY(-46px) scale(1);opacity:0}
   }
-  /* 升官 / 得匾额时横过来的一道大字 */
+  /* 朝纲升降 / 载入实录时横过来的一道大字 */
   .herald{position:fixed;inset:0;z-index:96;display:none;align-items:center;justify-content:center;
     pointer-events:none;background:radial-gradient(rgba(155,45,32,.16),transparent 62%)}
   .herald.on{display:flex;animation:heraldbg 2.4s ease-out forwards}
@@ -115,6 +115,26 @@
   .good.cur{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
   .good.cur::after{content:"在用";font-size:11px;letter-spacing:2px;color:var(--accent)}
   .good.poor{opacity:.5}
+  /* 六部 */
+  .mini{border:1px solid var(--line);border-radius:5px;padding:9px 11px;margin-bottom:7px;background:var(--card)}
+  .mini.sick{border-color:#b3402c;background:rgba(179,64,44,.07)}
+  .mini.good{border-color:var(--gold);background:rgba(169,134,63,.08)}
+  .mih{display:flex;align-items:baseline;gap:8px;margin-bottom:7px;flex-wrap:wrap}
+  .mih b{font-size:16px;letter-spacing:2px}
+  .mih .mid{font-size:12px;color:var(--dim);letter-spacing:1px}
+  .mih .mn{margin-left:auto;font:12px/1 ui-monospace,Consolas,monospace;color:var(--gold);flex:none}
+  .mirow{display:flex;align-items:center;gap:8px;margin:3px 0}
+  .mirow .mk{font-size:12px;color:var(--dim);letter-spacing:2px;flex:none;width:32px}
+  .mbar{flex:1;height:8px;border-radius:4px;background:var(--soft);overflow:hidden}
+  .mbar i{display:block;height:100%;border-radius:4px;transition:width .45s}
+  .mbar i.e{background:var(--link)}
+  .mbar i.l{background:var(--accent)}
+  .mirow .mv{font:12px/1 ui-monospace,Consolas,monospace;color:var(--dim);flex:none;width:24px;text-align:right}
+  .mib{display:flex;gap:7px;margin-top:8px}
+  .mib .btn{flex:1;padding:6px 4px;font-size:12.5px;letter-spacing:1px}
+  .gh .mtag{flex:none;font-size:11px;letter-spacing:1px;color:var(--gold);border:1px solid var(--line);
+    border-radius:3px;padding:2px 5px;line-height:1.2}
+
   .meds{display:flex;flex-wrap:wrap;gap:7px}
   .med{border:1px solid var(--line);border-radius:4px;padding:6px 9px;font-size:12.5px;letter-spacing:1px;
     color:var(--dim);background:var(--card)}
@@ -354,7 +374,7 @@
   <div class="ttl">奏事处</div>
   <div class="sub">朱笔一点，此事便算办了</div>
   <span class="seal">御<br>批</span>
-  <button class="purse" id="purse" title="内务府：俸银、官阶、匾额">
+  <button class="purse" id="purse" title="朝廷：国库、六部、治绩">
     <span class="rk" id="pRank">笔帖式</span>
     <span class="ag"><b id="pAg">0</b> 两</span>
     <span class="rn" id="pRun"></span><i class="dot"></i>
@@ -459,6 +479,8 @@
   <h2>这一卷</h2>
   <label>名字</label>
   <input type="text" id="gName" placeholder="比如：启程前 / 到任后">
+  <label>交哪个部办</label>
+  <select id="gMi"></select>
   <label>顺序</label>
   <div class="btns" style="margin-top:0">
     <button class="btn" id="gUp">↑ 上移</button>
@@ -505,22 +527,25 @@
 
 <!-- 内务府 -->
 <div class="mask" id="mask6"><div class="dlg sheet">
-  <h2>内务府</h2>
-  <label>官阶</label>
-  <div style="font-size:20px;font-weight:700;letter-spacing:4px;color:var(--accent)" id="ihRank">笔帖式</div>
+  <h2>朝廷</h2>
+  <label>朝纲</label>
+  <div style="font-size:20px;font-weight:700;letter-spacing:4px;color:var(--accent)" id="ihRank">四海承平</div>
   <div class="rankbar"><i id="ihBar" style="width:0"></i></div>
   <div class="ranktip" id="ihTip"></div>
 
-  <label>俸银</label>
+  <label>国库</label>
   <div class="ranktip" id="ihAg" style="margin-bottom:14px"></div>
 
-  <label>印章 <small style="color:var(--dim);font-weight:400">（批过的那一方印）</small></label>
+  <label>六部 <small style="color:var(--dim);font-weight:400">（每一卷折子归一个部办，久不派差人心就散）</small></label>
+  <div id="ihMi" style="margin-bottom:6px"></div>
+
+  <label style="margin-top:12px">印章 <small style="color:var(--dim);font-weight:400">（批过的那一方印）</small></label>
   <div class="goods" id="ihSeal"></div>
 
   <label style="margin-top:12px">纸色</label>
   <div class="goods" id="ihPaper"></div>
 
-  <label style="margin-top:12px">匾额 <small style="color:var(--dim);font-weight:400">（不卖，只能挣）</small></label>
+  <label style="margin-top:12px">治绩 <small style="color:var(--dim);font-weight:400">（不卖，只能挣）</small></label>
   <div class="meds" id="ihMed"></div>
 
   <div class="btns">
@@ -712,9 +737,10 @@ function render(){
           <span class="gt">${gtHTML(g)}</span>
           <span class="gc" data-gc="${g.id}"></span>
         </span>
+        <span class="mtag" title="这一卷归${MI[miOf(g)].n}办，可在 ⋮ 里改">${MI[miOf(g)].n}</span>
         <button class="gall" data-act="gall" title="${allDone(g) ? "整卷收回朱批" : "这一卷一次批完"}"
           ${g.items.length ? "" : "hidden"}>${allDone(g) ? "撤批" : "全批"}</button>
-        <button class="dots" data-act="gmore" title="改卷名 / 调次序 / 撤卷">⋮</button>
+        <button class="dots" data-act="gmore" title="改卷名 / 交哪个部 / 调次序 / 撤卷">⋮</button>
       </div>
       <ul>${g.items.map(liHTML).join("")}</ul>
       <button class="addrow" data-act="additem"><span class="p">＋</span>添一件</button>
@@ -872,7 +898,7 @@ $("#body").addEventListener("click", e => {
     it.done = !it.done; li.classList.toggle("ok", it.done);
     const seal = li.querySelector(".bx");                 // 盖印的动作，只在真点的时候放
     if (it.done && seal){ seal.classList.remove("stamp"); void seal.offsetWidth; seal.classList.add("stamp"); }
-    scoreTick(it, it.done, seal);
+    scoreTick(it, it.done, seal, miOf(g));
     if (it.done && allDone(g)) scoreGroup(g);
     paint(); save(); return;
   }
@@ -886,9 +912,9 @@ $("#body").addEventListener("click", e => {
 
 /* 一卷全批：全批过了再点就是整卷撤回 */
 function stampAll(g){
-  const all = allDone(g), was = G().ag;
+  const all = allDone(g), was = G().ag, mid = miOf(g);
   silent = 1;
-  g.items.forEach(i => { i.done = !all; scoreTick(i, !all); });
+  g.items.forEach(i => { i.done = !all; scoreTick(i, !all, null, mid); });
   if (!all) scoreGroup(g);
   silent = 0;
   coin(G().ag - was);
@@ -1034,6 +1060,9 @@ const mask3 = $("#mask3");
 function openGroup(gid){
   const g = curList().groups.find(x => x.id === gid); if (!g) return;
   editingG = gid; $("#gName").value = g.title;
+  $("#gMi").innerHTML = MINISTRY.map(m =>
+    `<option value="${m.id}">${m.n} · ${m.d}</option>`).join("");
+  $("#gMi").value = miOf(g);
   mask3.classList.add("on"); $("#gName").focus();
 }
 function closeGroup(){ mask3.classList.remove("on"); editingG = null; }
@@ -1050,7 +1079,7 @@ $("#gUp").onclick   = () => moveGroup(-1);
 $("#gDown").onclick = () => moveGroup(1);
 $("#gOk").onclick = () => {
   const g = curList().groups.find(x => x.id === editingG);
-  if (g) g.title = $("#gName").value.trim();
+  if (g){ g.title = $("#gName").value.trim(); g.m = $("#gMi").value; }
   closeGroup(); render(); save(true);
 };
 $("#gDel").onclick = () => {
@@ -1187,9 +1216,9 @@ function checkBackup(){
   $("#backup").classList.add("on");
 }
 
-/* ============ 俸银 · 官阶 · 内务府 ============
+/* ============ 国库 · 六部 · 内务府 ============
    批一件领赏，撤回退赏（所以反复勾撤刷不出钱来）。
-   攒的银子在内务府换印章和纸色；累计功绩定官阶；匾额只能挣，不卖。
+   库银在内务府换印章纸色，也能赏赐六部；六部均分定朝纲；治绩只能挣，不卖。
    这一摊数据挂在 D.g 上，跟着存档和驿传一起走。 */
 const SEALS = {
   zhun:{t:"准",     p:0,   n:"准"},
@@ -1205,35 +1234,69 @@ const PAPERS = {
   qing:{n:"竹青",     p:140, c:"pp-qing", sw:"#dde5d6"},
   lan: {n:"藏蓝夜奏", p:180, c:"pp-lan",  sw:"#141a26"},
 };
-const RANKS = [[0,"笔帖式"],[30,"库使"],[80,"主事"],[160,"员外郎"],[300,"郎中"],
-               [500,"侍郎"],[800,"尚书"],[1200,"大学士"],[1800,"军机大臣"]];
+/* 六部。每一卷折子归一个部办，批那一卷就是那个部在办差 */
+const MINISTRY = [
+  {id:"li",   n:"吏部", d:"官员任免考课"},
+  {id:"hu",   n:"户部", d:"钱粮户口田赋"},
+  {id:"rite", n:"礼部", d:"典礼科举邦交"},
+  {id:"bing", n:"兵部", d:"武备驿传舆图"},
+  {id:"xing", n:"刑部", d:"刑名律例狱讼"},
+  {id:"gong", n:"工部", d:"营造屯田水利"},
+];
+const MI = Object.fromEntries(MINISTRY.map(m => [m.id, m]));
+/* 六部平均分决定朝纲 */
+const COURT = [[0,"朝纲不振"],[40,"隐忧渐生"],[55,"四海承平"],[70,"政通人和"],[85,"海晏河清"]];
 const MEDALS = [
-  {id:"first", n:"初执朱笔", d:"批下头一件"},
+  {id:"first", n:"初御朱笔", d:"批下头一件"},
   {id:"vol",   n:"一卷功成", d:"整整一卷批完"},
+  {id:"six",   n:"六部齐备", d:"六个部都派到差事"},
+  {id:"qing",  n:"海晏河清", d:"六部均分到八十五"},
+  {id:"rich",  n:"国库充盈", d:"库银存到五百两"},
   {id:"d20",   n:"宵衣旰食", d:"一日之内批满二十件"},
   {id:"night", n:"秉烛达旦", d:"子夜到卯时之间批折"},
-  {id:"run7",  n:"持之以恒", d:"连批七日"},
-  {id:"c100",  n:"十年寒窗", d:"累计批过一百件"},
+  {id:"run7",  n:"勤政不辍", d:"连批七日"},
+  {id:"c100",  n:"日理万机", d:"累计批过一百件"},
   {id:"note10",n:"御笔亲批", d:"写下十条朱批"},
-  {id:"rich",  n:"富甲一方", d:"手上存到五百两"},
 ];
+const miDef = () => Object.fromEntries(MINISTRY.map(m => [m.id, {e:50, l:60, d:""}]));
 const GDEF = () => ({ag:0, tot:0, cnt:0, nc:0, day:"", tn:0, run:0, best:0,
-                     own:["zhun","xuan"], seal:"zhun", paper:"xuan", med:[]});
+                     own:["zhun","xuan"], seal:"zhun", paper:"xuan", med:[],
+                     mi:miDef(), mday:""});
 function G(){
   if (!D.g || typeof D.g !== "object") D.g = GDEF();
   const d = GDEF();
   for (const k in d) if (D.g[k] === undefined) D.g[k] = d[k];   // 老存档补齐字段
   if (!SEALS[D.g.seal]) D.g.seal = "zhun";
   if (!PAPERS[D.g.paper]) D.g.paper = "xuan";
+  if (!D.g.mi || typeof D.g.mi !== "object") D.g.mi = miDef();
+  for (const m of MINISTRY){                                    // 缺哪个部补哪个
+    const s = D.g.mi[m.id];
+    if (!s || typeof s !== "object") D.g.mi[m.id] = {e:50, l:60, d:""};
+    else { if (typeof s.e !== "number") s.e = 50; if (typeof s.l !== "number") s.l = 60; }
+  }
   return D.g;
 }
-const rankOf = tot => { let r = RANKS[0]; for (const x of RANKS) if (tot >= x[0]) r = x; return r; };
-const nextRank = tot => RANKS.find(x => x[0] > tot) || null;
+const clamp = (v, lo, hi) => v < lo ? lo : v > hi ? hi : v;
+/* 六部均分 = 效率和忠诚一起算 */
+function courtScore(){
+  const g = G();
+  let s = 0;
+  for (const m of MINISTRY) s += (g.mi[m.id].e + g.mi[m.id].l) / 2;
+  return Math.round(s / MINISTRY.length);
+}
+const courtOf = s => { let r = COURT[0]; for (const x of COURT) if (s >= x[0]) r = x; return r; };
+/* 这一卷归哪个部办；没派过的按卷的次序轮派，六部转着来 */
+function miOf(g, L){
+  if (g && g.m && MI[g.m]) return g.m;
+  const list = L || curList();
+  const i = Math.max(0, list.groups.findIndex(x => x.id === (g && g.id)));
+  return MINISTRY[i % MINISTRY.length].id;
+}
 
 const ymd = t => { const d = new Date(t); const p = n => String(n).padStart(2,"0");
                    return d.getFullYear() + "-" + p(d.getMonth()+1) + "-" + p(d.getDate()); };
 
-/* 赏银飘一下。el 给了就从它头上起飞，没给就从俸银牌起飞 */
+/* 入库的银子飘一下。el 给了就从它头上起飞，没给就从国库牌起飞 */
 let silent = 0;                                   // 整卷一次批完时先攒着，末了只飘一个总数
 function coin(n, el){
   if (!n || silent) return;
@@ -1260,28 +1323,39 @@ function herald(k, v, d){
   })();
 }
 
-/* 领赏 / 退赏。正数才计入累计功绩，退赏不倒扣官阶 */
+/* 入库 / 出库。退回时累计岁入一起退，不然反复勾撤就能刷 */
 function earn(n, el){
-  const g = G(), before = RANKS.indexOf(rankOf(g.tot));
+  const g = G();
   g.ag  = Math.max(0, g.ag + n);
-  g.tot = Math.max(0, g.tot + n);   // 退赏连功绩一起退，不然反复勾撤就能刷出官来
+  g.tot = Math.max(0, g.tot + n);
   coin(n, el);
-  const after = RANKS.indexOf(rankOf(g.tot));
-  if (after > before) herald("奉旨升授", RANKS[after][1], "累计功绩 " + g.tot + " 两");
   paintPurse();
+}
+/* 某个部办了差：效率和忠诚都涨；退回时照数扣 */
+function bump(mid, de, dl){
+  const g = G(), s = g.mi[mid]; if (!s) return;
+  const before = COURT.indexOf(courtOf(courtScore()));
+  s.e = clamp(s.e + de, 0, 100);
+  s.l = clamp(s.l + dl, 0, 100);
+  if (de > 0) s.d = ymd(Date.now());                 // 记下这个部最近一次办差的日子
+  const now = courtScore(), after = COURT.indexOf(courtOf(now));
+  if (after > before) herald("朝野称颂", COURT[after][1], "六部均分 " + now);
+  else if (after < before) herald("言官交章", COURT[after][1], "六部均分 " + now);
+  if (now >= 85) medal("qing");
 }
 /* 整卷批完的一次性赏。卷里超过两件才算，免得一件的卷白捡十两 */
 function scoreGroup(g){
   if (g.pg || g.items.length < 2 || !allDone(g)) return;
-  g.pg = 1; earn(10); medal("vol");
-  toast(`「${g.title || "这一卷"}」整卷功成，赏十两`);
+  const mid = miOf(g);
+  g.pg = 1; earn(10); bump(mid, 6, 5); medal("vol");
+  toast(`${MI[mid].n}「${g.title || "这一卷"}」整卷办结，入库十两`);
 }
 function medal(id){
   const g = G(); if (g.med.includes(id)) return;
   const m = MEDALS.find(x => x.id === id); if (!m) return;
   g.med.push(id);
-  g.ag += 20; g.tot += 20;                        // 每块匾额附赏二十两
-  herald("御赐匾额", m.n, m.d + " · 赏银二十两");
+  g.ag += 20; g.tot += 20;                        // 每件治绩入库二十两
+  herald("载入实录", m.n, m.d + " · 入库二十两");
   paintPurse();
 }
 /* 今天头一回批折：结算连批天数，返回该给的加赏 */
@@ -1294,27 +1368,57 @@ function touchDay(){
   if (g.run >= 7) medal("run7");
   return Math.min(g.run, 10);
 }
-/* 打勾/撤勾的结算。on=true 是批，false 是撤 */
-function scoreTick(it, on, el){
+/* 打勾/撤勾的结算。on=true 是批，false 是撤。mid 是这一卷归的部 */
+function scoreTick(it, on, el, mid){
   const g = G();
   if (on){
-    if (it.p) return;                             // 这一件的赏已经领过，不再给
+    if (it.p) return;                             // 这一件已经入过库，不重复计
     it.p = 1; g.cnt = (g.cnt || 0) + 1;
     const bonus = touchDay();
     g.tn = (g.tn || 0) + 1;
     earn(2 + bonus, el);
-    if (bonus) toast(`连批第 ${g.run} 日，加赏 ${bonus} 两`);
+    if (mid) bump(mid, 2, 1);
+    if (bonus) toast(`勤政第 ${g.run} 日，加征 ${bonus} 两`);
     if (g.cnt === 1) medal("first");
     if (g.cnt >= 100) medal("c100");
     if (g.tn >= 20) medal("d20");
     const h = new Date().getHours();
     if (h >= 0 && h < 5) medal("night");
     if (g.ag >= 500) medal("rich");
+    if (MINISTRY.every(m => g.mi[m.id].d)) medal("six");
   } else {
     if (!it.p) return;
     delete it.p; g.cnt = Math.max(0, (g.cnt || 0) - 1); g.tn = Math.max(0, (g.tn || 0) - 1);
     earn(-2, el);
+    if (mid) bump(mid, -2, -1);
   }
+}
+
+/* ── 荒疏：一个部多久没办差，效率忠诚就往下掉 ──
+   每天进门结算一次。掉到 25 打住，不至于彻底崩盘。 */
+function decay(){
+  const g = G(), t = ymd(Date.now());
+  if (g.mday === t) return;
+  const dayNo = s => Math.round(new Date(s + "T00:00:00").getTime() / 864e5);
+  const today = dayNo(t);
+  // 按「距上次结算过了几天」扣，不按总闲置天数扣。
+  // 否则天天开 app 的人会被反复叠加，掉得比几周不开的还狠。
+  const gap = g.mday ? clamp(today - dayNo(g.mday), 0, 60) : 1;
+  let worst = null;
+  for (const m of MINISTRY){
+    const s = g.mi[m.id];
+    if (!s.d) continue;                            // 从没派过差的部不算荒疏
+    const idle = today - dayNo(s.d);
+    if (idle < 3) continue;                        // 三天之内不算冷落
+    const hit = Math.min(gap, idle - 2) * 1.5;     // 每荒疏一天掉 1.5
+    // 存小数、显示时才取整。每天四舍五入会把 .5 抹掉，天天开 app 反而掉得慢
+    s.e = clamp(s.e - hit, 25, 100);
+    s.l = clamp(s.l - hit * .7, 25, 100);
+    if (!worst || idle > worst[1]) worst = [m, idle];
+  }
+  g.mday = t;
+  if (worst) setTimeout(() =>
+    toast(`${worst[0].n}已 ${worst[1]} 日无差可办，人心浮动`), 1600);
 }
 function scoreNote(it, has){
   const g = G();
@@ -1330,7 +1434,14 @@ function backpay(){
     if (it.done && !it.p){ it.p = 1; n++; }
   if (!n) return;
   g.cnt = n; g.ag += n * 2; g.tot += n * 2;
-  setTimeout(() => herald("补发俸银", n * 2 + " 两", `此前批过的 ${n} 件，一并结清`), 800);
+  // 此前批过的件，按所属的部把效率忠诚一并记上
+  const t = ymd(Date.now());
+  for (const l of D.lists) for (const gg of l.groups){
+    const k = gg.items.filter(i => i.done).length; if (!k) continue;
+    const s = g.mi[miOf(gg, l)];
+    s.e = clamp(s.e + k * 2, 0, 100); s.l = clamp(s.l + k, 0, 100); s.d = t;
+  }
+  setTimeout(() => herald("历年结算", n * 2 + " 两入库", `此前批过的 ${n} 件，六部一并记功`), 800);
 }
 
 /* 两台设备的账合起来：数目取大的，买过的和挣到的取并集。
@@ -1343,15 +1454,24 @@ function mergeGame(f){
   else if ((f.day || "") === (g.day || "")){ g.run = Math.max(g.run || 0, f.run || 0); g.tn = Math.max(g.tn || 0, f.tn || 0); }
   g.own = [...new Set([...(g.own || []), ...(f.own || [])])].filter(k => SEALS[k] || PAPERS[k]);
   g.med = [...new Set([...(g.med || []), ...(f.med || [])])].filter(k => MEDALS.some(m => m.id === k));
+  // 六部：取两边高的那个，办差日子取晚的（另一台办过差，这边就不该算荒疏）
+  if (f.mi) for (const m of MINISTRY){
+    const a = g.mi[m.id], b = f.mi[m.id];
+    if (!b) continue;
+    a.e = clamp(Math.max(a.e, b.e || 0), 0, 100);
+    a.l = clamp(Math.max(a.l, b.l || 0), 0, 100);
+    if ((b.d || "") > (a.d || "")) a.d = b.d;
+  }
+  if ((f.mday || "") > (g.mday || "")) g.mday = f.mday;
 }
 
 function paintPurse(){
   const g = G();
   $("#pAg").textContent = g.ag;
-  $("#pRank").textContent = rankOf(g.tot)[1];
+  $("#pRank").textContent = courtOf(courtScore())[1];
   const run = $("#pRun");
   const live = g.day === ymd(Date.now());
-  run.textContent = g.run ? `连批 ${g.run} 日` : "";
+  run.textContent = g.run ? `勤政 ${g.run} 日` : "";
   run.classList.toggle("hot", live && g.run >= 3);
   // 买得起没买过的东西，就在牌子上点一颗灯
   const buyable = Object.entries({...SEALS, ...PAPERS})
@@ -1374,15 +1494,37 @@ function goodHTML(k, v, kind, g){
     <span class="nm">${esc(kind === "seal" ? v.n : v.n)}</span>
     ${cur ? "" : `<span class="pz">${own ? "已有 · 换上" : v.p + " 两"}</span>`}</button>`;
 }
+/* 一个部一行：名字、两条杠、赏赐/申饬 */
+function miHTML(m, g, load){
+  const s = g.mi[m.id], sc = Math.round((s.e + s.l) / 2);
+  const bar = (k, v, cls) =>
+    `<div class="mirow"><span class="mk">${k}</span>
+      <span class="mbar"><i class="${cls}" style="width:${v}%"></i></span>
+      <span class="mv">${Math.round(v)}</span></div>`;
+  return `<div class="mini${sc < 40 ? " sick" : sc >= 85 ? " good" : ""}">
+    <div class="mih"><b>${m.n}</b><span class="mid">${m.d}</span>
+      <span class="mn">${load} 件待办</span></div>
+    ${bar("效率", s.e, "e")}${bar("忠诚", s.l, "l")}
+    <div class="mib">
+      <button class="btn" data-mi="give" data-id="${m.id}">赏赐 40 两</button>
+      <button class="btn" data-mi="scold" data-id="${m.id}">申饬</button>
+    </div>
+  </div>`;
+}
 function paintShop(){
-  const g = G(), r = rankOf(g.tot), nx = nextRank(g.tot);
-  $("#ihRank").textContent = r[1];
-  $("#ihBar").style.width = nx ? Math.round((g.tot - r[0]) / (nx[0] - r[0]) * 100) + "%" : "100%";
-  $("#ihTip").textContent = nx
-    ? `累计功绩 ${g.tot} 两，再挣 ${nx[0] - g.tot} 两升「${nx[1]}」`
-    : `累计功绩 ${g.tot} 两，位极人臣，无可再升`;
+  const g = G(), sc = courtScore(), c = courtOf(sc);
+  $("#ihRank").textContent = c[1];
+  $("#ihBar").style.width = sc + "%";
+  $("#ihTip").textContent = `六部均分 ${sc} · 历年岁入 ${g.tot} 两`;
   $("#ihAg").textContent =
-    `手上 ${g.ag} 两 · 批过 ${g.cnt} 件 · 朱批 ${g.nc} 条 · 连批 ${g.run} 日（最长 ${g.best} 日）`;
+    `国库 ${g.ag} 两 · 批过 ${g.cnt} 件 · 朱批 ${g.nc} 条 · 勤政 ${g.run} 日（最长 ${g.best} 日）`;
+  // 每个部手上还压着多少件没批的
+  const load = Object.fromEntries(MINISTRY.map(m => [m.id, 0]));
+  for (const l of D.lists) for (const gg of l.groups){
+    const mid = miOf(gg, l);
+    load[mid] += gg.items.filter(i => !i.done).length;
+  }
+  $("#ihMi").innerHTML = MINISTRY.map(m => miHTML(m, g, load[m.id])).join("");
   $("#ihSeal").innerHTML  = Object.entries(SEALS).map(([k,v]) => goodHTML(k,v,"seal",g)).join("");
   $("#ihPaper").innerHTML = Object.entries(PAPERS).map(([k,v]) => goodHTML(k,v,"paper",g)).join("");
   $("#ihMed").innerHTML = MEDALS.map(m =>
@@ -1392,6 +1534,23 @@ function openShop(){ paintShop(); mask6.classList.add("on"); }
 mask6.addEventListener("click", e => { if (e.target === mask6) mask6.classList.remove("on"); });
 $("#ihClose").onclick = () => mask6.classList.remove("on");
 $("#purse").onclick = openShop;
+
+/* 赏赐：国库出银换忠诚。申饬：不花钱，效率上去但忠诚下来 */
+mask6.addEventListener("click", e => {
+  const b = e.target.closest("[data-mi]"); if (!b) return;
+  const g = G(), m = MI[b.dataset.id];
+  if (b.dataset.mi === "give"){
+    if (g.ag < 40) return toast(`国库只剩 ${g.ag} 两，赏不动`);
+    g.ag -= 40; bump(m.id, 2, 12);
+    toast(`赏${m.n}银四十两，上下感戴`);
+  } else {
+    const room = g.mi[m.id].l - 25;                // 申饬压不到底限以下，压穿了要出事
+    if (room <= 0) return toast(`${m.n}忠诚已在底限，再申饬要出事`);
+    bump(m.id, 9, -Math.min(7, room));
+    toast(`申饬${m.n}，办事是快了，人心凉了几分`);
+  }
+  paintPurse(); paintShop(); save(true);
+});
 
 mask6.addEventListener("click", e => {
   const b = e.target.closest("[data-buy]"); if (!b) return;
@@ -1407,9 +1566,12 @@ mask6.addEventListener("click", e => {
   if (kind === "seal") render();                  // 印章换了，每一条的印都要重画
 });
 $("#ihReset").onclick = () => {
-  if (!confirm("俸银、官阶、匾额、买过的印章纸色，全部归零重来。折子本身不动。")) return;
+  if (!confirm("国库、六部、治绩、买过的印章纸色，全部归零重来。折子本身不动。")) return;
   D.g = GDEF();
-  for (const l of D.lists) for (const gg of l.groups) for (const it of gg.items){ delete it.p; delete it.pn; }
+  for (const l of D.lists) for (const gg of l.groups){
+    delete gg.pg;
+    for (const it of gg.items){ delete it.p; delete it.pn; }
+  }
   paintPurse(); paintShop(); render(); save(true); toast("已重开一局");
 };
 
@@ -1563,8 +1725,9 @@ if (!D || !Array.isArray(D.lists) || !D.lists.length){
   newList(SEED_NAME, parse(SEED_MD));
 }
 if (!D.lists.find(l => l.id === D.cur)) D.cur = D.lists[0].id;
-G();                                             // 老存档补上俸银那一摊
+G();                                             // 老存档补上国库六部那一摊
 backpay();
+decay();                                         // 结算这些天的荒疏
 paintPurse();
 render();
 
