@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#9b2d20">
+<title>奏事处</title>
+<style>
+  :root{
+    /* 宣纸 · 墨 · 朱砂 · 描金 */
+    --bg:#e9dcc0; --card:#fbf4e2; --ink:#2b2119; --dim:#8a7960; --line:#d8c8a6;
+    --accent:#9b2d20; --done:#9b2d20; --gold:#a9863f; --link:#2f5468;
+    --soft:#f2e8d0; --shadow:0 8px 26px rgba(60,40,18,.22);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#17120d; --card:#221b14; --ink:#e9dcc2; --dim:#9c8b70; --line:#3d3125;
+           --accent:#cf5a49; --done:#cf5a49; --gold:#c9a75a; --link:#8fb7ca;
+           --soft:#2b2219; --shadow:0 8px 26px rgba(0,0,0,.6); }
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{
+    margin:0; padding:18px 16px calc(28px + env(safe-area-inset-bottom));
+    color:var(--ink);
+    /* 纸纹：极淡的竖界行 + 纤维斑点，纯 CSS，不引外部图 */
+    background-color:var(--bg);
+    background-image:
+      repeating-linear-gradient(90deg, rgba(90,60,20,.05) 0 1px, transparent 1px 38px),
+      radial-gradient(rgba(120,90,40,.05) 1px, transparent 1px);
+    background-size:auto, 7px 7px;
+    font:17px/1.6 "Songti SC","STSong","SimSun","Noto Serif CJK SC","Source Han Serif SC",serif;
+  }
+
+  /* 抬头 */
+  .pagehead{position:relative;max-width:1060px;margin:0 auto 14px;padding:2px 76px 10px 2px}
+  .pagehead .ttl{font-size:27px;font-weight:700;letter-spacing:7px;color:var(--ink)}
+  .pagehead .sub{font-size:13px;color:var(--dim);letter-spacing:2px;margin-top:3px}
+  .pagehead .seal{position:absolute;right:6px;top:0;transform:rotate(-7deg);
+    border:2.5px solid var(--accent);color:var(--accent);border-radius:5px;
+    padding:5px 7px;font-size:16px;font-weight:700;line-height:1.15;letter-spacing:1px;
+    text-align:center;opacity:.9}
+  .app{display:flex;gap:22px;max-width:1060px;margin:0 auto;align-items:flex-start}
+  .wrap{flex:1;min-width:0;max-width:720px}
+
+  /* 左边大纲栏 = 目录签 */
+  #side{width:236px;flex:none;position:sticky;top:18px;max-height:calc(100vh - 36px);overflow:auto;
+    background:var(--card);border:1px solid var(--line);border-radius:6px;padding:9px;
+    box-shadow:inset 0 0 0 1px rgba(155,45,32,.07)}
+  #side .sec{font-size:12px;color:var(--gold);padding:9px 9px 5px;letter-spacing:3px;
+    border-bottom:1px solid var(--line);margin-bottom:4px}
+  #side button{display:flex;align-items:center;gap:8px;width:100%;text-align:left;padding:9px 9px;
+    border-radius:5px;font-size:14px;line-height:1.4}
+  #side button:hover{background:var(--soft)}
+  #side button .n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #side button .c{font:12px/1 ui-monospace,Consolas,monospace;color:var(--dim);flex:none}
+  #side button.on{background:var(--soft);font-weight:700;box-shadow:inset 3px 0 0 var(--accent)}
+  #side button.full .c{color:var(--accent)}
+  #side button.full .n::after{content:"　朱批";font-size:11px;color:var(--accent);letter-spacing:1px}
+  #side .add{color:var(--dim)}
+  #side .add:hover{color:var(--accent)}
+  #side hr{border:0;border-top:1px solid var(--line);margin:7px 4px}
+  #side .none{font-size:13px;color:var(--dim);padding:6px 9px 10px}
+  #btnSide{display:none;width:52px;height:52px;flex:none}
+  #sideMask{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:65;display:none}
+  #sideMask.on{display:block}
+  @media (max-width:900px){
+    #side{position:fixed;left:0;top:0;bottom:0;width:80vw;max-width:310px;max-height:none;z-index:70;
+      border-radius:0 14px 14px 0;border-left:0;transform:translateX(-102%);transition:transform .22s;
+      box-shadow:var(--shadow);padding:14px 9px calc(14px + env(safe-area-inset-bottom))}
+    #side.open{transform:none}
+    #btnSide{display:inline-flex}
+  }
+  a{color:var(--link)}
+  code{font:.85em/1 ui-monospace,Consolas,monospace;background:var(--soft);padding:2px 5px;border-radius:3px}
+  button{font:inherit;border:0;background:none;color:inherit;cursor:pointer;padding:0}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:46px;
+    padding:0 16px;border-radius:6px;border:1px solid var(--line);background:var(--card);font-size:16px;
+    letter-spacing:1px}
+  .btn:hover{border-color:var(--accent)}
+  .btn.pri{background:var(--accent);color:#fdf3e0;border-color:var(--accent);font-weight:700;
+    box-shadow:0 2px 0 rgba(90,20,12,.25)}
+  .btn.pri:hover{filter:brightness(1.08)}
+  .btn.wide{width:100%}
+  .icon{width:46px;height:46px;border-radius:6px;border:1px solid var(--line);background:var(--card);
+    display:inline-flex;align-items:center;justify-content:center;font-size:19px;flex:none}
+  input,textarea,select{font:inherit;font-size:16px;padding:11px 13px;border:1px solid var(--line);
+    border-radius:6px;background:var(--card);color:var(--ink);width:100%}
+  input:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:-1px}
+
+  /* 顶部 */
+  .top{display:flex;gap:8px;align-items:center}
+  .selwrap{position:relative;flex:1;min-width:0}
+  .selwrap::after{content:"▾";position:absolute;right:13px;top:50%;transform:translateY(-52%);
+    font-size:15px;color:var(--accent);pointer-events:none}
+  #listSel{width:100%;font-weight:600;height:52px;padding:0 34px 0 13px;appearance:none;
+    text-overflow:ellipsis}
+  #listSel:hover{border-color:var(--accent)}
+  .bar{height:10px;background:var(--soft);border:1px solid var(--line);border-radius:2px;
+    overflow:hidden;margin:14px 0 6px}
+  .bar>i{display:block;height:100%;width:0;transition:width .3s;
+    background:linear-gradient(180deg,var(--accent),#7d2019)}
+  .lab{display:flex;justify-content:space-between;font-size:14px;color:var(--dim);margin-bottom:14px;
+    letter-spacing:1px}
+  #searchWrap{display:none;margin-bottom:10px}
+  #searchWrap.on{display:block}
+  #searchInfo{display:none;font-size:13px;color:var(--dim);margin:0 2px 12px;line-height:1.7}
+  #searchInfo.on{display:block}
+  #searchInfo button{color:var(--accent);text-decoration:underline;font-size:13px}
+  /* 搜索时强制展开折叠的分组，否则搜到了也看不见 */
+  body.searching section.grp.collapsed ul{display:block}
+  body.searching .addrow{display:none}
+  body.searching mark{background:#ffe680;color:#1f1d1a;border-radius:3px;padding:0 1px}
+
+  /* 菜单 */
+  .menuwrap{position:relative;flex:none}
+  .menuwrap .icon{width:52px;height:52px}
+  .menuwrap .icon:hover{border-color:var(--accent);color:var(--accent)}
+  .menu{display:none;position:absolute;right:0;top:58px;z-index:30;width:308px;max-width:88vw;background:var(--card);
+    border:1px solid var(--line);border-radius:13px;box-shadow:var(--shadow);overflow:hidden;padding:5px}
+  .menu.on{display:block}
+  .menu button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;
+    padding:11px 12px;border-radius:9px;font-size:15px}
+  .menu .ml{flex:1;min-width:0}
+  .menu .ml small{display:block;font-size:12px;color:var(--dim);line-height:1.45;margin-top:3px;
+    font-weight:400}
+  .menu button:hover{background:var(--soft)}
+  .menu button b{margin-left:auto;font-size:12px;color:var(--done);font-weight:600}
+  .menu hr{border:0;border-top:1px solid var(--line);margin:5px 2px}
+  .menu .sm{font-size:13px;color:var(--dim);padding:6px 12px 8px;line-height:1.5}
+
+  /* 一卷 = 一张折页 */
+  section.grp{background:var(--card);border:1px solid var(--line);border-left:5px double var(--accent);
+    border-radius:3px;padding:2px 6px 6px;margin:14px 0;scroll-margin-top:14px;
+    box-shadow:1px 2px 0 rgba(90,60,20,.07)}
+  section.grp.done{border-color:var(--gold);border-left-color:var(--accent);background:var(--soft)}
+  .gh{display:flex;align-items:center;gap:8px;min-height:50px;padding:0 8px}
+  .gh .name{display:flex;align-items:center;gap:8px;flex:1;min-width:0;cursor:pointer;
+    padding:6px 4px;border-radius:5px}
+  .gh .name:hover{background:var(--soft)}
+  .gh .tw{color:var(--accent);font-size:12px;flex:none}
+  .gh .gt{font-size:17px;font-weight:700;letter-spacing:1px;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap}
+  .gh .gc{font:13px/1 ui-monospace,Consolas,monospace;color:var(--dim);flex:none;margin-left:auto}
+  .gall{flex:none;font-size:12px;letter-spacing:2px;color:var(--accent);border:1px solid var(--accent);
+    border-radius:3px;padding:4px 8px;opacity:.72;line-height:1}
+  .gall:hover{opacity:1;background:var(--accent);color:#fdf3e0}
+  .dots{width:38px;height:38px;border-radius:5px;flex:none;color:var(--dim);font-size:18px;
+    display:inline-flex;align-items:center;justify-content:center}
+  .dots:hover{background:var(--soft);color:var(--accent)}
+  section.grp.collapsed ul,section.grp.collapsed .addrow{display:none}
+
+  ul{list-style:none;margin:0;padding:0}
+  li{display:flex;gap:11px;align-items:flex-start;padding:9px 8px;border-top:1px dotted var(--line)}
+  li:hover{background:var(--soft);border-radius:5px}
+  /* 御印：没批是空印格，批了盖一方朱印「准」 */
+  li .bx{width:28px;height:28px;border:1.5px dashed var(--line);border-radius:3px;flex:none;margin-top:1px;
+    display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;
+    color:transparent;letter-spacing:0}
+  li:hover .bx{border-color:var(--accent);color:rgba(155,45,32,.3)}
+  li.ok .bx{border:1.5px solid var(--accent);border-radius:3px;background:var(--accent);color:#fdf3e0;
+    transform:rotate(-7deg);
+    box-shadow:inset 0 0 0 1.5px rgba(253,243,224,.9), 0 1px 3px rgba(90,20,12,.35)}
+  li.ok:hover .bx{color:#fdf3e0}
+  li .bx.stamp{animation:stamp .26s ease-out}
+  @keyframes stamp{
+    0%{transform:scale(1.9) rotate(-16deg);opacity:.15}
+    55%{transform:scale(.9) rotate(-7deg);opacity:1}
+    100%{transform:scale(1) rotate(-7deg)}
+  }
+  .tx{flex:1;min-width:0;word-break:break-word;padding-top:1px;cursor:pointer}
+  li.ok .tx{color:var(--dim);text-decoration:line-through;text-decoration-color:var(--accent);
+    text-decoration-thickness:2px}
+  li.ok .tx::after{content:"已批";display:inline-block;margin-left:8px;padding:0 4px;font-size:11px;
+    letter-spacing:1px;color:var(--accent);border:1px solid var(--accent);border-radius:3px;
+    text-decoration:none;vertical-align:2px}
+  li .dots{opacity:.5;width:34px;height:34px;font-size:16px}
+  li:hover .dots{opacity:1}
+  li.hide{display:none}
+
+  .addrow{display:flex;align-items:center;gap:11px;width:100%;min-height:44px;padding:0 8px;
+    color:var(--dim);font-size:15px;border-top:1px dotted var(--line);text-align:left}
+  .addrow:hover{color:var(--accent)}
+  .addrow .p{width:25px;text-align:center;font-size:17px;flex:none}
+  .addin{margin:6px 8px 8px}
+
+  .newgrp{width:100%;min-height:50px;border:1.5px dashed var(--line);border-radius:3px;
+    color:var(--dim);margin:14px 0 4px;font-size:16px;letter-spacing:2px}
+  .newgrp:hover{border-color:var(--accent);color:var(--accent);background:var(--card)}
+
+  /* 弹窗 */
+  .mask{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;z-index:40;
+    align-items:center;justify-content:center;padding:16px}
+  .mask.on{display:flex}
+  .dlg{background:var(--card);border-radius:6px;border-top:5px double var(--accent);padding:18px;
+    width:100%;max-width:560px;max-height:88vh;overflow:auto;box-shadow:var(--shadow)}
+  .dlg h2{margin:0 0 12px;font-size:19px;letter-spacing:3px;color:var(--accent)}
+  .dlg textarea{height:180px;resize:vertical;line-height:1.6}
+  .sheet label{display:block;font-size:13px;color:var(--dim);margin:14px 0 5px}
+  .sheet textarea{height:84px}
+  .hint{font-size:13px;color:var(--dim);margin:10px 0 0;line-height:1.7}
+  .hint summary{cursor:pointer;color:var(--accent);margin-top:6px}
+  .chk{display:flex;align-items:center;gap:9px;margin:12px 0 0;font-size:15px;cursor:pointer}
+  .chk input{width:21px;height:21px;flex:none;accent-color:var(--accent)}
+  .btns{display:flex;gap:9px;margin-top:14px}
+  .btns .btn{flex:1}
+
+  .empty{text-align:center;color:var(--dim);padding:34px 16px;line-height:2;letter-spacing:1px}
+  .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:60;background:var(--ink);
+    color:#f6ecd6;padding:10px 18px;border-radius:4px;font-size:15px;opacity:0;pointer-events:none;
+    transition:opacity .25s;max-width:90vw;text-align:center;letter-spacing:1px;
+    border-left:4px solid var(--accent)}
+  .toast.on{opacity:.96}
+  body.drag::after{content:"松手，此件即刻收进来";position:fixed;inset:12px;border:3px dashed var(--accent);
+    border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:19px;
+    letter-spacing:3px;color:var(--accent);background:rgba(155,45,32,.08);z-index:50;pointer-events:none}
+
+  @media (max-width:640px){
+    body{padding:14px 12px calc(24px + env(safe-area-inset-bottom))}
+    .pagehead .ttl{font-size:23px}
+    .dlg{border-radius:6px 6px 0 0;max-height:92vh;align-self:flex-end}
+    .mask{padding:0;align-items:flex-end}
+    li .dots{opacity:.65}
+  }
+</style>
+</head>
+<body>
+<div class="pagehead">
+  <div class="ttl">奏事处</div>
+  <div class="sub">朱笔一点，此事便算办了</div>
+  <span class="seal">御<br>批</span>
+</div>
+<div class="app">
+<aside id="side"></aside>
+<div class="wrap">
+
+  <div class="top">
+    <button class="icon" id="btnSide" title="目录">☰</button>
+    <div class="selwrap">
+      <select id="listSel" title="换一本折子"></select>
+    </div>
+    <div class="menuwrap">
+      <button class="icon" id="btnMenu" title="其他">⋯</button>
+      <div class="menu" id="menu">
+        <button data-m="search">🔍 查档（搜索）</button>
+        <button data-m="hide">👁 隐去已批 <b id="mHide"></b></button>
+        <hr>
+        <button data-m="new">➕ 另开一本折子</button>
+        <button data-m="ren">✎ 这本折子改名</button>
+        <button data-m="dellist">🗑 焚了这本折子</button>
+        <hr>
+        <button data-m="exp"><span class="ml">⬇ 存档（导出一个文件）
+          <small>带到别的设备呈进，批过的朱笔都在</small></span></button>
+        <button data-m="imp"><span class="ml">⬆ 呈进（读一个文件）
+          <small>存档文件、或者一段文字稿都收</small></span></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="bar"><i id="bar"></i></div>
+  <div class="lab"><span id="pct">0%</span><span id="cnt">0 / 0</span></div>
+
+  <div id="searchWrap"><input type="search" id="search" placeholder="查档：事由、卷名都能搜"></div>
+  <div id="searchInfo"></div>
+
+  <button class="btn pri wide" id="btnAdd">＋ 递一本折子（批量录入）</button>
+
+  <div id="body"></div>
+  <button class="newgrp" id="btnNewGroup">＋ 新立一卷</button>
+</div>
+</div>
+<div id="sideMask"></div>
+
+<!-- 递折子 -->
+<div class="mask" id="mask"><div class="dlg">
+  <h2>递折子</h2>
+  <textarea id="ta" placeholder="把要办的事写进来，一行一件"></textarea>
+  <div class="hint">
+    一行一件即可。想分卷，在那行开头加 <code>#</code>。
+    <details><summary>还能认这些写法</summary>
+      <code>- 事由</code> <code>* 事由</code> <code>1. 事由</code> 都算一件 ·
+      <code>- [x] 事由</code> = 已批 · <code>**加粗**</code> · <code>[文字](网址)</code> ·
+      网址邮箱自动变链接 · 空行和 <code>---</code> 跳过
+    </details>
+  </div>
+  <label class="chk"><input type="checkbox" id="asNew">另开一本新折子（不勾就并进眼下这本）</label>
+  <div class="btns">
+    <button class="btn" id="btnFile">📄 选文件</button>
+    <button class="btn" id="btnCancel">取消</button>
+    <button class="btn pri" id="btnOk">呈上</button>
+  </div>
+</div></div>
+
+<!-- 单条 -->
+<div class="mask" id="mask2"><div class="dlg sheet">
+  <h2>批这一件</h2>
+  <label>事由</label>
+  <textarea id="itText"></textarea>
+  <label>归在哪一卷</label>
+  <select id="itGroup"></select>
+  <label>顺序</label>
+  <div class="btns" style="margin-top:0">
+    <button class="btn" id="itUp">↑ 上移</button>
+    <button class="btn" id="itDown">↓ 下移</button>
+  </div>
+  <div class="btns">
+    <button class="btn" id="itDel">🗑 删去</button>
+    <button class="btn pri" id="itOk">批毕</button>
+  </div>
+</div></div>
+
+<!-- 分组 -->
+<div class="mask" id="mask3"><div class="dlg sheet">
+  <h2>这一卷</h2>
+  <label>名字</label>
+  <input type="text" id="gName" placeholder="比如：启程前 / 到任后">
+  <label>顺序</label>
+  <div class="btns" style="margin-top:0">
+    <button class="btn" id="gUp">↑ 上移</button>
+    <button class="btn" id="gDown">↓ 下移</button>
+  </div>
+  <div class="btns">
+    <button class="btn" id="gDel">🗑 撤了整卷</button>
+    <button class="btn pri" id="gOk">批毕</button>
+  </div>
+</div></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============ 首次打开的自带清单 ============ */
+const SEED_NAME = "Imperial HDA-ML 开学前准备";
+const SEED_MD = `
+## W0 · 8/11–8/16 · 清障周（只装环境，不学内容）
+- 登录 My Imperial，查学位证 / 成绩单是否还有 outstanding conditions
+- 查签证进度；来不及就联系 Ms Jo Tite（j.tite@imperial.ac.uk）
+- 查机器规格：Mac 看 About This Mac；Windows 用 \`winver\` + Settings → System → About
+- 装 R
+- 装 RStudio + 装包
+- 装 Python / Anaconda
+- 装 VS Code
+- 装 MySQL
+- 装 DBeaver
+- 装 Git
+- 注册 GitHub 账号
+- 小练习：终端 \`pwd\` \`ls\` → R 里 \`2+2\` → Python 里 \`2+2\`，理清「语言 / 解释器 / 终端」
+## W1 · 8/17–8/23 · R（回报最高，Term 1 统计课全程用 R）
+- **主线** DataCamp [Introduction to R](https://www.datacamp.com/courses/free-introduction-to-r)（无账号替代：RStudio 里装 \`swirl\`，免费）
+- **副线** DataCamp [Introduction to Shell](https://www.datacamp.com/courses/introduction-to-shell)
+- **产出** 写一个 .R 脚本：读 CSV、算均值、画图
+## W2 · 8/24–8/30 · Python + 向量
+- **主线** DataCamp [Introduction to Python](https://www.datacamp.com/courses/intro-to-python-for-data-science)
+- **副线** [3Blue1Brown 线性代数](https://www.3blue1brown.com/topics/linear-algebra) 第 1–4 集：向量、线性组合、矩阵作为线性变换
+- **产出** Jupyter Notebook 跑通一个 notebook，代码 cell 与 markdown cell 混排
+## W3 · 8/31–9/6 · SQL（Clinical Data Management 整门课建在 SQL 上）
+- **主线** DataCamp [Introduction to SQL](https://www.datacamp.com/courses/introduction-to-sql)（免费替代：[SQLBolt](https://sqlbolt.com/)）
+- **副线** 3Blue1Brown 第 5–6、9 集：点积、叉积、基变换、特征值
+- **产出** DBeaver 连上本地 MySQL，建表，写出带 JOIN 和 GROUP BY 的查询
+## W4 · 9/7–9/13 · 统计 + Git
+- **主线** Kirkwood & Sterne《Essential Medical Statistics》第 2 章
+- **主线** 第 3 章
+- **主线** 第 4 章
+- **主线** 第 5 章（指南点名第 2–5 章对应 Term 1 统计课）
+- **主线** 配 [StatQuest](https://www.youtube.com/@statquest) 看：抽样、置信区间、假设检验、p 值
+- **副线** DataCamp [Foundations of Git](https://www.datacamp.com/courses/introduction-to-git)
+- **副线** 把 W1–W3 的代码全部 push 到一个 GitHub repo
+- **产出** 能说清「p 值到底是什么」，且有一个自己的 repo
+## W5 · 9/14–9/20 · 分子生物学 + 优化（有生物背景可整周跳过）
+- **主线** 指南 5.1 节 omics cheat sheet：基因组学 / 转录组学 / 蛋白质组学词汇
+- **副线** 指南 5.2.1 节 4 个优化视频：约束优化、最小二乘、凸 vs 非凸
+- **产出** 看到 penalised regression、gradient descent 不发怵
+## W6 · 9/21–9/27 · 缓冲周（不安排新内容）
+- 搬家 / 入住
+- 开银行账户
+- 注册 GP
+- 认路：White City 校区（西伦敦）
+- 把 W1–W3 的代码重跑一遍，确认环境正常
+- 翻一遍 Term 1 四门课的 module content 清单
+## 备查
+- 开学 2026-09-27；Induction Week 09-28 → 10-02；Term 1 10-05 → 12-11
+- 上课时间：周一、二、四、五 9:30–17:00，周三选修短课或自习
+- **所有考试与答辩必须人在伦敦**
+- 官方预备指南 v0.2：https://sdarodrigues.github.io/HDAML-Pre-Course-Information/
+- 行政找 Ms Jo Tite j.tite@imperial.ac.uk；课程内容找 Dr Sabrina Andrade Rodrigues s.andrade-rodrigues@ic.ac.uk
+- 节奏：每天 30–60 分钟，一周 5–6 天。**别求全**——真跑完 R + Python + SQL 已超过大多数人
+`.trim();
+
+/* 存储 key 与前两版一致，老数据直接接管 */
+const KEY = "checklist_v1";
+const $ = s => document.querySelector(s);
+const uid = () => Math.random().toString(36).slice(2, 9);
+
+let D = null, hideDone = false, filter = "";
+
+function toast(m){
+  const t = $("#toast"); t.textContent = m; t.classList.add("on");
+  clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove("on"), 1900);
+}
+
+/* ============ 任意文字 → 分组 + 条目 ============ */
+function parse(text){
+  const groups = []; let cur = null;
+  const open = title => { cur = {id:uid(), title, open:true, items:[]}; groups.push(cur); };
+  for (const raw of String(text).split(/\r?\n/)){
+    const line = raw.trim();
+    if (!line || /^[-=*_]{3,}$/.test(line) || /^\|[\s:|-]+\|$/.test(line)) continue;
+    let m = line.match(/^(#{1,6})\s+(.+)$/);
+    if (m){ open(m[2].trim()); continue; }
+    let t = line, done = false;
+    if (m = t.match(/^[-*+]\s+\[([ xX])\]\s*(.*)$/)) { done = m[1].toLowerCase() === "x"; t = m[2]; }
+    else if (m = t.match(/^[-*+]\s+(.*)$/))          { t = m[1]; }
+    else if (m = t.match(/^\d+[.)]\s+(.*)$/))        { t = m[1]; }
+    t = t.trim(); if (!t) continue;
+    if (!cur) open("");
+    cur.items.push({id:uid(), t, done});
+  }
+  return groups.filter(g => g.items.length);
+}
+function esc(s){ return s.replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function md(s){
+  let h = esc(s);
+  h = h.replace(/`([^`]+)`/g, "<code>$1</code>");
+  h = h.replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>");
+  h = h.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+  h = h.replace(/(^|[\s(，。：])((?:https?:\/\/)[^\s<)，。]+)/g,
+        (m, p, u) => p + '<a href="' + u + '" target="_blank" rel="noopener">' + u + "</a>");
+  h = h.replace(/(^|[\s(])([\w.+-]+@[\w-]+\.[\w.]+)/g,
+        (m, p, e) => p + '<a href="mailto:' + e + '">' + e + "</a>");
+  return h;
+}
+
+/* ============ 保存 ============ */
+let saveTimer = null;
+function save(now){
+  clearTimeout(saveTimer);
+  const go = () => { try { localStorage.setItem(KEY, JSON.stringify(D)); } catch(e){} };
+  if (now) go(); else saveTimer = setTimeout(go, 400);
+}
+function mergeData(from){                       // 任一边打过勾就算勾上，只增不减
+  if (!from || !Array.isArray(from.lists)) return;
+  for (const inc of from.lists){
+    const mine = D.lists.find(l => l.id === inc.id) || D.lists.find(l => l.name === inc.name);
+    if (!mine){ D.lists.push(inc); continue; }
+    for (const ig of inc.groups || []){
+      const mg = mine.groups.find(g => g.id === ig.id) || mine.groups.find(g => g.title === ig.title);
+      if (!mg){ mine.groups.push(ig); continue; }
+      for (const it of ig.items || []){
+        const mi = mg.items.find(x => x.id === it.id) || mg.items.find(x => x.t === it.t);
+        if (!mi) mg.items.push(it); else if (it.done) mi.done = true;
+      }
+    }
+  }
+}
+
+/* ============ 渲染 ============ */
+const curList = () => D.lists.find(l => l.id === D.cur) || D.lists[0];
+function newList(name, groups){
+  const l = {id:uid(), name:name || "新折子", groups:groups || []};
+  D.lists.push(l); D.cur = l.id; return l;
+}
+const allDone = g => g.items.length > 0 && g.items.every(i => i.done);
+const gtHTML = g => g.title ? md(g.title) : '<span style="color:var(--dim)">未归卷</span>';
+const liHTML = it => `
+  <li data-i="${it.id}" class="${it.done?"ok":""}">
+    <span class="bx" data-act="tick">准</span>
+    <span class="tx" data-act="tick">${md(it.t)}</span>
+    <button class="dots" data-act="more" title="改事由 / 换卷 / 删去">⋮</button>
+  </li>`;
+
+function render(){
+  $("#listSel").innerHTML = D.lists.map(l => {
+    let d = 0, t = 0;
+    for (const g of l.groups) for (const i of g.items){ t++; if (i.done) d++; }
+    return `<option value="${l.id}"${l.id===D.cur?" selected":""}>${esc(l.name)}　${d}/${t}</option>`;
+  }).join("");
+
+  const L = curList(), box = $("#body");
+  if (!L || !L.groups.length){
+    box.innerHTML = `<div class="empty">这本折子还是空的<br>
+      上面「＋ 递一本折子」贴一段进来，或下面「＋ 新立一卷」从头写</div>`;
+    paint(); return;
+  }
+  box.innerHTML = L.groups.map(g => `
+    <section class="grp${g.open===false?" collapsed":""}" data-g="${g.id}">
+      <div class="gh">
+        <span class="name" data-act="fold">
+          <span class="tw">${g.open===false?"▸":"▾"}</span>
+          <span class="gt">${gtHTML(g)}</span>
+          <span class="gc" data-gc="${g.id}"></span>
+        </span>
+        <button class="gall" data-act="gall" title="${allDone(g) ? "整卷收回朱批" : "这一卷一次批完"}"
+          ${g.items.length ? "" : "hidden"}>${allDone(g) ? "撤批" : "全批"}</button>
+        <button class="dots" data-act="gmore" title="改卷名 / 调次序 / 撤卷">⋮</button>
+      </div>
+      <ul>${g.items.map(liHTML).join("")}</ul>
+      <button class="addrow" data-act="additem"><span class="p">＋</span>添一件</button>
+    </section>`).join("");
+  paint();
+}
+/* ============ 左边大纲栏 ============ */
+const gcount = g => { let d = 0; for (const i of g.items) if (i.done) d++; return [d, g.items.length]; };
+function renderSide(){
+  const L = curList();
+  let h = '<div class="sec">案上折子</div>';
+  for (const l of D.lists){
+    let d = 0, t = 0;
+    for (const g of l.groups) for (const i of g.items){ t++; if (i.done) d++; }
+    h += `<button data-list="${l.id}" class="${l.id===D.cur?"on":""}${t&&d===t?" full":""}">
+      <span class="n">${esc(l.name)}</span><span class="c">${d}/${t}</span></button>`;
+  }
+  h += '<button class="add" data-newlist><span class="n">＋ 另开一本</span></button><hr>';
+  h += '<div class="sec">本折各卷</div>';
+  if (!L || !L.groups.length){
+    h += '<div class="none">还没有分卷</div>';
+  } else {
+    for (const g of L.groups){
+      const [d, t] = gcount(g);
+      h += `<button data-go="${g.id}" class="${t&&d===t?"full":""}">
+        <span class="n">${g.title ? esc(g.title) : "未归卷"}</span><span class="c">${t?d+"/"+t:""}</span></button>`;
+    }
+  }
+  h += '<button class="add" data-newgroup><span class="n">＋ 新立一卷</span></button>';
+  $("#side").innerHTML = h;
+}
+function closeSide(){ $("#side").classList.remove("open"); $("#sideMask").classList.remove("on"); }
+$("#btnSide").onclick = () => { $("#side").classList.add("open"); $("#sideMask").classList.add("on"); };
+$("#sideMask").onclick = closeSide;
+$("#side").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.list){ D.cur = b.dataset.list; render(); save(true); closeSide(); return; }
+  if (b.hasAttribute("data-newlist")){ closeSide(); return newListPrompt(); }
+  if (b.hasAttribute("data-newgroup")){ closeSide(); return $("#btnNewGroup").click(); }
+  if (b.dataset.go){
+    const g = curList().groups.find(x => x.id === b.dataset.go);
+    if (g && g.open === false){ g.open = true; render(); save(); }   // 折起来的先展开
+    closeSide();
+    const el = document.querySelector(`[data-g="${b.dataset.go}"]`);
+    if (el) el.scrollIntoView({behavior:"smooth", block:"start"});
+  }
+});
+function newListPrompt(){
+  const n = prompt("这本折子叫什么？", "新折子"); if (n === null) return;
+  newList(n.trim() || "新折子"); render(); save(true);
+}
+
+function paint(){
+  const L = curList();
+  let done = 0, total = 0;
+  for (const g of (L ? L.groups : [])){
+    let d = 0; for (const i of g.items) if (i.done) d++;
+    done += d; total += g.items.length;
+    const c = document.querySelector(`[data-gc="${g.id}"]`);
+    if (c) c.textContent = g.items.length ? d + "/" + g.items.length : "";
+    const s = document.querySelector(`[data-g="${g.id}"]`);
+    if (s) s.classList.toggle("done", g.items.length > 0 && d === g.items.length);
+  }
+  const pct = total ? Math.round(done / total * 100) : 0;
+  $("#bar").style.width = pct + "%";
+  $("#pct").textContent = pct + "%";
+  $("#cnt").textContent = done + " / " + total;
+  renderSide();
+  applyFilter();
+}
+const hits = (l, q) => {                       // 某个清单里有多少条命中（分组名命中就算整组）
+  let n = 0;
+  for (const g of l.groups){
+    if ((g.title || "").toLowerCase().includes(q)) n += g.items.length;
+    else n += g.items.filter(i => i.t.toLowerCase().includes(q)).length;
+  }
+  return n;
+};
+/* 只在文字节点里加 <mark>，不会碰到链接的 href 之类的标签内部 */
+function highlight(root, q){
+  if (!q) return;
+  const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT), nodes = [];
+  while (w.nextNode()) nodes.push(w.currentNode);
+  for (const n of nodes){
+    const s = n.nodeValue, low = s.toLowerCase();
+    let i = low.indexOf(q); if (i < 0) continue;
+    const frag = document.createDocumentFragment();
+    let pos = 0;
+    while (i >= 0){
+      if (i > pos) frag.appendChild(document.createTextNode(s.slice(pos, i)));
+      const m = document.createElement("mark");
+      m.textContent = s.slice(i, i + q.length);
+      frag.appendChild(m);
+      pos = i + q.length;
+      i = low.indexOf(q, pos);
+    }
+    if (pos < s.length) frag.appendChild(document.createTextNode(s.slice(pos)));
+    n.parentNode.replaceChild(frag, n);
+  }
+}
+function applyFilter(){
+  const q = filter.toLowerCase();
+  document.body.classList.toggle("searching", !!q);
+  let shown = 0;
+  document.querySelectorAll("#body section.grp").forEach(s => {
+    const g = curList().groups.find(x => x.id === s.dataset.g);
+    const gHit = !!q && g && (g.title || "").toLowerCase().includes(q);   // 分组名命中 = 整组都算
+    const gt = s.querySelector(".gt");
+    if (gt && g){ gt.innerHTML = gtHTML(g); if (gHit) highlight(gt, q); }  // 先还原再上色
+    let any = false;
+    s.querySelectorAll("li").forEach(li => {
+      const it = findItem(li.dataset.i); if (!it) return;
+      const show = (!q || gHit || it.t.toLowerCase().includes(q)) && !(hideDone && it.done);
+      li.classList.toggle("hide", !show);
+      const tx = li.querySelector(".tx");
+      if (tx){ tx.innerHTML = md(it.t); if (show && q) highlight(tx, q); }
+      if (show){ any = true; shown++; }
+    });
+    s.style.display = (any || (!q && !hideDone)) ? "" : "none";
+  });
+
+  const info = $("#searchInfo");
+  if (!q){ info.classList.remove("on"); info.innerHTML = ""; return; }
+  let other = 0, jump = null;
+  for (const l of D.lists){
+    if (l.id === D.cur) continue;
+    const n = hits(l, q);
+    if (n){ other += n; if (!jump) jump = l; }
+  }
+  info.classList.add("on");
+  info.innerHTML =
+    (shown ? `本折查得 <b>${shown}</b> 件` : "本折未查得")
+    + (other ? ` · 「${esc(jump.name)}」中另有 <b>${other}</b> 件 <button data-jump="${jump.id}">翻过去</button>` : "");
+}
+$("#searchInfo").onclick = e => {
+  const b = e.target.closest("[data-jump]"); if (!b) return;
+  D.cur = b.dataset.jump; render(); save(true);        // 搜索词保留，切过去接着看
+};
+const findItem = id => { for (const g of curList().groups){ const i = g.items.find(x => x.id === id); if (i) return i; } return null; };
+const findGroupOf = id => curList().groups.find(g => g.items.some(x => x.id === id));
+
+/* ============ 点击：看到什么点什么，没有隐藏模式 ============ */
+$("#body").addEventListener("click", e => {
+  if (e.target.closest("a")) return;                    // 点链接不算打勾
+  const hit = e.target.closest("[data-act]"); if (!hit) return;
+  const act = hit.dataset.act;
+  const li = e.target.closest("li"), sec = e.target.closest("section.grp");
+  const g = curList().groups.find(x => x.id === sec.dataset.g);
+
+  if (act === "tick"){
+    const it = findItem(li.dataset.i);
+    it.done = !it.done; li.classList.toggle("ok", it.done);
+    const seal = li.querySelector(".bx");                 // 盖印的动作，只在真点的时候放
+    if (it.done && seal){ seal.classList.remove("stamp"); void seal.offsetWidth; seal.classList.add("stamp"); }
+    paint(); save(); return;
+  }
+  if (act === "more")     return openItem(li.dataset.i);
+  if (act === "gall")     return stampAll(g);
+  if (act === "gmore")    return openGroup(g.id);
+  if (act === "additem")  return startAdd(g.id, hit);
+  if (act === "fold"){ g.open = g.open === false; render(); save(); }
+});
+
+/* 一卷全批：全批过了再点就是整卷撤回 */
+function stampAll(g){
+  const all = allDone(g);
+  g.items.forEach(i => i.done = !all);
+  render(); save(true);
+  if (!all){                                   // 一枚一枚落印，看着像批折子
+    const sec = document.querySelector(`[data-g="${g.id}"]`);
+    if (sec) sec.querySelectorAll(".bx").forEach((b, k) =>
+      setTimeout(() => { b.classList.remove("stamp"); void b.offsetWidth; b.classList.add("stamp"); }, k * 55));
+  }
+  toast(all ? "整卷朱批已撤" : `整卷已批 ${g.items.length} 件`);
+}
+
+/* 「＋ 添加一条」：原地变输入框，回车连着加下一条 */
+function startAdd(gid, row){
+  const g = curList().groups.find(x => x.id === gid);
+  const ul = row.parentElement.querySelector("ul");
+  const inp = document.createElement("input");
+  inp.type = "text"; inp.className = "addin"; inp.placeholder = "写一件，回车接着写下一件";
+  row.style.display = "none";
+  row.parentElement.insertBefore(inp, row);
+  inp.focus();
+
+  const commit = () => {
+    const v = inp.value.trim(); if (!v) return false;
+    const it = {id:uid(), t:v, done:false};
+    g.items.push(it);
+    ul.insertAdjacentHTML("beforeend", liHTML(it));      // 手动插一行，别整页重绘丢焦点
+    inp.value = ""; paint(); save(true);
+    return true;
+  };
+  inp.addEventListener("keydown", ev => {
+    if (ev.key === "Enter"){ ev.preventDefault(); if (!commit()) inp.blur(); }
+    if (ev.key === "Escape"){ inp.value = ""; inp.blur(); }
+  });
+  inp.addEventListener("blur", () => { commit(); render(); });
+}
+
+/* ============ 单条面板 ============ */
+let editingId = null;
+const mask2 = $("#mask2");
+function openItem(id){
+  const it = findItem(id); if (!it) return;
+  editingId = id;
+  $("#itText").value = it.t;
+  $("#itGroup").innerHTML =
+    curList().groups.map(g => `<option value="${g.id}">${esc(g.title || "未归卷")}</option>`).join("")
+    + '<option value="__new">＋ 另立一卷…</option>';
+  $("#itGroup").value = findGroupOf(id).id;
+  mask2.classList.add("on"); $("#itText").focus();
+}
+function closeItem(){ mask2.classList.remove("on"); editingId = null; }
+mask2.addEventListener("click", e => { if (e.target === mask2) closeItem(); });
+
+function moveItem(dir){
+  const g = findGroupOf(editingId); if (!g) return;
+  const i = g.items.findIndex(x => x.id === editingId), j = i + dir;
+  if (j < 0 || j >= g.items.length) return toast(dir < 0 ? "已在卷首" : "已在卷末");
+  [g.items[i], g.items[j]] = [g.items[j], g.items[i]];
+  render(); save(true);
+}
+$("#itUp").onclick   = () => moveItem(-1);
+$("#itDown").onclick = () => moveItem(1);
+
+$("#itOk").onclick = () => {
+  const it = findItem(editingId), src = findGroupOf(editingId);
+  if (!it){ closeItem(); return; }
+  const t = $("#itText").value.trim();
+  if (!t){ src.items = src.items.filter(x => x.id !== it.id); closeItem(); render(); save(true); return; }
+  it.t = t;
+  let target = $("#itGroup").value;
+  if (target === "__new"){
+    const n = prompt("这一卷叫什么？", "");
+    if (n === null) target = src.id;
+    else { const g = {id:uid(), title:n.trim(), open:true, items:[]}; curList().groups.push(g); target = g.id; }
+  }
+  if (target !== src.id){
+    src.items = src.items.filter(x => x.id !== it.id);
+    curList().groups.find(g => g.id === target).items.push(it);
+  }
+  closeItem(); render(); save(true);
+};
+$("#itDel").onclick = () => {
+  const src = findGroupOf(editingId);
+  if (src) src.items = src.items.filter(x => x.id !== editingId);
+  closeItem(); render(); save(true); toast("此件已删");
+};
+
+/* ============ 分组面板 ============ */
+let editingG = null;
+const mask3 = $("#mask3");
+function openGroup(gid){
+  const g = curList().groups.find(x => x.id === gid); if (!g) return;
+  editingG = gid; $("#gName").value = g.title;
+  mask3.classList.add("on"); $("#gName").focus();
+}
+function closeGroup(){ mask3.classList.remove("on"); editingG = null; }
+mask3.addEventListener("click", e => { if (e.target === mask3) closeGroup(); });
+
+function moveGroup(dir){
+  const L = curList();
+  const i = L.groups.findIndex(x => x.id === editingG), j = i + dir;
+  if (j < 0 || j >= L.groups.length) return toast(dir < 0 ? "已是头一卷" : "已是末一卷");
+  [L.groups[i], L.groups[j]] = [L.groups[j], L.groups[i]];
+  render(); save(true);
+}
+$("#gUp").onclick   = () => moveGroup(-1);
+$("#gDown").onclick = () => moveGroup(1);
+$("#gOk").onclick = () => {
+  const g = curList().groups.find(x => x.id === editingG);
+  if (g) g.title = $("#gName").value.trim();
+  closeGroup(); render(); save(true);
+};
+$("#gDel").onclick = () => {
+  const L = curList(), g = L.groups.find(x => x.id === editingG);
+  if (!g) return closeGroup();
+  if (g.items.length && !confirm(`撤掉「${g.title || "未归卷"}」这一卷，连同卷内 ${g.items.length} 件？`)) return;
+  L.groups = L.groups.filter(x => x.id !== editingG);
+  closeGroup(); render(); save(true); toast("此卷已撤");
+};
+
+$("#btnNewGroup").onclick = () => {
+  const L = curList();
+  L.groups.push({id:uid(), title:"", open:true, items:[]});
+  render(); save(true);
+  openGroup(L.groups[L.groups.length - 1].id);          // 直接弹出来让你起名字
+};
+
+/* ============ 顶部菜单 ============ */
+const menu = $("#menu");
+$("#btnMenu").onclick = e => { e.stopPropagation(); menu.classList.toggle("on"); };
+document.addEventListener("click", () => menu.classList.remove("on"));
+menu.addEventListener("click", e => e.stopPropagation());
+menu.addEventListener("click", e => {
+  const b = e.target.closest("[data-m]"); if (!b) return;
+  const m = b.dataset.m; menu.classList.remove("on");
+  const L = curList();
+  if (m === "search"){
+    const w = $("#searchWrap"); w.classList.toggle("on");
+    if (w.classList.contains("on")) $("#search").focus();
+    else { filter = ""; $("#search").value = ""; applyFilter(); }
+  }
+  else if (m === "hide"){
+    hideDone = !hideDone; $("#mHide").textContent = hideDone ? "开" : "";
+    applyFilter(); toast(hideDone ? "已批的先收起" : "全数呈览");
+  }
+  else if (m === "new") newListPrompt();
+  else if (m === "ren"){
+    const n = prompt("这本折子改叫什么？", L.name); if (n === null) return;
+    L.name = n.trim() || L.name; render(); save(true);
+  }
+  else if (m === "dellist"){
+    if (D.lists.length === 1) return toast("只剩这一本了，焚不得");
+    if (!confirm(`焚掉整本「${L.name}」？动手前先「存档」为宜。`)) return;
+    D.lists = D.lists.filter(x => x.id !== L.id); D.cur = D.lists[0].id;
+    render(); save(true); toast("已焚");
+  }
+  else if (m === "exp"){ download("奏事处存档.json", JSON.stringify(D, null, 1), "application/json"); toast("已存档，拷到别的设备「呈进」即可"); }
+  else if (m === "imp"){ pickFile(".json,.txt,.md,.markdown,text/*,application/json", (txt, name) => {
+      if (/^\s*\{/.test(txt)){                     // 导出的文件：合并进来，勾不会丢
+        try { mergeData(JSON.parse(txt)); render(); save(true); toast("已呈进，朱批照旧"); }
+        catch(e){ toast("此件读不出来"); }
+      } else {                                     // 普通文字稿：进粘贴框，让你确认
+        $("#ta").value = txt; mask.classList.add("on"); toast("已收 " + name + "，过目后再呈上");
+      } }); }
+});
+$("#listSel").onchange = e => { D.cur = e.target.value; render(); save(true); };
+$("#search").oninput = e => { filter = e.target.value.trim(); applyFilter(); };
+
+/* ============ 粘贴一批 ============ */
+const mask = $("#mask");
+$("#btnAdd").onclick = () => { mask.classList.add("on"); $("#ta").focus(); };
+$("#btnCancel").onclick = () => mask.classList.remove("on");
+mask.addEventListener("click", e => { if (e.target === mask) mask.classList.remove("on"); });
+function pickFile(accept, cb){
+  const inp = document.createElement("input");
+  inp.type = "file"; inp.accept = accept;
+  inp.onchange = () => { const f = inp.files[0]; if (!f) return;
+    const fr = new FileReader(); fr.onload = () => cb(fr.result, f.name); fr.readAsText(f); };
+  inp.click();
+}
+$("#btnFile").onclick = () => pickFile(".txt,.md,.markdown,.csv,text/*",
+  (txt, name) => { $("#ta").value = txt; toast("已收 " + name); });
+$("#btnOk").onclick = () => {
+  const groups = parse($("#ta").value);
+  if (!groups.length) return toast("没读出内容，看看是不是空的");
+  const n = groups.reduce((a, g) => a + g.items.length, 0);
+  if ($("#asNew").checked){
+    const first = $("#ta").value.trim().split(/\r?\n/)[0].replace(/^#+\s*/, "").trim();
+    newList(first.slice(0, 30) || "新折子", groups);
+  } else {
+    const L = curList();
+    if (L) L.groups.push(...groups); else newList("新折子", groups);
+  }
+  $("#ta").value = ""; $("#asNew").checked = false;
+  mask.classList.remove("on"); render(); save(true); toast("已录 " + n + " 件");
+};
+
+/* 电脑上拖文件进来 */
+let dragN = 0;
+addEventListener("dragenter", e => { e.preventDefault(); if (++dragN) document.body.classList.add("drag"); });
+addEventListener("dragover", e => e.preventDefault());
+addEventListener("dragleave", () => { if (--dragN <= 0){ dragN = 0; document.body.classList.remove("drag"); } });
+addEventListener("drop", e => {
+  e.preventDefault(); dragN = 0; document.body.classList.remove("drag");
+  const f = e.dataTransfer.files[0]; if (!f) return;
+  const fr = new FileReader();
+  fr.onload = () => {
+    if (/\.json$/i.test(f.name)){
+      try { mergeData(JSON.parse(fr.result)); render(); save(true); toast("已呈进"); }
+      catch(err){ toast("此件读不出来"); }
+    } else { $("#ta").value = fr.result; mask.classList.add("on"); }
+  };
+  fr.readAsText(f);
+});
+function download(name, text, type){
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([text], {type}));
+  a.download = name; a.click(); URL.revokeObjectURL(a.href);
+}
+
+/* ============ 启动 ============ */
+try { D = JSON.parse(localStorage.getItem(KEY) || "null"); } catch(e){ D = null; }
+if (!D || !Array.isArray(D.lists) || !D.lists.length){
+  D = {v:1, lists:[], cur:null};
+  newList(SEED_NAME, parse(SEED_MD));
+}
+if (!D.lists.find(l => l.id === D.cur)) D.cur = D.lists[0].id;
+render();
+</script>
+</body>
+</html>
