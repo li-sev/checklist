@@ -182,11 +182,21 @@
   li .dots{opacity:.5;width:34px;height:34px;font-size:16px}
   li:hover .dots{opacity:1}
   li.hide{display:none}
+  /* 朱笔：每条右边单独一个，点了直接写朱批，不用先进 ⋮ */
+  .pen{width:34px;height:34px;border-radius:5px;flex:none;font-size:13.5px;opacity:.45;
+    display:inline-flex;align-items:center;justify-content:center;
+    color:var(--dim);border:1px solid transparent}
+  li:hover .pen{opacity:1}
+  .pen:hover{background:var(--soft);color:var(--accent);border-color:var(--line)}
+  li.hasnote .pen{opacity:1;color:var(--accent);border-color:var(--accent);background:rgba(155,45,32,.07)}
   /* 朱批：写在事由底下的一段朱笔小字 */
   .note{flex-basis:100%;width:100%;margin:2px 0 1px 39px;padding:7px 11px;cursor:pointer;
     background:rgba(155,45,32,.06);border-left:2px solid var(--accent);border-radius:0 4px 4px 0;
     color:var(--accent);font-size:14.5px;line-height:1.6;white-space:normal;word-break:break-word}
   .note:hover{background:rgba(155,45,32,.11)}
+  /* 朱批面板顶上那行，提醒你在批哪一件 */
+  .nsubj{margin:0 0 12px;padding:9px 12px;background:var(--soft);border-left:3px solid var(--accent);
+    border-radius:0 4px 4px 0;font-size:15px;line-height:1.55;word-break:break-word}
   li.ok .note{opacity:.6}
   .note a{color:var(--accent);text-decoration:underline}
   @media (prefers-color-scheme: dark){ .note{background:rgba(207,90,73,.1)} }
@@ -253,6 +263,7 @@
     .dlg{border-radius:6px 6px 0 0;max-height:92vh;align-self:flex-end}
     .mask{padding:0;align-items:flex-end}
     li .dots{opacity:.65}
+    li .pen{opacity:.6}
   }
 </style>
 </head>
@@ -331,8 +342,6 @@
   <h2>批这一件</h2>
   <label>事由</label>
   <textarea id="itText"></textarea>
-  <label>朱批 <small style="color:var(--dim);font-weight:400">（备注，可空。卡在哪、看到几分几秒、问谁）</small></label>
-  <textarea id="itNote" placeholder="写点什么，回头自己看得懂就行"></textarea>
   <label>归在哪一卷</label>
   <select id="itGroup"></select>
   <label>顺序</label>
@@ -343,6 +352,18 @@
   <div class="btns">
     <button class="btn" id="itDel">🗑 删去</button>
     <button class="btn pri" id="itOk">批毕</button>
+  </div>
+</div></div>
+
+<!-- 朱批：从条目右边那支朱笔直接进来，只管写字，别的不碰 -->
+<div class="mask" id="mask5"><div class="dlg sheet">
+  <h2>朱批</h2>
+  <div class="nsubj" id="nSubj"></div>
+  <textarea id="nText" placeholder="卡在哪、看到几分几秒、问谁、下一步——回头自己看得懂就行"></textarea>
+  <div class="btns">
+    <button class="btn" id="nDel">抹去朱批</button>
+    <button class="btn" id="nMore">改事由…</button>
+    <button class="btn pri" id="nOk">批毕</button>
   </div>
 </div></div>
 
@@ -544,11 +565,12 @@ const allDone = g => g.items.length > 0 && g.items.every(i => i.done);
 const gtHTML = g => g.title ? md(g.title) : '<span style="color:var(--dim)">未归卷</span>';
 const mdN = s => s.split(/\n/).map(md).join("<br>");     // 朱批是多行的，逐行渲染再接起来
 const liHTML = it => `
-  <li data-i="${it.id}" class="${it.done?"ok":""}">
+  <li data-i="${it.id}" class="${it.done?"ok ":""}${it.n?"hasnote":""}">
     <span class="bx" data-act="tick">准</span>
     <span class="tx" data-act="tick">${md(it.t)}</span>
-    <button class="dots" data-act="more" title="改事由 / 写朱批 / 换卷 / 删去">⋮</button>
-    ${it.n ? `<div class="note" data-act="more">${mdN(it.n)}</div>` : ""}
+    <button class="pen" data-act="note" title="${it.n ? "改朱批" : "写朱批"}">朱</button>
+    <button class="dots" data-act="more" title="改事由 / 换卷 / 删去">⋮</button>
+    ${it.n ? `<div class="note" data-act="note">${mdN(it.n)}</div>` : ""}
   </li>`;
 
 function render(){
@@ -734,6 +756,7 @@ $("#body").addEventListener("click", e => {
     if (it.done && seal){ seal.classList.remove("stamp"); void seal.offsetWidth; seal.classList.add("stamp"); }
     paint(); save(); return;
   }
+  if (act === "note")     return openNote(li.dataset.i);
   if (act === "more")     return openItem(li.dataset.i);
   if (act === "gall")     return stampAll(g);
   if (act === "gmore")    return openGroup(g.id);
@@ -786,7 +809,6 @@ function openItem(id){
   const it = findItem(id); if (!it) return;
   editingId = id;
   $("#itText").value = it.t;
-  $("#itNote").value = it.n || "";
   $("#itGroup").innerHTML =
     curList().groups.map(g => `<option value="${g.id}">${esc(g.title || "未归卷")}</option>`).join("")
     + '<option value="__new">＋ 另立一卷…</option>';
@@ -811,10 +833,8 @@ $("#itOk").onclick = () => {
   if (!it){ closeItem(); return; }
   const t = $("#itText").value.trim();
   if (!t){ src.items = src.items.filter(x => x.id !== it.id); closeItem(); render(); save(true); return; }
-  const n = $("#itNote").value.trim();
-  if (t !== it.t || n !== (it.n || "")) it.mt = Date.now();   // 记下改动时刻，同步时按新的算
+  if (t !== it.t) it.mt = Date.now();            // 记下改动时刻，同步时按新的算
   it.t = t;
-  if (n) it.n = n; else delete it.n;
   let target = $("#itGroup").value;
   if (target === "__new"){
     const n = prompt("这一卷叫什么？", "");
@@ -832,6 +852,56 @@ $("#itDel").onclick = () => {
   if (src) src.items = src.items.filter(x => x.id !== editingId);
   closeItem(); render(); save(true); toast("此件已删");
 };
+
+/* ============ 朱批面板 ============
+   从每条右边那支「朱」笔进来。只改 n 一个字段，别的一律不碰，
+   所以关掉时不用整页重绘，就地把那一条改掉，页面不跳。 */
+let notingId = null;
+const mask5 = $("#mask5");
+function openNote(id){
+  const it = findItem(id); if (!it) return;
+  notingId = id;
+  $("#nSubj").innerHTML = md(it.t);
+  $("#nText").value = it.n || "";
+  $("#nDel").style.display = it.n ? "" : "none";
+  mask5.classList.add("on");
+  const ta = $("#nText");
+  ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length);   // 光标落到末尾，接着往下写
+}
+function closeNote(){ mask5.classList.remove("on"); notingId = null; }
+mask5.addEventListener("click", e => { if (e.target === mask5) saveNote(); });
+
+function saveNote(){
+  const it = findItem(notingId);
+  if (!it){ closeNote(); return; }
+  const n = $("#nText").value.trim();
+  const changed = n !== (it.n || "");
+  if (changed){
+    it.mt = Date.now();
+    if (n) it.n = n; else delete it.n;
+  }
+  const id = notingId;
+  closeNote();
+  if (!changed) return;
+  redrawItem(id);
+  save(true);
+  toast(n ? "朱批已记" : "朱批已抹");
+}
+/* 只重画这一条，不动整页——正在滚动的位置和别处的折叠状态都保住 */
+function redrawItem(id){
+  const li = document.querySelector(`li[data-i="${id}"]`);
+  const it = findItem(id);
+  if (!li || !it) { render(); return; }
+  li.outerHTML = liHTML(it);
+  if (filter || hideDone) applyFilter();       // 新画的这条还没沾上隐藏/高亮，补一次
+}
+$("#nOk").onclick  = saveNote;
+$("#nDel").onclick = () => { $("#nText").value = ""; saveNote(); };
+$("#nMore").onclick = () => { const id = notingId; saveNote(); openItem(id); };
+$("#nText").addEventListener("keydown", e => {
+  if (e.key === "Escape"){ closeNote(); return; }                 // Esc 丢掉这次的改动
+  if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) saveNote();  // ⌘/Ctrl+回车 收笔
+});
 
 /* ============ 分组面板 ============ */
 let editingG = null;
