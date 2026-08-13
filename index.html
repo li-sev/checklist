@@ -182,13 +182,15 @@
   li .dots{opacity:.5;width:34px;height:34px;font-size:16px}
   li:hover .dots{opacity:1}
   li.hide{display:none}
-  /* 朱笔：每条右边单独一个，点了直接写朱批，不用先进 ⋮ */
-  .pen{width:34px;height:34px;border-radius:5px;flex:none;font-size:13.5px;opacity:.45;
+  /* 朱笔：每条右边单独一个，点了直接写朱批，不用先进 ⋮
+     一律朱红描边，随时看得见（手机上没有 hover，藏着等于没有）。
+     已经批过的填个淡底，还是一眼分得出哪几条留过话。 */
+  .pen{width:34px;height:34px;border-radius:5px;flex:none;font-size:13.5px;
     display:inline-flex;align-items:center;justify-content:center;
-    color:var(--dim);border:1px solid transparent}
-  li:hover .pen{opacity:1}
-  .pen:hover{background:var(--soft);color:var(--accent);border-color:var(--line)}
-  li.hasnote .pen{opacity:1;color:var(--accent);border-color:var(--accent);background:rgba(155,45,32,.07)}
+    color:var(--accent);border:1px solid var(--accent);background:transparent}
+  .pen:hover{background:var(--accent);color:#fdf3e0}
+  li.hasnote .pen{background:rgba(155,45,32,.14);font-weight:700}
+  li.hasnote .pen:hover{background:var(--accent);color:#fdf3e0}
   /* 朱批：写在事由底下的一段朱笔小字 */
   .note{flex-basis:100%;width:100%;margin:2px 0 1px 39px;padding:7px 11px;cursor:pointer;
     background:rgba(155,45,32,.06);border-left:2px solid var(--accent);border-radius:0 4px 4px 0;
@@ -199,7 +201,11 @@
     border-radius:0 4px 4px 0;font-size:15px;line-height:1.55;word-break:break-word}
   li.ok .note{opacity:.6}
   .note a{color:var(--accent);text-decoration:underline}
-  @media (prefers-color-scheme: dark){ .note{background:rgba(207,90,73,.1)} }
+  @media (prefers-color-scheme: dark){
+    .note{background:rgba(207,90,73,.1)}
+    li.hasnote .pen{background:rgba(207,90,73,.2)}
+    .pen:hover,li.hasnote .pen:hover{color:#1b1613}
+  }
   /* 同步：⋯ 按钮上那颗小点 */
   .menuwrap{position:relative}
   #syncDot{position:absolute;right:5px;top:5px;width:7px;height:7px;border-radius:50%;
@@ -263,7 +269,6 @@
     .dlg{border-radius:6px 6px 0 0;max-height:92vh;align-self:flex-end}
     .mask{padding:0;align-items:flex-end}
     li .dots{opacity:.65}
-    li .pen{opacity:.6}
   }
 </style>
 </head>
