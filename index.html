@@ -24,6 +24,15 @@
            --accent:#cf5a49; --done:#cf5a49; --gold:#c9a75a; --link:#8fb7ca;
            --soft:#2b2219; --shadow:0 8px 26px rgba(0,0,0,.6); }
   }
+  /* 内务府买来的纸色。写在 body 上，压过上面 :root 那一套（含深色模式） */
+  body.pp-jin{ --bg:#eadfba; --card:#fdf6df; --line:#dcc98f; --gold:#9a7c2e; --soft:#f6edcf;
+               --accent:#8d3a15; --done:#8d3a15; }
+  body.pp-qing{ --bg:#dde5d6; --card:#f4f8ee; --ink:#242c22; --dim:#6f7d67; --line:#c2cfb6;
+                --accent:#3f6b46; --done:#3f6b46; --gold:#7e8f56; --link:#2c5b63; --soft:#e8efe0; }
+  body.pp-lan{ --bg:#141a26; --card:#1e2637; --ink:#dfe6f2; --dim:#8593ab; --line:#33405a;
+               --accent:#d4a24a; --done:#d4a24a; --gold:#d4a24a; --link:#7fa8cf; --soft:#26304400;
+               --soft:#263044; --shadow:0 8px 26px rgba(0,0,0,.65); }
+
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   body{
     margin:0; padding:18px 16px calc(28px + env(safe-area-inset-bottom));
@@ -45,6 +54,73 @@
     border:2.5px solid var(--accent);color:var(--accent);border-radius:5px;
     padding:5px 7px;font-size:16px;font-weight:700;line-height:1.15;letter-spacing:1px;
     text-align:center;opacity:.9}
+  /* 俸银牌：抬头底下一条，点开是内务府 */
+  .purse{display:inline-flex;align-items:center;gap:0;margin-top:9px;padding:0;
+    border:1px solid var(--line);border-radius:5px;background:var(--card);
+    font:13px/1 inherit;color:var(--ink);overflow:hidden}
+  .purse:hover{border-color:var(--accent)}
+  .purse>span{padding:6px 10px;display:inline-flex;align-items:center;gap:5px;letter-spacing:1px;white-space:nowrap}
+  .purse .rk{background:var(--accent);color:#fdf3e0;font-weight:700}
+  .purse .ag{color:var(--gold);font-weight:700;border-right:1px solid var(--line)}
+  .purse .ag b{font:15px/1 ui-monospace,Consolas,monospace}
+  .purse .rn{color:var(--dim);font-size:12px}
+  .purse .rn.hot{color:var(--accent)}
+  .purse .dot{width:6px;height:6px;border-radius:50%;background:var(--gold);padding:0;margin-right:8px;
+    display:none;animation:blink 1.4s ease-in-out infinite}
+  .purse.buyable .dot{display:block}
+
+  /* 打勾时从印上飘起来的赏银 */
+  .coin{position:fixed;z-index:95;pointer-events:none;font-weight:700;font-size:15px;letter-spacing:1px;
+    color:var(--gold);text-shadow:0 1px 2px rgba(0,0,0,.25);animation:coin 1s ease-out forwards}
+  .coin.neg{color:var(--dim)}
+  @keyframes coin{
+    0%{transform:translateY(0) scale(.7);opacity:0}
+    18%{transform:translateY(-8px) scale(1.12);opacity:1}
+    100%{transform:translateY(-46px) scale(1);opacity:0}
+  }
+  /* 升官 / 得匾额时横过来的一道大字 */
+  .herald{position:fixed;inset:0;z-index:96;display:none;align-items:center;justify-content:center;
+    pointer-events:none;background:radial-gradient(rgba(155,45,32,.16),transparent 62%)}
+  .herald.on{display:flex;animation:heraldbg 2.4s ease-out forwards}
+  .herald .in{text-align:center;animation:heraldin 2.4s cubic-bezier(.2,.9,.2,1) forwards}
+  .herald .k{font-size:12px;letter-spacing:8px;color:var(--accent);margin-bottom:8px}
+  .herald .v{font-size:clamp(30px,9vw,52px);font-weight:700;letter-spacing:10px;color:var(--accent);
+    text-shadow:0 2px 0 rgba(253,243,224,.7)}
+  .herald .d{font-size:13px;letter-spacing:3px;color:var(--dim);margin-top:10px}
+  @keyframes heraldbg{0%{opacity:0}12%{opacity:1}75%{opacity:1}100%{opacity:0}}
+  @keyframes heraldin{
+    0%{transform:scale(.72) rotate(-5deg);opacity:0}
+    14%{transform:scale(1) rotate(0);opacity:1}
+    78%{transform:scale(1);opacity:1}
+    100%{transform:scale(1.04);opacity:0}
+  }
+
+  /* 内务府 */
+  .rankbar{margin:2px 0 4px;height:7px;border-radius:4px;background:var(--soft);overflow:hidden}
+  .rankbar i{display:block;height:100%;background:var(--accent);border-radius:4px;transition:width .5s}
+  .ranktip{font-size:12.5px;color:var(--dim);margin-bottom:14px;letter-spacing:1px}
+  .goods{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px;margin-bottom:6px}
+  .good{border:1px solid var(--line);border-radius:5px;padding:9px 7px;background:var(--card);
+    display:flex;flex-direction:column;align-items:center;gap:6px;font-size:13px;line-height:1.3}
+  .good:hover{border-color:var(--accent)}
+  .good .pv{width:34px;height:34px;border:1.5px solid var(--accent);border-radius:3px;color:var(--accent);
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;
+    transform:rotate(-7deg);flex:none;overflow:hidden;text-align:center}
+  .good .pv.tiny{font-size:9px;letter-spacing:0;line-height:1.05;white-space:normal;word-break:break-all;padding:1px}
+  .good .pv.paper{transform:none;border-radius:4px;border-color:var(--line)}
+  .good .nm{font-weight:700;letter-spacing:1px}
+  .good .pz{font:12px/1 ui-monospace,Consolas,monospace;color:var(--gold)}
+  .good.own{background:var(--soft)}
+  .good.own .pz{color:var(--dim)}
+  .good.cur{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+  .good.cur::after{content:"在用";font-size:11px;letter-spacing:2px;color:var(--accent)}
+  .good.poor{opacity:.5}
+  .meds{display:flex;flex-wrap:wrap;gap:7px}
+  .med{border:1px solid var(--line);border-radius:4px;padding:6px 9px;font-size:12.5px;letter-spacing:1px;
+    color:var(--dim);background:var(--card)}
+  .med.got{border-color:var(--gold);color:var(--gold);background:rgba(169,134,63,.09);font-weight:700}
+  .med small{display:block;font-size:11px;letter-spacing:0;font-weight:400;opacity:.8;margin-top:2px}
+
   .app{display:flex;gap:22px;max-width:1060px;margin:0 auto;align-items:flex-start}
   .wrap{flex:1;min-width:0;max-width:720px}
 
@@ -161,7 +237,8 @@
   /* 御印：没批是空印格，批了盖一方朱印「准」 */
   li .bx{width:28px;height:28px;border:1.5px dashed var(--line);border-radius:3px;flex:none;margin-top:1px;
     display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;
-    color:transparent;letter-spacing:0}
+    color:transparent;letter-spacing:0;overflow:hidden;text-align:center}
+  li .bx.tiny{font-size:9px;line-height:1.05;white-space:normal;word-break:break-all;padding:1px}
   li:hover .bx{border-color:var(--accent);color:rgba(155,45,32,.3)}
   li.ok .bx{border:1.5px solid var(--accent);border-radius:3px;background:var(--accent);color:#fdf3e0;
     transform:rotate(-7deg);
@@ -277,6 +354,11 @@
   <div class="ttl">奏事处</div>
   <div class="sub">朱笔一点，此事便算办了</div>
   <span class="seal">御<br>批</span>
+  <button class="purse" id="purse" title="内务府：俸银、官阶、匾额">
+    <span class="rk" id="pRank">笔帖式</span>
+    <span class="ag"><b id="pAg">0</b> 两</span>
+    <span class="rn" id="pRun"></span><i class="dot"></i>
+  </button>
 </div>
 <div class="app">
 <aside id="side"></aside>
@@ -421,6 +503,36 @@
   </div>
 </div></div>
 
+<!-- 内务府 -->
+<div class="mask" id="mask6"><div class="dlg sheet">
+  <h2>内务府</h2>
+  <label>官阶</label>
+  <div style="font-size:20px;font-weight:700;letter-spacing:4px;color:var(--accent)" id="ihRank">笔帖式</div>
+  <div class="rankbar"><i id="ihBar" style="width:0"></i></div>
+  <div class="ranktip" id="ihTip"></div>
+
+  <label>俸银</label>
+  <div class="ranktip" id="ihAg" style="margin-bottom:14px"></div>
+
+  <label>印章 <small style="color:var(--dim);font-weight:400">（批过的那一方印）</small></label>
+  <div class="goods" id="ihSeal"></div>
+
+  <label style="margin-top:12px">纸色</label>
+  <div class="goods" id="ihPaper"></div>
+
+  <label style="margin-top:12px">匾额 <small style="color:var(--dim);font-weight:400">（不卖，只能挣）</small></label>
+  <div class="meds" id="ihMed"></div>
+
+  <div class="btns">
+    <button class="btn" id="ihReset">重开一局</button>
+    <button class="btn pri" id="ihClose">退下</button>
+  </div>
+</div></div>
+
+<div class="herald" id="herald"><div class="in">
+  <div class="k" id="hK">奉旨</div><div class="v" id="hV"></div><div class="d" id="hD"></div>
+</div></div>
+
 <div class="toast" id="toast"></div>
 <div class="newver" id="newver"><span>新版已到</span><button id="nvGo">换上</button><button class="x" id="nvNo">待会儿</button></div>
 <div class="newver" id="backup"><span><b id="backupDays">14</b> 天没存档了</span><button id="bkGo">存一份</button><button class="x" id="bkNo">知道了</button></div>
@@ -539,6 +651,7 @@ function save(now){
 }
 function mergeData(from){                       // 任一边打过勾就算勾上，只增不减
   if (!from || !Array.isArray(from.lists)) return;
+  mergeGame(from.g);
   for (const inc of from.lists){
     const mine = D.lists.find(l => l.id === inc.id) || D.lists.find(l => l.name === inc.name);
     if (!mine){ D.lists.push(inc); continue; }
@@ -571,7 +684,7 @@ const gtHTML = g => g.title ? md(g.title) : '<span style="color:var(--dim)">未�
 const mdN = s => s.split(/\n/).map(md).join("<br>");     // 朱批是多行的，逐行渲染再接起来
 const liHTML = it => `
   <li data-i="${it.id}" class="${it.done?"ok ":""}${it.n?"hasnote":""}">
-    <span class="bx" data-act="tick">准</span>
+    <span class="bx${SEALS[G().seal] && SEALS[G().seal].sm ? " tiny" : ""}" data-act="tick">${SEALS[G().seal] ? SEALS[G().seal].t : "准"}</span>
     <span class="tx" data-act="tick">${md(it.t)}</span>
     <button class="pen" data-act="note" title="${it.n ? "改朱批" : "写朱批"}">朱</button>
     <button class="dots" data-act="more" title="改事由 / 换卷 / 删去">⋮</button>
@@ -759,6 +872,8 @@ $("#body").addEventListener("click", e => {
     it.done = !it.done; li.classList.toggle("ok", it.done);
     const seal = li.querySelector(".bx");                 // 盖印的动作，只在真点的时候放
     if (it.done && seal){ seal.classList.remove("stamp"); void seal.offsetWidth; seal.classList.add("stamp"); }
+    scoreTick(it, it.done, seal);
+    if (it.done && allDone(g)) scoreGroup(g);
     paint(); save(); return;
   }
   if (act === "note")     return openNote(li.dataset.i);
@@ -771,8 +886,12 @@ $("#body").addEventListener("click", e => {
 
 /* 一卷全批：全批过了再点就是整卷撤回 */
 function stampAll(g){
-  const all = allDone(g);
-  g.items.forEach(i => i.done = !all);
+  const all = allDone(g), was = G().ag;
+  silent = 1;
+  g.items.forEach(i => { i.done = !all; scoreTick(i, !all); });
+  if (!all) scoreGroup(g);
+  silent = 0;
+  coin(G().ag - was);
   render(); save(true);
   if (!all){                                   // 一枚一枚落印，看着像批折子
     const sec = document.querySelector(`[data-g="${g.id}"]`);
@@ -884,6 +1003,7 @@ function saveNote(){
   if (changed){
     it.mt = Date.now();
     if (n) it.n = n; else delete it.n;
+    scoreNote(it, !!n);
   }
   const id = notingId;
   closeNote();
@@ -1067,6 +1187,232 @@ function checkBackup(){
   $("#backup").classList.add("on");
 }
 
+/* ============ 俸银 · 官阶 · 内务府 ============
+   批一件领赏，撤回退赏（所以反复勾撤刷不出钱来）。
+   攒的银子在内务府换印章和纸色；累计功绩定官阶；匾额只能挣，不卖。
+   这一摊数据挂在 D.g 上，跟着存档和驿传一起走。 */
+const SEALS = {
+  zhun:{t:"准",     p:0,   n:"准"},
+  yue: {t:"阅",     p:30,  n:"阅"},
+  ke:  {t:"可",     p:30,  n:"可"},
+  xing:{t:"行",     p:30,  n:"行"},
+  tick:{t:"✓",      p:60,  n:"素印"},
+  zhen:{t:"朕知道了", p:150, n:"朕知道了", sm:true},
+};
+const PAPERS = {
+  xuan:{n:"宣纸",     p:0,   c:"",        sw:"#e9dcc0"},
+  jin: {n:"洒金笺",   p:100, c:"pp-jin",  sw:"#eadfba"},
+  qing:{n:"竹青",     p:140, c:"pp-qing", sw:"#dde5d6"},
+  lan: {n:"藏蓝夜奏", p:180, c:"pp-lan",  sw:"#141a26"},
+};
+const RANKS = [[0,"笔帖式"],[30,"库使"],[80,"主事"],[160,"员外郎"],[300,"郎中"],
+               [500,"侍郎"],[800,"尚书"],[1200,"大学士"],[1800,"军机大臣"]];
+const MEDALS = [
+  {id:"first", n:"初执朱笔", d:"批下头一件"},
+  {id:"vol",   n:"一卷功成", d:"整整一卷批完"},
+  {id:"d20",   n:"宵衣旰食", d:"一日之内批满二十件"},
+  {id:"night", n:"秉烛达旦", d:"子夜到卯时之间批折"},
+  {id:"run7",  n:"持之以恒", d:"连批七日"},
+  {id:"c100",  n:"十年寒窗", d:"累计批过一百件"},
+  {id:"note10",n:"御笔亲批", d:"写下十条朱批"},
+  {id:"rich",  n:"富甲一方", d:"手上存到五百两"},
+];
+const GDEF = () => ({ag:0, tot:0, cnt:0, nc:0, day:"", tn:0, run:0, best:0,
+                     own:["zhun","xuan"], seal:"zhun", paper:"xuan", med:[]});
+function G(){
+  if (!D.g || typeof D.g !== "object") D.g = GDEF();
+  const d = GDEF();
+  for (const k in d) if (D.g[k] === undefined) D.g[k] = d[k];   // 老存档补齐字段
+  if (!SEALS[D.g.seal]) D.g.seal = "zhun";
+  if (!PAPERS[D.g.paper]) D.g.paper = "xuan";
+  return D.g;
+}
+const rankOf = tot => { let r = RANKS[0]; for (const x of RANKS) if (tot >= x[0]) r = x; return r; };
+const nextRank = tot => RANKS.find(x => x[0] > tot) || null;
+
+const ymd = t => { const d = new Date(t); const p = n => String(n).padStart(2,"0");
+                   return d.getFullYear() + "-" + p(d.getMonth()+1) + "-" + p(d.getDate()); };
+
+/* 赏银飘一下。el 给了就从它头上起飞，没给就从俸银牌起飞 */
+let silent = 0;                                   // 整卷一次批完时先攒着，末了只飘一个总数
+function coin(n, el){
+  if (!n || silent) return;
+  const host = el || $("#purse");
+  const r = host.getBoundingClientRect();
+  const c = document.createElement("div");
+  c.className = "coin" + (n < 0 ? " neg" : "");
+  c.textContent = (n > 0 ? "+" : "−") + Math.abs(n) + " 两";
+  c.style.left = (r.left + r.width / 2 - 22) + "px";
+  c.style.top  = (r.top - 4) + "px";
+  document.body.appendChild(c);
+  setTimeout(() => c.remove(), 1050);
+}
+let heraldQ = [];
+function herald(k, v, d){
+  heraldQ.push([k, v, d]);
+  if (heraldQ.length > 1) return;                 // 排队，一条一条来
+  (function next(){
+    const cur = heraldQ[0]; if (!cur) return;
+    $("#hK").textContent = cur[0]; $("#hV").textContent = cur[1]; $("#hD").textContent = cur[2] || "";
+    const h = $("#herald");
+    h.classList.remove("on"); void h.offsetWidth; h.classList.add("on");
+    setTimeout(() => { h.classList.remove("on"); heraldQ.shift(); next(); }, 2450);
+  })();
+}
+
+/* 领赏 / 退赏。正数才计入累计功绩，退赏不倒扣官阶 */
+function earn(n, el){
+  const g = G(), before = RANKS.indexOf(rankOf(g.tot));
+  g.ag  = Math.max(0, g.ag + n);
+  g.tot = Math.max(0, g.tot + n);   // 退赏连功绩一起退，不然反复勾撤就能刷出官来
+  coin(n, el);
+  const after = RANKS.indexOf(rankOf(g.tot));
+  if (after > before) herald("奉旨升授", RANKS[after][1], "累计功绩 " + g.tot + " 两");
+  paintPurse();
+}
+/* 整卷批完的一次性赏。卷里超过两件才算，免得一件的卷白捡十两 */
+function scoreGroup(g){
+  if (g.pg || g.items.length < 2 || !allDone(g)) return;
+  g.pg = 1; earn(10); medal("vol");
+  toast(`「${g.title || "这一卷"}」整卷功成，赏十两`);
+}
+function medal(id){
+  const g = G(); if (g.med.includes(id)) return;
+  const m = MEDALS.find(x => x.id === id); if (!m) return;
+  g.med.push(id);
+  g.ag += 20; g.tot += 20;                        // 每块匾额附赏二十两
+  herald("御赐匾额", m.n, m.d + " · 赏银二十两");
+  paintPurse();
+}
+/* 今天头一回批折：结算连批天数，返回该给的加赏 */
+function touchDay(){
+  const g = G(), t = ymd(Date.now());
+  if (g.day === t) return 0;
+  g.run = (g.day === ymd(Date.now() - 864e5)) ? (g.run || 0) + 1 : 1;
+  g.best = Math.max(g.best || 0, g.run);
+  g.day = t; g.tn = 0;
+  if (g.run >= 7) medal("run7");
+  return Math.min(g.run, 10);
+}
+/* 打勾/撤勾的结算。on=true 是批，false 是撤 */
+function scoreTick(it, on, el){
+  const g = G();
+  if (on){
+    if (it.p) return;                             // 这一件的赏已经领过，不再给
+    it.p = 1; g.cnt = (g.cnt || 0) + 1;
+    const bonus = touchDay();
+    g.tn = (g.tn || 0) + 1;
+    earn(2 + bonus, el);
+    if (bonus) toast(`连批第 ${g.run} 日，加赏 ${bonus} 两`);
+    if (g.cnt === 1) medal("first");
+    if (g.cnt >= 100) medal("c100");
+    if (g.tn >= 20) medal("d20");
+    const h = new Date().getHours();
+    if (h >= 0 && h < 5) medal("night");
+    if (g.ag >= 500) medal("rich");
+  } else {
+    if (!it.p) return;
+    delete it.p; g.cnt = Math.max(0, (g.cnt || 0) - 1); g.tn = Math.max(0, (g.tn || 0) - 1);
+    earn(-2, el);
+  }
+}
+function scoreNote(it, has){
+  const g = G();
+  if (has && !it.pn){ it.pn = 1; g.nc = (g.nc || 0) + 1; earn(1); if (g.nc >= 10) medal("note10"); }
+}
+
+/* 开局补发：这套东西是后加的，此前批过的件不能白批 */
+function backpay(){
+  const g = G();
+  if (g.tot || g.cnt) return;                      // 已经开过局，别重复发
+  let n = 0;
+  for (const l of D.lists) for (const gg of l.groups) for (const it of gg.items)
+    if (it.done && !it.p){ it.p = 1; n++; }
+  if (!n) return;
+  g.cnt = n; g.ag += n * 2; g.tot += n * 2;
+  setTimeout(() => herald("补发俸银", n * 2 + " 两", `此前批过的 ${n} 件，一并结清`), 800);
+}
+
+/* 两台设备的账合起来：数目取大的，买过的和挣到的取并集。
+   要是两边各自批了同一批件，it.p 那边的合并已经保住了勾，这里数目取大的也不会重复计。 */
+function mergeGame(f){
+  if (!f || typeof f !== "object") return;
+  const g = G();
+  for (const k of ["ag","tot","cnt","nc","best"]) g[k] = Math.max(g[k] || 0, f[k] || 0);
+  if ((f.day || "") > (g.day || "")){ g.day = f.day; g.run = f.run || 0; g.tn = f.tn || 0; }
+  else if ((f.day || "") === (g.day || "")){ g.run = Math.max(g.run || 0, f.run || 0); g.tn = Math.max(g.tn || 0, f.tn || 0); }
+  g.own = [...new Set([...(g.own || []), ...(f.own || [])])].filter(k => SEALS[k] || PAPERS[k]);
+  g.med = [...new Set([...(g.med || []), ...(f.med || [])])].filter(k => MEDALS.some(m => m.id === k));
+}
+
+function paintPurse(){
+  const g = G();
+  $("#pAg").textContent = g.ag;
+  $("#pRank").textContent = rankOf(g.tot)[1];
+  const run = $("#pRun");
+  const live = g.day === ymd(Date.now());
+  run.textContent = g.run ? `连批 ${g.run} 日` : "";
+  run.classList.toggle("hot", live && g.run >= 3);
+  // 买得起没买过的东西，就在牌子上点一颗灯
+  const buyable = Object.entries({...SEALS, ...PAPERS})
+    .some(([k, v]) => v.p > 0 && !g.own.includes(k) && g.ag >= v.p);
+  $("#purse").classList.toggle("buyable", buyable);
+  // 只动纸色这几个类，别把 applyFilter 挂上去的 searching 一起抹了
+  document.body.classList.remove("pp-jin","pp-qing","pp-lan");
+  if (PAPERS[g.paper].c) document.body.classList.add(PAPERS[g.paper].c);
+}
+
+/* ── 内务府面板 ── */
+const mask6 = $("#mask6");
+function goodHTML(k, v, kind, g){
+  const own = g.own.includes(k), cur = (kind === "seal" ? g.seal : g.paper) === k;
+  const pv = kind === "seal"
+    ? `<span class="pv${v.sm ? " tiny" : ""}">${esc(v.t)}</span>`
+    : `<span class="pv paper" style="background:${v.sw}"></span>`;
+  return `<button class="good${own?" own":""}${cur?" cur":""}${!own && g.ag < v.p ? " poor" : ""}"
+    data-buy="${k}" data-kind="${kind}">${pv}
+    <span class="nm">${esc(kind === "seal" ? v.n : v.n)}</span>
+    ${cur ? "" : `<span class="pz">${own ? "已有 · 换上" : v.p + " 两"}</span>`}</button>`;
+}
+function paintShop(){
+  const g = G(), r = rankOf(g.tot), nx = nextRank(g.tot);
+  $("#ihRank").textContent = r[1];
+  $("#ihBar").style.width = nx ? Math.round((g.tot - r[0]) / (nx[0] - r[0]) * 100) + "%" : "100%";
+  $("#ihTip").textContent = nx
+    ? `累计功绩 ${g.tot} 两，再挣 ${nx[0] - g.tot} 两升「${nx[1]}」`
+    : `累计功绩 ${g.tot} 两，位极人臣，无可再升`;
+  $("#ihAg").textContent =
+    `手上 ${g.ag} 两 · 批过 ${g.cnt} 件 · 朱批 ${g.nc} 条 · 连批 ${g.run} 日（最长 ${g.best} 日）`;
+  $("#ihSeal").innerHTML  = Object.entries(SEALS).map(([k,v]) => goodHTML(k,v,"seal",g)).join("");
+  $("#ihPaper").innerHTML = Object.entries(PAPERS).map(([k,v]) => goodHTML(k,v,"paper",g)).join("");
+  $("#ihMed").innerHTML = MEDALS.map(m =>
+    `<span class="med${g.med.includes(m.id)?" got":""}">${m.n}<small>${m.d}</small></span>`).join("");
+}
+function openShop(){ paintShop(); mask6.classList.add("on"); }
+mask6.addEventListener("click", e => { if (e.target === mask6) mask6.classList.remove("on"); });
+$("#ihClose").onclick = () => mask6.classList.remove("on");
+$("#purse").onclick = openShop;
+
+mask6.addEventListener("click", e => {
+  const b = e.target.closest("[data-buy]"); if (!b) return;
+  const g = G(), k = b.dataset.buy, kind = b.dataset.kind;
+  const v = (kind === "seal" ? SEALS : PAPERS)[k];
+  if (!g.own.includes(k)){
+    if (g.ag < v.p) return toast(`还差 ${v.p - g.ag} 两`);
+    g.ag -= v.p; g.own.push(k);
+    toast(`内务府已备下「${v.n}」`);
+  }
+  if (kind === "seal") g.seal = k; else g.paper = k;
+  paintPurse(); paintShop(); save(true);
+  if (kind === "seal") render();                  // 印章换了，每一条的印都要重画
+});
+$("#ihReset").onclick = () => {
+  if (!confirm("俸银、官阶、匾额、买过的印章纸色，全部归零重来。折子本身不动。")) return;
+  D.g = GDEF();
+  for (const l of D.lists) for (const gg of l.groups) for (const it of gg.items){ delete it.p; delete it.pn; }
+  paintPurse(); paintShop(); render(); save(true); toast("已重开一局");
+};
+
 /* ============ 驿传：拿 GitHub 一个私有仓库当中转 ============
    没有服务器，两台设备各自读写同一个 json。合并还是老规矩（勾只增不减），
    事由和朱批按改动时刻取新的。令牌只落在本机 localStorage，
@@ -1217,6 +1563,9 @@ if (!D || !Array.isArray(D.lists) || !D.lists.length){
   newList(SEED_NAME, parse(SEED_MD));
 }
 if (!D.lists.find(l => l.id === D.cur)) D.cur = D.lists[0].id;
+G();                                             // 老存档补上俸银那一摊
+backpay();
+paintPurse();
 render();
 
 /* ── 让浏览器把这份数据标成「持久」，别在清存储时顺手清掉 ─────
