@@ -955,7 +955,10 @@ const DEMO = /[?&]demo\b/.test(location.search);
 /* 演武场里六部、荒疏、请辞一概照真的来 —— 要试的就是这一套。只两处不同：
    库银管够、内库的东西全在手上，且恩典之物不看朝纲脸色（不然玉玺压根试不着） */
 const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
-const BUILD = "v25" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+/* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
+   "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
+const selfURL = demo => location.pathname + (demo ? "?demo" : "");
+const BUILD = "v26" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -1515,7 +1518,7 @@ menu.addEventListener("click", async e => {
   else if (m === "sync"){ openSync(); }
   /* 演武场进出。加到主屏幕之后没有地址栏，手打不了 ?demo，所以这里给一道门。
      两边各存各的存档，来回走不会丢东西 */
-  else if (m === "demo") location.href = DEMO ? "./" : "./?demo";
+  else if (m === "demo") location.href = selfURL(!DEMO);
   else if (m === "upd"){
     if (window.forceUpdate) forceUpdate();
     else toast("这是本地打开的文件，没有缓存这回事");
@@ -2715,7 +2718,7 @@ if (DEMO){
   if (sub){
     sub.textContent = "演武场 · 全解锁试皮肤 · 存档与真本分开 · ";
     const a = document.createElement("a");
-    a.href = "./"; a.textContent = "回真本";
+    a.href = selfURL(0); a.textContent = "回真本";
     a.style.cssText = "color:var(--gold);text-decoration:underline";
     sub.appendChild(a);
   }
