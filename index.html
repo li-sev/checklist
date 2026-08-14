@@ -116,8 +116,11 @@
     background:var(--card);font-size:12px;color:var(--dim);letter-spacing:0;padding:0}
   .sfx.on{border-color:var(--gold);color:var(--gold)}
   .tabs{display:flex;margin:11px 0;border:1px solid var(--line);border-radius:6px;overflow:hidden}
-  .tab{flex:1;min-height:40px;border:0;background:var(--card);font-size:15px;letter-spacing:5px;
-    color:var(--dim);padding:0}
+  /* 四个页签并排，字距收紧些，窄屏才挤得下 */
+  .tab{flex:1;min-height:40px;border:0;background:var(--card);font-size:14.5px;letter-spacing:1.5px;
+    color:var(--dim);padding:0 2px;white-space:nowrap}
+  .tab i{font-style:normal;font-size:10.5px;letter-spacing:0;opacity:.72;margin-left:3px;
+    font-family:ui-monospace,Consolas,monospace}
   .tab+.tab{border-left:1px solid var(--line)}
   .tab.on{background:var(--accent);color:#fdf3e0;font-weight:700}
   .pane{display:none}
@@ -650,6 +653,8 @@
 
   <div class="tabs" id="ihTabs">
     <button class="tab on" data-tab="court">朝廷</button>
+    <button class="tab" data-tab="boon">恩典</button>
+    <button class="tab" data-tab="med">治绩<i id="ihMedN"></i></button>
     <button class="tab" data-tab="store">内库</button>
   </div>
 
@@ -658,11 +663,21 @@
     <div class="hint">每一卷折子归一个部办，那个部的尚书就是替你办这件事的人。<br>
       姓是部名的谐音，名就是第几任 —— 李一走了，接任的叫李二。<br>
       久不派差人心就散；忠诚跌到三十，他会递牌子请辞 —— 留人要花银子，准辞则这个部空着</div>
-    <label>恩典 <small>朝纲到了自然有，跌下去自然收回</small></label>
-    <div class="boons" id="ihBoon"></div>
-    <label>治绩 <small>不卖，只能挣</small></label>
-    <div class="meds" id="ihMed"></div>
     <div class="ranktip tight" id="ihAg"></div>
+  </div>
+
+  <div class="pane" data-pane="boon">
+    <label class="first">恩典 <small>朝纲到了自然有，跌下去自然收回</small></label>
+    <div class="boons" id="ihBoon"></div>
+    <div class="hint">这几样不用买，也买不着，只跟着六部均分走。<br>
+      倍率只乘底数（一件 2 两 / 整卷 10 两），勤政加赏和治绩赏格不乘</div>
+  </div>
+
+  <div class="pane" data-pane="med">
+    <label class="first">治绩 <small>不卖，只能挣</small></label>
+    <div class="meds" id="ihMed"></div>
+    <div class="hint">难的赏得多，牌子上标着各值几两。<br>
+      挣到就一次入库，不会撤销，也不会重复给</div>
   </div>
 
   <div class="pane" data-pane="store">
@@ -758,7 +773,7 @@ const SEED_MD = `
 
 /* 存储 key 与前两版一致，老数据直接接管 */
 const KEY = "checklist_v1";
-const BUILD = "v16";                              // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v17";                              // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -2023,11 +2038,12 @@ function paintShop(){
   }).join("");
   $("#ihSeal").innerHTML  = Object.entries(SEALS).map(([k,v]) => goodHTML(k,v,"seal",g)).join("");
   $("#ihPaper").innerHTML = Object.entries(PAPERS).map(([k,v]) => goodHTML(k,v,"paper",g)).join("");
+  $("#ihMedN").textContent = g.med.length + "/" + MEDALS.length;   // 页签上带个数，不点进去也知道挣了几件
   $("#ihMed").innerHTML = MEDALS.map(m => { const got = g.med.includes(m.id);
     return `<span class="med${got?" got":""}"><b>${m.n}</b><i class="mp">${
       got ? "已入 " + m.p : m.p} 两</i><small>${m.d}</small></span>`; }).join("");
 }
-/* 朝廷 / 内库分两页，省得一长条摊到底 */
+/* 朝廷 / 恩典 / 治绩 / 内库分四页，省得一长条摊到底 */
 $("#ihTabs").addEventListener("click", e => {
   const b = e.target.closest(".tab"); if (!b || b.classList.contains("on")) return;
   $$("#ihTabs .tab").forEach(x => x.classList.toggle("on", x === b));
