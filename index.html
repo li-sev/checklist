@@ -24,7 +24,7 @@
     --rule:rgba(90,60,20,.05); --fiber:rgba(120,90,40,.05);
     /* 货色自己的颜色：一概不随纸色走。金是金、朱是朱、墨是墨 ——
        铺子里看见什么样，买回来就是什么样，不然换张纸就成了另一件东西 */
-    --au:#c9a227; --au1:#f2dc96; --au2:#8a6b1e; --mo:#2a241c;
+    --au:#c9a227; --au2:#8a6b1e; --mo:#2a241c;
     /* 印泥：一律朱，只有万年红那种大红纸上盖白 —— 红纸盖红印等于没盖。
        --onzhu 是压在印面上的那个字。铺子里的样张和真盖下去的印用同一对色，
        所以挑的时候看见什么，盖出来就是什么 */
@@ -44,10 +44,13 @@
                --accent:#8d3a15; --done:#8d3a15; }
   body.pp-qing{ --bg:#dde5d6; --card:#f4f8ee; --ink:#242c22; --dim:#6f7d67; --line:#c2cfb6;
                 --accent:#3f6b46; --done:#3f6b46; --gold:#7e8f56; --link:#2c5b63; --soft:#e8efe0; }
-  /* 金云笺：政通人和才配用的一张纸，比洒金更沉些，落款描金 */
-  body.pp-yun{ --bg:#e7d7ab; --card:#fffaea; --line:#cdb173; --gold:#8a6b1e; --soft:#f6ecca;
+  /* 金云笺：政通人和才配用的一张纸。要的是正金，不是米黄，
+     所以底色直接压到金上去；卡片留浅金，字才看得清 */
+  body.pp-yun{ --bg:#dcb648; --card:#f8ead0; --line:#c19a34; --gold:#7d5f14; --soft:#f0dda3;
+               --ink:#2a2010; --dim:#7e6a3a;
                --accent:#8a2f14; --done:#8a2f14; --link:#3f6480;
-               --shadow:0 8px 26px rgba(120,92,26,.24) }
+               --rule:rgba(90,66,14,.10); --fiber:rgba(90,66,14,.07);
+               --shadow:0 8px 26px rgba(120,92,26,.34) }
   body.pp-lan{ --zhu:#cf4232; --warn:#e2695a;  --bg:#141a26; --card:#1e2637; --ink:#dfe6f2; --dim:#8593ab; --line:#33405a;
                --accent:#d4a24a; --done:#d4a24a; --gold:#d4a24a; --link:#7fa8cf; --onacc:#141a26;
                --soft:#263044; --shadow:0 8px 26px rgba(0,0,0,.65);
@@ -66,12 +69,12 @@
               --rule:rgba(40,40,36,.06); --fiber:rgba(40,40,36,.05);
               --shadow:0 8px 26px rgba(40,40,36,.2) }
   /* 竹笺：一条条竹片编起来的那种简。缝在 #fleck 那层画 */
-  body.pp-jian{ --bg:#d7cb98; --card:#ede5c2; --ink:#332d1c; --dim:#7a6f4c; --line:#bdb07c;
+  body.pp-jian{ --bg:#cfc088; --card:#ede5c2; --ink:#332d1c; --dim:#7a6f4c; --line:#bdb07c;
                 --accent:#8a3a18; --done:#8a3a18; --gold:#8a7530; --link:#3d5b46; --soft:#e3daaf;
                 --rule:rgba(70,58,20,.09); --fiber:rgba(70,58,20,.06);
                 --shadow:0 8px 26px rgba(80,66,24,.28) }
   /* 松木板：浅色木案，横着的木纹加两道板缝 */
-  body.pp-mu{ --bg:#e8d6b9; --card:#f9f0de; --ink:#3a2d1e; --dim:#8a7458; --line:#cdb388;
+  body.pp-mu{ --bg:#e3cba2; --card:#f9f0de; --ink:#3a2d1e; --dim:#8a7458; --line:#cdb388;
               --accent:#8f3a1c; --done:#8f3a1c; --gold:#9a7a3c; --link:#4a6072; --soft:#f2e5cc;
               --rule:rgba(96,66,32,.07); --fiber:rgba(96,66,32,.05);
               --shadow:0 8px 26px rgba(90,62,26,.26) }
@@ -99,21 +102,36 @@
       radial-gradient(circle at 68% 12%, rgba(246,222,158,.36) 0 1.2px, transparent 1.8px),
       radial-gradient(circle at 87% 66%, rgba(246,222,158,.44) 0 2.2px, transparent 2.8px);
     background-size:107px 89px, 73px 79px, 139px 127px}
-  /* 竹笺：竖着一片一片的竹简。每片之间一道暗缝加一线高光，看着才有厚度；
-     再压一层极淡的竖丝当竹纤维 */
+  /* 竹笺：竖着一片一片编起来的竹简。光靠一道缝看不出是竹片，
+     得把每片的「鼓」画出来 —— 一片之内左亮右暗地收一道弧光，
+     再压竹丝，最后横过两道编绳。三层叠起来才认得出是简不是条纹纸 */
   body.pp-jian #fleck{background-image:
+      /* 编简的两道绳，绳上还有一格一格的缠痕 */
       repeating-linear-gradient(90deg,
-        rgba(94,78,30,.20) 0 1.5px, rgba(255,246,206,.30) 1.5px 3px, transparent 3px 27px),
+        rgba(126,92,38,.42) 0 9px, rgba(96,68,26,.42) 9px 11px) left top 21%/100% 8px no-repeat,
       repeating-linear-gradient(90deg,
-        rgba(94,78,30,.05) 0 1px, transparent 1px 6px)}
-  /* 松木板：横着的木纹，粗细深浅错开；每隔一百来像素一道板缝 */
+        rgba(126,92,38,.42) 0 9px, rgba(96,68,26,.42) 9px 11px) left bottom 21%/100% 8px no-repeat,
+      /* 竹丝：极细的竖纹 */
+      repeating-linear-gradient(90deg, rgba(86,68,24,.09) 0 1px, transparent 1px 5px),
+      /* 每一片的弧光：暗缝 → 高光 → 平面 → 渐收暗 */
+      repeating-linear-gradient(90deg,
+        rgba(80,62,20,.40) 0 2px,
+        rgba(255,250,216,.50) 2px 5px,
+        rgba(255,250,216,.16) 5px 13px,
+        rgba(80,62,20,.07) 13px 23px,
+        rgba(80,62,20,.24) 23px 29px)}
+  /* 松木板：横着的木纹。三层疏密不同的横纹错开，免得看着像五线谱；
+     隔一块板一道深槽加高光当拼缝；再点两个木疖，一眼就知道是木头 */
   body.pp-mu #fleck{background-image:
+      radial-gradient(ellipse 30px 10px at 23% 17%,
+        rgba(104,66,22,.40) 0 38%, rgba(104,66,22,.18) 56%, transparent 74%),
+      radial-gradient(ellipse 22px 8px at 72% 63%,
+        rgba(104,66,22,.34) 0 38%, rgba(104,66,22,.15) 56%, transparent 74%),
+      repeating-linear-gradient(0deg, rgba(122,82,34,.20) 0 1.5px, transparent 1.5px 7px),
+      repeating-linear-gradient(0deg, rgba(122,82,34,.13) 0 3px, transparent 3px 19px),
+      repeating-linear-gradient(0deg, rgba(96,60,20,.10) 0 6px, transparent 6px 43px),
       repeating-linear-gradient(0deg,
-        rgba(120,84,40,.13) 0 1.5px, transparent 1.5px 9px),
-      repeating-linear-gradient(0deg,
-        rgba(120,84,40,.07) 0 3px, transparent 3px 23px),
-      repeating-linear-gradient(0deg,
-        rgba(96,64,26,.28) 0 2px, rgba(255,244,222,.35) 2px 4px, transparent 4px 118px)}
+        rgba(74,46,14,.48) 0 2.5px, rgba(255,244,218,.48) 2.5px 5px, transparent 5px 148px)}
 
   /* ── 书体：整页的字形。一律用系统自带的字体，没装就自己退回宋体，不引任何外部资源 ── */
   body.ft-kai,  .pv.ft-kai { font-family:"Kaiti SC","STKaiti","KaiTi","DFKai-SB",serif }
@@ -121,13 +139,16 @@
   body.ft-li,   .pv.ft-li  { font-family:"Baoli SC","Libian SC","LiSu","STLiti",serif }
   body.ft-xing, .pv.ft-xing{ font-family:"Xingkai SC","STXingkai","Weibei SC","Hannotate SC",cursive,serif }
 
-  /* ── 玉玺盖出来是金的，不是朱的。别的印一律随朱笔 ── */
-  body.sl-xi li.ok .bx{background:linear-gradient(145deg,var(--au1),var(--au) 48%,var(--au2));
-    border-color:var(--au2);color:#33260a}
+  /* ── 玉玺盖出来是金的，不是朱的。别的印一律随朱笔 ──
+     平的一块金，不打高光渐变 —— 印泥盖出来本就没有金属反光，
+     那道斜渐变看着像塑料贴片。内圈那道边正页和铺子用同一个深色，不能一亮一暗 */
+  body.sl-xi li.ok .bx{background:var(--au);border-color:var(--au2);color:#33260a;
+    box-shadow:inset 0 0 0 1.5px rgba(51,38,10,.55), 0 1px 3px rgba(80,60,10,.3)}
   body.sl-xi li:hover .bx{border-color:var(--au)}
+  body.sl-xi li.ok:hover .bx{color:#33260a}
   body.sl-xi .pagehead .seal{border-color:var(--au);color:var(--au)}
   .good[data-buy="xi"] .pv.sl{border-color:var(--au2);color:#33260a;
-    background:linear-gradient(145deg,var(--au1),var(--au) 48%,var(--au2));
+    background:var(--au);
     box-shadow:inset 0 0 0 1.5px rgba(51,38,10,.55)}
 
   /* ── 纸纹：底下这张纸怎么打格。改的是 body 的背景，跟纸色各管各的 ── */
@@ -150,28 +171,34 @@
   /* 三样都嫌太素，一律加粗：金线换成实打实的一圈，回纹补上齿、云纹角描双弧、乌木框加厚。
      背景那几条齿要躲开下面的 inset 阴影 —— 阴影是盖在背景上头画的，
      贴边放就被吃掉了，所以齿band从 8px 处起。 */
+  /* 还嫌不够显眼，再加一档：回纹的齿放大到看得清一格一格，
+     云纹角的弧加粗并四边通金线，乌木框加厚到二十像素、外沿另起一圈亮边。
+     背景那几条齿要躲开下面的 inset 阴影 —— 阴影是盖在背景上头画的，
+     贴边放就被吃掉了，所以齿band要从阴影管到的宽度之外起。 */
   body.mt-hui::after{content:"";position:fixed;inset:5px;z-index:2;pointer-events:none;
-    border:3px solid var(--gold);
+    border:4px solid var(--gold);
     background:
-      repeating-linear-gradient(90deg,var(--gold) 0 7px,transparent 7px 16px) left 0 top 8px/100% 4px no-repeat,
-      repeating-linear-gradient(90deg,var(--gold) 0 7px,transparent 7px 16px) left 0 bottom 8px/100% 4px no-repeat,
-      repeating-linear-gradient(0deg, var(--gold) 0 7px,transparent 7px 16px) left 8px top 0/4px 100% no-repeat,
-      repeating-linear-gradient(0deg, var(--gold) 0 7px,transparent 7px 16px) right 8px top 0/4px 100% no-repeat;
-    box-shadow:inset 0 0 0 4px var(--bg), inset 0 0 0 6px var(--gold),
-               0 0 0 1px color-mix(in srgb,var(--gold) 50%,transparent)}
+      repeating-linear-gradient(90deg,var(--gold) 0 10px,transparent 10px 20px) left 0 top 10px/100% 6px no-repeat,
+      repeating-linear-gradient(90deg,var(--gold) 0 10px,transparent 10px 20px) left 0 bottom 10px/100% 6px no-repeat,
+      repeating-linear-gradient(0deg, var(--gold) 0 10px,transparent 10px 20px) left 10px top 0/6px 100% no-repeat,
+      repeating-linear-gradient(0deg, var(--gold) 0 10px,transparent 10px 20px) right 10px top 0/6px 100% no-repeat;
+    box-shadow:inset 0 0 0 5px var(--bg), inset 0 0 0 8px var(--gold),
+               0 0 0 2px color-mix(in srgb,var(--gold) 60%,transparent)}
   body.mt-yun::after{content:"";position:fixed;inset:6px;z-index:2;pointer-events:none;
     background:
-      radial-gradient(circle at 0 0,       transparent 26px,var(--gold) 26px 29px,transparent 30px,transparent 38px,var(--gold) 38px 40px,transparent 41px) left  top/66px 66px no-repeat,
-      radial-gradient(circle at 100% 0,    transparent 26px,var(--gold) 26px 29px,transparent 30px,transparent 38px,var(--gold) 38px 40px,transparent 41px) right top/66px 66px no-repeat,
-      radial-gradient(circle at 0 100%,    transparent 26px,var(--gold) 26px 29px,transparent 30px,transparent 38px,var(--gold) 38px 40px,transparent 41px) left  bottom/66px 66px no-repeat,
-      radial-gradient(circle at 100% 100%, transparent 26px,var(--gold) 26px 29px,transparent 30px,transparent 38px,var(--gold) 38px 40px,transparent 41px) right bottom/66px 66px no-repeat;
-    box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--gold) 55%,transparent)}
+      radial-gradient(circle at 0 0,       transparent 30px,var(--gold) 30px 34.5px,transparent 35.5px,transparent 45px,var(--gold) 45px 48px,transparent 49px) left  top/78px 78px no-repeat,
+      radial-gradient(circle at 100% 0,    transparent 30px,var(--gold) 30px 34.5px,transparent 35.5px,transparent 45px,var(--gold) 45px 48px,transparent 49px) right top/78px 78px no-repeat,
+      radial-gradient(circle at 0 100%,    transparent 30px,var(--gold) 30px 34.5px,transparent 35.5px,transparent 45px,var(--gold) 45px 48px,transparent 49px) left  bottom/78px 78px no-repeat,
+      radial-gradient(circle at 100% 100%, transparent 30px,var(--gold) 30px 34.5px,transparent 35.5px,transparent 45px,var(--gold) 45px 48px,transparent 49px) right bottom/78px 78px no-repeat;
+    box-shadow:inset 0 0 0 3px var(--gold),
+               0 0 0 1.5px color-mix(in srgb,var(--gold) 45%,transparent)}
   body.mt-wu::after{content:"";position:fixed;inset:0;z-index:2;pointer-events:none;
-    border:14px solid #2c231a;
-    border-image:repeating-linear-gradient(45deg,#241c14 0 6px,#3a2e21 6px 13px) 14;
-    box-shadow:inset 0 0 0 2px var(--gold), inset 0 0 0 3px rgba(0,0,0,.5),
-               inset 0 0 26px rgba(0,0,0,.4)}
-  body.mt-wu{padding-left:26px;padding-right:26px}
+    border:20px solid #2c231a;
+    border-image:repeating-linear-gradient(45deg,#211a12 0 7px,#3f3225 7px 15px) 20;
+    box-shadow:inset 0 0 0 2.5px var(--gold), inset 0 0 0 4px rgba(0,0,0,.55),
+               inset 0 0 34px rgba(0,0,0,.45)}
+  /* 框子实打实占掉二十像素，正文得往里让，不然贴着木头 */
+  body.mt-wu{padding-left:32px;padding-right:32px;padding-top:30px}
 
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   body{
@@ -306,6 +333,22 @@
     transform:rotate(-7deg);flex:none;overflow:hidden;text-align:center}
   .good .pv.tiny{font-size:9px;letter-spacing:0;line-height:1.05;white-space:normal;word-break:break-all;padding:1px}
   .good .pv.paper{transform:none;border-radius:4px;border-color:var(--line)}
+  /* 纸色样张里的两张有纹的：正页那套按小样张的尺寸缩一遍 */
+  .good .pv.paper.p-jian{background-image:
+      repeating-linear-gradient(90deg, rgba(86,68,24,.09) 0 1px, transparent 1px 4px),
+      repeating-linear-gradient(90deg,
+        rgba(80,62,20,.42) 0 1.5px,
+        rgba(255,250,216,.52) 1.5px 3px,
+        rgba(255,250,216,.16) 3px 7px,
+        rgba(80,62,20,.08) 7px 11px,
+        rgba(80,62,20,.26) 11px 14px) !important;
+    background-color:#cfc088 !important}
+  .good .pv.paper.p-mu{background-image:
+      repeating-linear-gradient(0deg, rgba(122,82,34,.22) 0 1px, transparent 1px 4px),
+      repeating-linear-gradient(0deg, rgba(96,60,20,.12) 0 2px, transparent 2px 11px),
+      repeating-linear-gradient(0deg,
+        rgba(74,46,14,.5) 0 1.5px, rgba(255,244,218,.5) 1.5px 3px, transparent 3px 17px) !important;
+    background-color:#e3cba2 !important}
   /* 书体的样张写个「永」字：八法都在这一个字里，一眼看得出是哪一路 */
   .good .pv.ft{transform:none;border-color:var(--line);color:var(--ink);font-size:20px}
   /* 纸纹、装裱的样张：把整页那套花样缩到 34px 的小方块里比划一下 */
@@ -333,13 +376,21 @@
                                  radial-gradient(circle at 68% 30%,var(--mo) 0 1.5px,transparent 2px),
                                  radial-gradient(circle at 52% 70%,var(--mo) 0 1.8px,transparent 2.3px)}
   /* 样张跟着正页一起加粗，挑的时候看见什么样买回来就是什么样 */
-  .pv.gp.m-hui {border-color:var(--gold);
-    box-shadow:inset 0 0 0 2px var(--bg),inset 0 0 0 3.5px var(--gold)}
+  .pv.gp.m-hui {border-width:2.5px;border-color:var(--gold);
+    background-image:
+      repeating-linear-gradient(90deg,var(--gold) 0 3px,transparent 3px 6px) ,
+      repeating-linear-gradient(0deg, var(--gold) 0 3px,transparent 3px 6px);
+    background-size:100% 2px, 2px 100%;
+    background-position:left top 5px, left 5px top;
+    background-repeat:no-repeat;
+    box-shadow:inset 0 0 0 2px var(--bg),inset 0 0 0 4px var(--gold)}
   .pv.gp.m-yun {background-image:
-      radial-gradient(circle at 0 0,      transparent 8px,var(--gold) 8px 10px,transparent 11px,transparent 13px,var(--gold) 13px 14.5px,transparent 15.5px),
-      radial-gradient(circle at 100% 100%,transparent 8px,var(--gold) 8px 10px,transparent 11px,transparent 13px,var(--gold) 13px 14.5px,transparent 15.5px)}
-  .pv.gp.m-wu  {border-width:6px;border-color:#2c231a;
-    box-shadow:inset 0 0 0 1.5px var(--gold),inset 0 0 6px rgba(0,0,0,.45)}
+      radial-gradient(circle at 0 0,      transparent 7px,var(--gold) 7px 10px,transparent 11px,transparent 13px,var(--gold) 13px 15px,transparent 16px),
+      radial-gradient(circle at 100% 100%,transparent 7px,var(--gold) 7px 10px,transparent 11px,transparent 13px,var(--gold) 13px 15px,transparent 16px);
+    box-shadow:inset 0 0 0 1.5px var(--gold)}
+  .pv.gp.m-wu  {border-width:8px;border-color:#2c231a;
+    border-image:repeating-linear-gradient(45deg,#211a12 0 4px,#3f3225 4px 8px) 8;
+    box-shadow:inset 0 0 0 1.5px var(--gold),inset 0 0 6px rgba(0,0,0,.5)}
 
   /* 金粉：点下去迸开的那几粒。位置由 --dx/--dy 定，各飞各的 */
   .spark{position:fixed;z-index:96;pointer-events:none;width:4px;height:4px;margin:-2px 0 0 -2px;
@@ -1009,7 +1060,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v31" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v32" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -1686,9 +1737,9 @@ const PAPERS = {
   xue: {n:"雪浪笺",   p:120, c:"pp-xue",  sw:"#f2f3ef"},
   mo:  {n:"水墨",     p:160, c:"pp-mo",   sw:"#dedcd6"},
   hong:{n:"万年红",   p:200, c:"pp-hong", sw:"#7e1c14"},
-  jian:{n:"竹笺",     p:170, c:"pp-jian", sw:"#d6cb99"},
-  mu:  {n:"松木板",   p:210, c:"pp-mu",   sw:"#e7d4b6"},
-  yun: {n:"金云笺",   p:260, c:"pp-yun",  sw:"#f2e0b0", r:70},
+  jian:{n:"竹笺",     p:170, c:"pp-jian", sw:"#cfc088", tx:"p-jian"},
+  mu:  {n:"松木板",   p:210, c:"pp-mu",   sw:"#e3cba2", tx:"p-mu"},
+  yun: {n:"金云笺",   p:260, c:"pp-yun",  sw:"#dcb648", r:70},
 };
 /* 书体：整页的字形。用的都是系统自带的字体 —— 你这台装了才有，没装就退回宋体，
    所以样张里的「永」字长什么样，以你自己这台为准。 */
@@ -2386,7 +2437,9 @@ function goodHTML(k, v, kind, g){
   /* 样张：印章画那一方印，书体写个「永」字，纸色是一块颜色，装裱纸纹缩一个小样 */
   const pv = kind === "seal"  ? `<span class="pv sl${v.sm ? " tiny" : ""}">${esc(v.t)}</span>`
            : kind === "font"  ? `<span class="pv ft ${v.c}">${esc(v.t)}</span>`
-           : v.sw             ? `<span class="pv paper" style="background:${v.sw}"></span>`
+           /* 竹笺松木板靠的是纹理不是颜色，光给一块底色看不出买的是什么，
+              所以带 tx 的那两样另挂一个类，把纹路缩个小样画上去 */
+           : v.sw             ? `<span class="pv paper${v.tx ? " " + v.tx : ""}" style="background:${v.sw}"></span>`
            : `<span class="pv gp ${v.pv}">${v.e || ""}</span>`;
   // 本机没装这种字：上架也没用，买回来跟宋体一个样
   if (kind === "font" && !hasFont(v.f)) return `<button class="good na" disabled>${pv}
