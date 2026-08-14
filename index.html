@@ -227,7 +227,19 @@
     border-image:repeating-linear-gradient(45deg,#241c14 0 6px,#3a2e21 6px 13px) 14;
     box-shadow:inset 0 0 0 2px var(--gold), inset 0 0 0 3px rgba(0,0,0,.5),
                inset 0 0 26px rgba(0,0,0,.4)}
-  body.mt-wu{padding-left:26px;padding-right:26px}
+  /* 装裱是 position:fixed 贴着屏幕四边画的，跟正文不在一个流里 ——
+     页面自己不会给它让地方，正文该压上去还是压上去。
+     卷子那些格子有底色，边饰压上去还像描了道边，不难看；
+     可抬头那两行字和右上那方印底下没有纸垫着，一压就糊成一团。
+     所以按各自最外那道，把 body 的内边距撑开：
+       回纹边  外框到 14px，背景那圈齿探到 20px
+       乌木框  实心到 19px
+       云纹角  角上那两道弧从 6px 探到 46px —— 只在四角，可抬头正好在左上角，
+               所以顶上要让够 46px，两边按弧在那个高度上的宽度算就行
+     只挪正文，不动框本身的分寸 —— v32 把框加粗过一版，正页被吃掉太多，退回来了。 */
+  body.mt-hui{padding:28px 26px calc(34px + env(safe-area-inset-bottom))}
+  body.mt-wu {padding:28px 28px calc(34px + env(safe-area-inset-bottom))}
+  body.mt-yun{padding:52px 26px calc(52px + env(safe-area-inset-bottom))}
 
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   body{
@@ -632,7 +644,17 @@
   li .bx{width:28px;height:28px;border:1.5px dashed var(--line);border-radius:3px;flex:none;margin-top:1px;
     display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;
     color:transparent;letter-spacing:0;overflow:hidden;text-align:center}
-  li .bx.tiny{font-size:9px;line-height:1.05;white-space:normal;word-break:break-all;padding:1px}
+  /* 多字印（「朕知道了」）挤在 28px 的印格里。
+     原先是 font-size:9px 让它自己断行 —— 断成了一行一个字、共四行，比格子高，
+     flex 一居中，上下各切掉一个，外头只看得见当中的「知道」。
+     根子在浏览器的「最小字号」：中文界面的 Chrome 常默认 12px，写 9px 也给你顶回 12，
+     两个字就要 24px，而格子里净宽只有 23px，于是一行只塞得下一个。
+     （铺子里那张样张是 34px 的格子，净宽 29px 塞得下两个，所以只有正页上出岔子。）
+     现在不赌断行了：sealTxt() 两个字一行硬断开（见那儿），这里只管摆；
+     字号照 12px 写（最小字号顶不动它），再整体 scale 缩小 —— transform 不受最小字号管。 */
+  li .bx.tiny{font-size:12px;letter-spacing:0;padding:0}
+  li .bx.tiny > b{display:block;line-height:1.06;font-weight:700;
+    text-align:center;white-space:nowrap;transform:scale(.82)}
   li:hover .bx{border-color:var(--zhu);color:color-mix(in srgb,var(--zhu) 32%,transparent)}
   li.ok .bx{border:1.5px solid var(--zhu);border-radius:3px;background:var(--zhu);color:var(--onzhu);
     transform:rotate(-7deg);
@@ -1092,7 +1114,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v36" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v37" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -1204,9 +1226,16 @@ function newList(name, groups){
 const allDone = g => g.items.length > 0 && g.items.every(i => i.done);
 const gtHTML = g => g.title ? md(g.title) : '<span style="color:var(--dim)">未归卷</span>';
 const mdN = s => s.split(/\n/).map(md).join("<br>");     // 朱批是多行的，逐行渲染再接起来
+/* 印格里那几个字。多字印（「朕知道了」）两个字一行硬断开，排成二乘二的方阵 ——
+   不指望浏览器自己断行，理由见 li .bx.tiny 那条注释 */
+const sealTxt = () => {
+  const v = SEALS[G().seal] || SEALS.zhun;
+  if (!v.sm) return esc(v.t);
+  return "<b>" + (v.t.match(/.{1,2}/g) || []).map(esc).join("<br>") + "</b>";
+};
 const liHTML = it => `
   <li data-i="${it.id}" class="${it.done?"ok ":""}${it.n?"hasnote":""}">
-    <span class="bx${SEALS[G().seal] && SEALS[G().seal].sm ? " tiny" : ""}" data-act="tick">${SEALS[G().seal] ? SEALS[G().seal].t : "准"}</span>
+    <span class="bx${SEALS[G().seal] && SEALS[G().seal].sm ? " tiny" : ""}" data-act="tick">${sealTxt()}</span>
     <span class="tx" data-act="tick">${md(it.t)}</span>
     <button class="pen" data-act="note" title="${it.n ? "改朱批" : "写朱批"}">朱</button>
     <button class="dots" data-act="more" title="改事由 / 换卷 / 删去">⋮</button>
