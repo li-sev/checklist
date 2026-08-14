@@ -46,7 +46,7 @@
                 --accent:#3f6b46; --done:#3f6b46; --gold:#7e8f56; --link:#2c5b63; --soft:#e8efe0; }
   /* 金云笺：政通人和才配用的一张纸。要的是正金，不是米黄，
      所以底色直接压到金上去；卡片留浅金，字才看得清 */
-  body.pp-yun{ --bg:#dcb648; --card:#f8ead0; --line:#c19a34; --gold:#7d5f14; --soft:#f0dda3;
+  body.pp-yun{ --bg:#d8a92f; --card:#f9ecca; --line:#bd9226; --gold:#7a5a0e; --soft:#f2dc94;
                --ink:#2a2010; --dim:#7e6a3a;
                --accent:#8a2f14; --done:#8a2f14; --link:#3f6480;
                --rule:rgba(90,66,14,.10); --fiber:rgba(90,66,14,.07);
@@ -90,7 +90,7 @@
      几层圆点各用一个互质的间距错开，看着才像随手洒的，不像打的格子 */
   #fleck{position:fixed;inset:0;z-index:-1;pointer-events:none;display:none}
   body.pp-jin #fleck, body.pp-hong #fleck,
-  body.pp-jian #fleck, body.pp-mu #fleck{display:block}
+  body.pp-jian #fleck, body.pp-mu #fleck, body.pp-yun #fleck{display:block}
   body.pp-jin #fleck{background-image:
       radial-gradient(circle at 17% 23%, rgba(186,146,46,.85) 0 1.8px, transparent 2.4px),
       radial-gradient(circle at 63% 8%,  rgba(206,172,74,.62) 0 1.2px, transparent 1.8px),
@@ -102,36 +102,51 @@
       radial-gradient(circle at 68% 12%, rgba(246,222,158,.36) 0 1.2px, transparent 1.8px),
       radial-gradient(circle at 87% 66%, rgba(246,222,158,.44) 0 2.2px, transparent 2.8px);
     background-size:107px 89px, 73px 79px, 139px 127px}
+  /* 金云笺的祥云：一朵云 = 三个圆头挨着 + 一条尾，外加一道如意勾的圈线。
+     整朵摆在一张 210×150 的方砖里平铺；再错开半砖铺一层淡的，看着才不像格子。
+     位置和尺寸只有 background 简写认，别挪进 background-image。 */
+  body.pp-yun #fleck{background:
+      radial-gradient(circle at 84px 74px, transparent 30px, rgba(122,90,14,.26) 30px 32px, transparent 33px) 0 0/210px 150px repeat,
+      radial-gradient(circle 22px at 44px 92px,  rgba(255,243,196,.46) 0 94%, transparent 100%) 0 0/210px 150px repeat,
+      radial-gradient(circle 30px at 84px 74px,  rgba(255,243,196,.46) 0 94%, transparent 100%) 0 0/210px 150px repeat,
+      radial-gradient(circle 21px at 122px 90px, rgba(255,243,196,.46) 0 94%, transparent 100%) 0 0/210px 150px repeat,
+      radial-gradient(circle 13px at 150px 97px, rgba(255,243,196,.40) 0 94%, transparent 100%) 0 0/210px 150px repeat,
+      radial-gradient(circle 17px at 44px 92px,  rgba(255,247,214,.30) 0 94%, transparent 100%) 105px 75px/210px 150px repeat,
+      radial-gradient(circle 23px at 84px 74px,  rgba(255,247,214,.30) 0 94%, transparent 100%) 105px 75px/210px 150px repeat,
+      radial-gradient(circle 16px at 122px 90px, rgba(255,247,214,.30) 0 94%, transparent 100%) 105px 75px/210px 150px repeat}
+
   /* 竹笺：竖着一片一片编起来的竹简。光靠一道缝看不出是竹片，
      得把每片的「鼓」画出来 —— 一片之内左亮右暗地收一道弧光，
      再压竹丝，最后横过两道编绳。三层叠起来才认得出是简不是条纹纸 */
-  body.pp-jian #fleck{background-image:
-      /* 编简的两道绳，绳上还有一格一格的缠痕 */
+  /* 带 position/size 的层必须走 background 简写：写进 background-image 是整条作废，
+     v32 就是这么把正页的竹纹弄没的（铺子样张另一条规则没踩到，所以只有它对）。 */
+  body.pp-jian #fleck{background:
+      /* 编简的两道绳，绳上一格一格的缠痕 */
       repeating-linear-gradient(90deg,
-        rgba(126,92,38,.42) 0 9px, rgba(96,68,26,.42) 9px 11px) left top 21%/100% 8px no-repeat,
+        rgba(126,92,38,.45) 0 9px, rgba(92,64,24,.45) 9px 11px) left top 21%/100% 9px no-repeat,
       repeating-linear-gradient(90deg,
-        rgba(126,92,38,.42) 0 9px, rgba(96,68,26,.42) 9px 11px) left bottom 21%/100% 8px no-repeat,
+        rgba(126,92,38,.45) 0 9px, rgba(92,64,24,.45) 9px 11px) left bottom 21%/100% 9px no-repeat,
       /* 竹丝：极细的竖纹 */
       repeating-linear-gradient(90deg, rgba(86,68,24,.09) 0 1px, transparent 1px 5px),
       /* 每一片的弧光：暗缝 → 高光 → 平面 → 渐收暗 */
       repeating-linear-gradient(90deg,
-        rgba(80,62,20,.40) 0 2px,
-        rgba(255,250,216,.50) 2px 5px,
+        rgba(80,62,20,.42) 0 2px,
+        rgba(255,250,216,.52) 2px 5px,
         rgba(255,250,216,.16) 5px 13px,
         rgba(80,62,20,.07) 13px 23px,
-        rgba(80,62,20,.24) 23px 29px)}
+        rgba(80,62,20,.26) 23px 29px)}
   /* 松木板：横着的木纹。三层疏密不同的横纹错开，免得看着像五线谱；
      隔一块板一道深槽加高光当拼缝；再点两个木疖，一眼就知道是木头 */
   body.pp-mu #fleck{background-image:
-      radial-gradient(ellipse 30px 10px at 23% 17%,
-        rgba(104,66,22,.40) 0 38%, rgba(104,66,22,.18) 56%, transparent 74%),
-      radial-gradient(ellipse 22px 8px at 72% 63%,
-        rgba(104,66,22,.34) 0 38%, rgba(104,66,22,.15) 56%, transparent 74%),
-      repeating-linear-gradient(0deg, rgba(122,82,34,.20) 0 1.5px, transparent 1.5px 7px),
-      repeating-linear-gradient(0deg, rgba(122,82,34,.13) 0 3px, transparent 3px 19px),
-      repeating-linear-gradient(0deg, rgba(96,60,20,.10) 0 6px, transparent 6px 43px),
+      radial-gradient(ellipse 90px 26px at 23% 19%,
+        rgba(104,66,22,.42) 0 34%, rgba(104,66,22,.20) 54%, transparent 74%),
+      radial-gradient(ellipse 66px 20px at 72% 64%,
+        rgba(104,66,22,.36) 0 34%, rgba(104,66,22,.17) 54%, transparent 74%),
+      repeating-linear-gradient(0deg, rgba(122,82,34,.20) 0 11px, transparent 11px 52px),
+      repeating-linear-gradient(0deg, rgba(122,82,34,.14) 0 22px, transparent 22px 140px),
+      repeating-linear-gradient(0deg, rgba(96,60,20,.11) 0 44px, transparent 44px 310px),
       repeating-linear-gradient(0deg,
-        rgba(74,46,14,.48) 0 2.5px, rgba(255,244,218,.48) 2.5px 5px, transparent 5px 148px)}
+        rgba(74,46,14,.5) 0 6px, rgba(255,244,218,.5) 6px 11px, transparent 11px 420px)}
 
   /* ── 书体：整页的字形。一律用系统自带的字体，没装就自己退回宋体，不引任何外部资源 ── */
   body.ft-kai,  .pv.ft-kai { font-family:"Kaiti SC","STKaiti","KaiTi","DFKai-SB",serif }
@@ -344,11 +359,18 @@
         rgba(80,62,20,.26) 11px 14px) !important;
     background-color:#cfc088 !important}
   .good .pv.paper.p-mu{background-image:
-      repeating-linear-gradient(0deg, rgba(122,82,34,.22) 0 1px, transparent 1px 4px),
-      repeating-linear-gradient(0deg, rgba(96,60,20,.12) 0 2px, transparent 2px 11px),
+      repeating-linear-gradient(0deg, rgba(122,82,34,.22) 0 4px, transparent 4px 17px),
+      repeating-linear-gradient(0deg, rgba(96,60,20,.13) 0 7px, transparent 7px 46px),
       repeating-linear-gradient(0deg,
-        rgba(74,46,14,.5) 0 1.5px, rgba(255,244,218,.5) 1.5px 3px, transparent 3px 17px) !important;
+        rgba(74,46,14,.5) 0 2px, rgba(255,244,218,.5) 2px 4px, transparent 4px 138px) !important;
     background-color:#e3cba2 !important}
+  /* 金云笺样张：一朵云放不下，画半朵意思到就行 */
+  .good .pv.paper.p-yun{background-image:
+      radial-gradient(circle 7px  at 8px 24px,  rgba(255,243,196,.62) 0 94%, transparent 100%),
+      radial-gradient(circle 9.5px at 20px 18px, rgba(255,243,196,.62) 0 94%, transparent 100%),
+      radial-gradient(circle 6.5px at 30px 23px, rgba(255,243,196,.62) 0 94%, transparent 100%),
+      radial-gradient(circle at 20px 18px, transparent 9.5px, rgba(122,90,14,.34) 9.5px 11px, transparent 12px) !important;
+    background-color:#d8a92f !important}
   /* 书体的样张写个「永」字：八法都在这一个字里，一眼看得出是哪一路 */
   .good .pv.ft{transform:none;border-color:var(--line);color:var(--ink);font-size:20px}
   /* 纸纹、装裱的样张：把整页那套花样缩到 34px 的小方块里比划一下 */
@@ -1060,7 +1082,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v32" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v33" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -1739,7 +1761,7 @@ const PAPERS = {
   hong:{n:"万年红",   p:200, c:"pp-hong", sw:"#7e1c14"},
   jian:{n:"竹笺",     p:170, c:"pp-jian", sw:"#cfc088", tx:"p-jian"},
   mu:  {n:"松木板",   p:210, c:"pp-mu",   sw:"#e3cba2", tx:"p-mu"},
-  yun: {n:"金云笺",   p:260, c:"pp-yun",  sw:"#dcb648", r:70},
+  yun: {n:"金云笺",   p:260, c:"pp-yun",  sw:"#d8a92f", r:70, tx:"p-yun"},
 };
 /* 书体：整页的字形。用的都是系统自带的字体 —— 你这台装了才有，没装就退回宋体，
    所以样张里的「永」字长什么样，以你自己这台为准。 */
