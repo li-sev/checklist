@@ -29,6 +29,10 @@
                --accent:#8d3a15; --done:#8d3a15; }
   body.pp-qing{ --bg:#dde5d6; --card:#f4f8ee; --ink:#242c22; --dim:#6f7d67; --line:#c2cfb6;
                 --accent:#3f6b46; --done:#3f6b46; --gold:#7e8f56; --link:#2c5b63; --soft:#e8efe0; }
+  /* 金云笺：政通人和才配用的一张纸，比洒金更沉些，落款描金 */
+  body.pp-yun{ --bg:#e7d7ab; --card:#fffaea; --line:#cdb173; --gold:#8a6b1e; --soft:#f6ecca;
+               --accent:#8a2f14; --done:#8a2f14; --link:#3f6480;
+               --shadow:0 8px 26px rgba(120,92,26,.24) }
   body.pp-lan{ --bg:#141a26; --card:#1e2637; --ink:#dfe6f2; --dim:#8593ab; --line:#33405a;
                --accent:#d4a24a; --done:#d4a24a; --gold:#d4a24a; --link:#7fa8cf; --soft:#26304400;
                --soft:#263044; --shadow:0 8px 26px rgba(0,0,0,.65); }
@@ -164,6 +168,10 @@
   .good.cur{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
   .good.cur::after{content:"在用";font-size:11px;letter-spacing:2px;color:var(--accent)}
   .good.poor{opacity:.5}
+  /* 恩典之物：朝纲不到，摆在那儿看着，够不着 */
+  .good.lock{opacity:.62;border-style:dashed}
+  .good.lock .pv{border-color:var(--dim);color:var(--dim)}
+  .good.lock .pz{color:var(--dim)}
   /* 六部 */
   .mis{display:grid;gap:6px}
   @media (min-width:520px){ .mis{grid-template-columns:1fr 1fr} }
@@ -396,6 +404,31 @@
   .btns{display:flex;gap:9px;margin-top:14px}
   .btns .btn{flex:1}
 
+  /* 海晏河清才有的四角描金。纯 CSS 画四个角，不引外部图；跌下去自动收走 */
+  body.hy::before{content:"";position:fixed;inset:5px;z-index:2;pointer-events:none;opacity:.72;
+    background:
+      linear-gradient(var(--gold),var(--gold)) left  top/36px 2px no-repeat,
+      linear-gradient(var(--gold),var(--gold)) left  top/2px 36px no-repeat,
+      linear-gradient(var(--gold),var(--gold)) right top/36px 2px no-repeat,
+      linear-gradient(var(--gold),var(--gold)) right top/2px 36px no-repeat,
+      linear-gradient(var(--gold),var(--gold)) left  bottom/36px 2px no-repeat,
+      linear-gradient(var(--gold),var(--gold)) left  bottom/2px 36px no-repeat,
+      linear-gradient(var(--gold),var(--gold)) right bottom/36px 2px no-repeat,
+      linear-gradient(var(--gold),var(--gold)) right bottom/2px 36px no-repeat}
+
+  /* 恩典一览：哪一档给什么，够到没够到一眼看得见 */
+  .boons{display:grid;gap:5px}
+  .boon{display:flex;align-items:baseline;gap:9px;padding:7px 10px;border:1px solid var(--line);
+    border-radius:4px;background:var(--card);opacity:.5;font-size:13px}
+  .boon b{font-size:14px;letter-spacing:2px;white-space:nowrap;color:var(--dim)}
+  .boon i{font-style:normal;color:var(--dim);line-height:1.6}
+  .boon .sc{margin-left:auto;color:var(--dim);font-size:12px;white-space:nowrap}
+  .boon.got{opacity:1;background:var(--soft)}
+  .boon.got b{color:var(--ink)}
+  .boon.now{opacity:1;border-color:var(--accent);background:var(--card)}
+  .boon.now b{color:var(--accent)}
+  .boon.bad.now{border-color:var(--dim)}
+
   /* 二次确认。z 要压过侧栏(70)：侧栏里也有能动刀子的事 */
   .mask.ask{z-index:80;align-items:center;padding:16px}
   .dlg.ask{max-width:380px;align-self:center;border-radius:6px}
@@ -608,6 +641,8 @@
   <div class="pane on" data-pane="court">
     <div class="mis" id="ihMi"></div>
     <div class="hint">每一卷折子归一个部办，久不派差人心就散</div>
+    <label>恩典 <small>朝纲到了自然有，跌下去自然收回</small></label>
+    <div class="boons" id="ihBoon"></div>
     <label>治绩 <small>不卖，只能挣</small></label>
     <div class="meds" id="ihMed"></div>
     <div class="ranktip tight" id="ihAg"></div>
@@ -618,7 +653,8 @@
     <div class="goods" id="ihSeal"></div>
     <label>纸色</label>
     <div class="goods" id="ihPaper"></div>
-    <div class="hint">买过的就一直在，随时换回来。库银在上头那一行</div>
+    <div class="hint">买过的就一直在，随时换回来。库银在上头那一行。<br>
+      虚线框的两样是恩典之物：银子够也得朝纲够，跌下去就暂时不敢用了</div>
   </div>
 
   <div class="btns">
@@ -705,7 +741,7 @@ const SEED_MD = `
 
 /* 存储 key 与前两版一致，老数据直接接管 */
 const KEY = "checklist_v1";
-const BUILD = "v13";                              // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v14";                              // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -1363,12 +1399,15 @@ const SEALS = {
   xing:{t:"行",     p:30,  n:"行"},
   tick:{t:"✓",      p:60,  n:"素印"},
   zhen:{t:"朕知道了", p:150, n:"朕知道了", sm:true},
+  /* r = 要朝纲到这个分数才配用。买得起也没用，得先把六部治明白 */
+  xi:  {t:"敕",     p:400, n:"玉玺·敕", r:85},
 };
 const PAPERS = {
   xuan:{n:"宣纸",     p:0,   c:"",        sw:"#e9dcc0"},
   jin: {n:"洒金笺",   p:100, c:"pp-jin",  sw:"#eadfba"},
   qing:{n:"竹青",     p:140, c:"pp-qing", sw:"#dde5d6"},
   lan: {n:"藏蓝夜奏", p:180, c:"pp-lan",  sw:"#141a26"},
+  yun: {n:"金云笺",   p:260, c:"pp-yun",  sw:"#f2e0b0", r:70},
 };
 /* 六部。每一卷折子归一个部办，批那一卷就是那个部在办差 */
 const MINISTRY = [
@@ -1380,8 +1419,17 @@ const MINISTRY = [
   {id:"gong", n:"工部", d:"营造屯田水利"},
 ];
 const MI = Object.fromEntries(MINISTRY.map(m => [m.id, m]));
-/* 六部平均分决定朝纲 */
-const COURT = [[0,"朝纲不振"],[40,"隐忧渐生"],[55,"四海承平"],[70,"政通人和"],[85,"海晏河清"]];
+/* 六部平均分决定朝纲。
+   [门槛, 名号, 入库倍率, 这一档的恩典]
+   —— 朝纲不只是个好看的分数：它决定同一件折子入库几两，还管着几样只能靠治理换来的东西。
+      倍率只乘底数（一件 2 两 / 整卷 10 两），勤政加赏和治绩赏格不乘，免得滚雪球。 */
+const COURT = [
+  [0,  "朝纲不振", 0.5, "每件仅 1 两"],
+  [40, "隐忧渐生", 1,   "每件 2 两"],
+  [55, "四海承平", 1.5, "每件 3 两 · 整卷 15 两"],
+  [70, "政通人和", 2,   "每件 4 两 · 解锁金云笺 · 荒疏五日才起"],
+  [85, "海晏河清", 3,   "每件 6 两 · 解锁玉玺 · 四角描金"],
+];
 /* 治绩：难的赏得多。p 是入库的两数，摆在牌子上，一眼看得见值多少。
    十件全挣到共 240 两——铺子里全套要 720 两，光靠治绩买不完，还得老实批折子。 */
 const MEDALS = [
@@ -1423,6 +1471,8 @@ function courtScore(){
   return Math.round(s / MINISTRY.length);
 }
 const courtOf = s => { let r = COURT[0]; for (const x of COURT) if (s >= x[0]) r = x; return r; };
+/* 当下的入库倍率。朝廷稳，办一件事的赏就厚 */
+const mult = () => courtOf(courtScore())[2];
 /* 这一卷归哪个部办；没派过的按卷的次序轮派，六部转着来 */
 function miOf(g, L){
   if (g && g.m && MI[g.m]) return g.m;
@@ -1523,7 +1573,8 @@ function refund(groups, L){
     for (const it of gg.items) if (it.p){ back += (typeof it.p === "number" ? it.p : 2); k++; }
     n += k;
     let de = k * 2, dl = k;
-    if (gg.pg){ back += 10; de += 6; dl += 5; }     // 整卷的赏也要吐出来
+    // 整卷的赏也要吐出来。老存档里 pg 是个 1 的记号，那会儿整卷固定十两
+    if (gg.pg){ back += gg.pg === 1 ? 10 : gg.pg; de += 6; dl += 5; }
     if (de) bump(mid, -de, -dl);
   }
   if (!n && !back) return 0;
@@ -1539,16 +1590,20 @@ function bump(mid, de, dl){
   s.l = clamp(s.l + dl, 0, 100);
   if (de > 0) s.d = ymd(Date.now());                 // 记下这个部最近一次办差的日子
   const now = courtScore(), after = COURT.indexOf(courtOf(now));
-  if (after > before) herald("朝野称颂", COURT[after][1], "六部均分 " + now);
-  else if (after < before) herald("言官交章", COURT[after][1], "六部均分 " + now);
+  // 升降都报一声，并且把这一档给什么、收什么说清楚 —— 不然朝纲高了也不知道图什么
+  if (after > before) herald("朝野称颂", COURT[after][1], COURT[after][3]);
+  else if (after < before) herald("言官交章", COURT[after][1], "此后 " + COURT[after][3]);
   if (now >= 85) medal("qing");
+  if (after !== before) paintPurse();              // 倍率、描金、副题都跟着这一档变
 }
 /* 整卷批完的一次性赏。卷里超过两件才算，免得一件的卷白捡十两 */
 function scoreGroup(g){
   if (g.pg || g.items.length < 2 || !allDone(g)) return;
   const mid = miOf(g);
-  g.pg = 1; earn(10); bump(mid, 6, 5); medal("vol");
-  toast(`${MI[mid].n}「${g.title || "这一卷"}」整卷办结，入库十两`);
+  const amt = Math.round(10 * mult());
+  g.pg = amt;                                     // 存实数，撤卷照数退（老存档里这儿是个 1）
+  earn(amt); bump(mid, 6, 5); medal("vol");
+  toast(`${MI[mid].n}「${g.title || "这一卷"}」整卷办结，入库 ${amt} 两`);
 }
 function medal(id){
   const g = G(); if (g.med.includes(id)) return;
@@ -1575,7 +1630,9 @@ function scoreTick(it, on, el, mid){
     g.cnt = (g.cnt || 0) + 1;
     const bonus = touchDay();
     g.tn = (g.tn || 0) + 1;
-    it.p = 2 + bonus;                             // 记下这一件到底入了几两，撤回时照数退
+    /* 记下这一件到底入了几两，撤回时照数退。
+       倍率是当下这一刻的：朝纲后来涨了跌了，都不动已经入过库的账 */
+    it.p = Math.round(2 * mult()) + bonus;
     earn(it.p, el);
     if (mid) bump(mid, 2, 1);
     if (bonus) toast(`勤政第 ${g.run} 日，加征 ${bonus} 两`);
@@ -1605,13 +1662,15 @@ function decay(){
   // 按「距上次结算过了几天」扣，不按总闲置天数扣。
   // 否则天天开 app 的人会被反复叠加，掉得比几周不开的还狠。
   const gap = g.mday ? clamp(today - dayNo(g.mday), 0, 60) : 1;
+  // 政通人和以上是一项恩典：朝廷稳，人心耐得住，五天才开始凉
+  const grace = courtScore() >= 70 ? 5 : 3;
   let worst = null;
   for (const m of MINISTRY){
     const s = g.mi[m.id];
     if (!s.d) continue;                            // 从没派过差的部不算荒疏
     const idle = today - dayNo(s.d);
-    if (idle < 3) continue;                        // 三天之内不算冷落
-    const hit = Math.min(gap, idle - 2) * 1.5;     // 每荒疏一天掉 1.5
+    if (idle < grace) continue;                    // 这几天之内不算冷落
+    const hit = Math.min(gap, idle - grace + 1) * 1.5;   // 每荒疏一天掉 1.5
     // 存小数、显示时才取整。每天四舍五入会把 .5 抹掉，天天开 app 反而掉得慢
     s.e = clamp(s.e - hit, 25, 100);
     s.l = clamp(s.l - hit * .7, 25, 100);
@@ -1669,16 +1728,24 @@ function mergeGame(f){
 
 function paintPurse(){
   const g = G();
+  const sc = courtScore(), c = courtOf(sc);
+  enforceRank();                                  // 朝纲跌了，恩典之物先收走再画
   $("#pAg").textContent = g.owe ? "亏 " + g.owe : g.ag;
   $("#purse").classList.toggle("owe", !!g.owe);
-  $("#pRank").textContent = courtOf(courtScore())[1];
+  // 名号后头挂着倍率：这一刻办一件事值几两，随时看得见
+  $("#pRank").textContent = c[1] + (c[2] === 1 ? "" : " ×" + c[2]);
+  // 海晏河清才有的排场：四角描金 + 换一句副题
+  document.body.classList.toggle("hy", sc >= 85);
+  const sub = $(".pagehead .sub");
+  if (sub) sub.textContent = sc >= 85 ? "海晏河清，天下无事" : "朱笔一点，此事便算办了";
   const run = $("#pRun");
   const live = g.day === ymd(Date.now());
   run.textContent = g.run ? `勤政 ${g.run} 日` : "";
   run.classList.toggle("hot", live && g.run >= 3);
   // 买得起没买过的东西，就在牌子上点一颗灯
   const buyable = Object.entries({...SEALS, ...PAPERS})
-    .some(([k, v]) => v.p > 0 && !g.own.includes(k) && g.ag >= v.p);
+    .some(([k, v]) => v.p > 0 && !g.own.includes(k) && g.ag >= v.p
+                      && !(v.r && sc < v.r));       // 够不着的恩典之物不点灯，免得白高兴
   $("#purse").classList.toggle("buyable", buyable);
   // 只动纸色这几个类，别把 applyFilter 挂上去的 searching 一起抹了
   document.body.classList.remove("pp-jin","pp-qing","pp-lan");
@@ -1689,13 +1756,26 @@ function paintPurse(){
 const mask6 = $("#mask6");
 function goodHTML(k, v, kind, g){
   const own = g.own.includes(k), cur = (kind === "seal" ? g.seal : g.paper) === k;
+  const locked = v.r && courtScore() < v.r;       // 恩典之物：朝纲不到就摆在那儿看着
   const pv = kind === "seal"
     ? `<span class="pv${v.sm ? " tiny" : ""}">${esc(v.t)}</span>`
     : `<span class="pv paper" style="background:${v.sw}"></span>`;
-  return `<button class="good${own?" own":""}${cur?" cur":""}${!own && g.ag < v.p ? " poor" : ""}"
+  const tag = locked ? (own ? "暂不敢用" : courtOf(v.r)[1] + "方可")
+            : cur    ? ""
+            : own    ? "已有 · 换上" : v.p + " 两";
+  return `<button class="good${own?" own":""}${cur?" cur":""}${locked?" lock":""}${
+      !own && !locked && g.ag < v.p ? " poor" : ""}"
     data-buy="${k}" data-kind="${kind}">${pv}
-    <span class="nm">${esc(kind === "seal" ? v.n : v.n)}</span>
-    ${cur ? "" : `<span class="pz">${own ? "已有 · 换上" : v.p + " 两"}</span>`}</button>`;
+    <span class="nm">${esc(v.n)}</span>
+    ${tag ? `<span class="pz">${tag}</span>` : ""}</button>`;
+}
+/* 恩典之物用不起了就自己换回来。朝纲跌下去，玉玺金云笺一并收走 */
+function enforceRank(){
+  const g = G(), sc = courtScore();
+  let off = 0;
+  if (SEALS[g.seal] && SEALS[g.seal].r && sc < SEALS[g.seal].r){ g.seal = "zhun"; off = 1; }
+  if (PAPERS[g.paper] && PAPERS[g.paper].r && sc < PAPERS[g.paper].r){ g.paper = "xuan"; off = 1; }
+  return off;
 }
 /* 一个部一行：名字、两条杠、赏赐/申饬 */
 function miHTML(m, g, load){
@@ -1718,9 +1798,10 @@ function paintShop(){
   const g = G(), sc = courtScore(), c = courtOf(sc);
   $("#ihRank").textContent = c[1];
   $("#ihBar").style.width = sc + "%";
+  const per = Math.round(2 * c[2]);
   $("#ihTip").textContent = g.owe
-    ? `国库空虚，尚欠 ${g.owe} 两 · 六部均分 ${sc}`
-    : `六部均分 ${sc} · 历年岁入 ${g.tot} 两`;
+    ? `国库空虚，尚欠 ${g.owe} 两 · 六部均分 ${sc} · 眼下每件 ${per} 两`
+    : `六部均分 ${sc} · 眼下每件 ${per} 两 · 历年岁入 ${g.tot} 两`;
   $("#ihAgN").textContent = g.owe ? "-" + g.owe : g.ag;
   $("#ihBox").classList.toggle("owe", !!g.owe);
   $("#ihTip").classList.toggle("owe", !!g.owe);
@@ -1735,6 +1816,13 @@ function paintShop(){
     load[mid] += gg.items.filter(i => !i.done).length;
   }
   $("#ihMi").innerHTML = MINISTRY.map(m => miHTML(m, g, load[m.id])).join("");
+  // 恩典一览：够到的亮着，眼下这一档描红，够不到的暗着当个念想
+  $("#ihBoon").innerHTML = COURT.map((x, i) => {
+    const got = sc >= x[0], now = x === c;
+    return `<div class="boon${got?" got":""}${now?" now":""}${i < 2 ? " bad" : ""}">
+      <b>${x[1]}</b><i>${x[3]}</i>
+      <span class="sc">${now ? "眼下" : (got ? "已过" : "均分 " + x[0])}</span></div>`;
+  }).join("");
   $("#ihSeal").innerHTML  = Object.entries(SEALS).map(([k,v]) => goodHTML(k,v,"seal",g)).join("");
   $("#ihPaper").innerHTML = Object.entries(PAPERS).map(([k,v]) => goodHTML(k,v,"paper",g)).join("");
   $("#ihMed").innerHTML = MEDALS.map(m => { const got = g.med.includes(m.id);
@@ -1798,6 +1886,11 @@ mask6.addEventListener("click", async e => {
   const g = G(), k = b.dataset.buy, kind = b.dataset.kind;
   const v = (kind === "seal" ? SEALS : PAPERS)[k];
   const had = g.own.includes(k);
+  if (v.r && courtScore() < v.r){                 // 恩典之物，钱到了也不行，得朝纲到
+    punch(b);
+    return toast(had ? `朝纲已不及${courtOf(v.r)[1]}，「${v.n}」暂不敢用`
+                     : `${courtOf(v.r)[1]}（六部均分 ${v.r}）方能用「${v.n}」`);
+  }
   punch(b, had ? "" : "big");
   if (!had){
     if (g.ag < v.p) return toast(`还差 ${v.p - g.ag + (g.owe || 0)} 两${g.owe ? "（含亏空）" : ""}`);
