@@ -102,18 +102,20 @@
       radial-gradient(circle at 68% 12%, rgba(246,222,158,.36) 0 1.2px, transparent 1.8px),
       radial-gradient(circle at 87% 66%, rgba(246,222,158,.44) 0 2.2px, transparent 2.8px);
     background-size:107px 89px, 73px 79px, 139px 127px}
-  /* 金云笺的祥云：一朵云 = 三个圆头挨着 + 一条尾，外加一道如意勾的圈线。
-     整朵摆在一张 210×150 的方砖里平铺；再错开半砖铺一层淡的，看着才不像格子。
-     位置和尺寸只有 background 简写认，别挪进 background-image。 */
+  /* 金云笺的祥云：卷云纹，只描白边不填色。
+     一朵 = 三个如意云头（外圈扇贝瓣 + 里头一个真螺旋涡卷），后头拖三条并行的尾带。
+     圆头堆出来的那版（v33）太笨，像一串泡泡；卷云的魂在「卷」，
+     而 radial-gradient 画不出螺旋，只能改内联 SVG。
+     data: URI 是文件自带的，不算外部引用，离线照样有。
+     一张砖 430×300，左上一朵整的、右下一朵缩到 0.6 又左右镜像 ——
+     一朵一砖会铺成整整齐齐的方格，一大一小错开才像随手洒的。
+     路径不是手写的，是 /tmp/yun/gen.py 拿螺旋公式生成的（想改形状回去改那个脚本再套进来）。
+     三个坑：
+       ① url() 用双引号，SVG 里的属性就只能用单引号；
+       ② < > 一律写成 %3C %3E —— 有些 Safari 见了裸尖括号整条不认；
+       ③ 颜色不能写 #xxx，# 在 data: URI 里是片段分隔符，一律 rgba()。 */
   body.pp-yun #fleck{background:
-      radial-gradient(circle at 84px 74px, transparent 30px, rgba(122,90,14,.26) 30px 32px, transparent 33px) 0 0/210px 150px repeat,
-      radial-gradient(circle 22px at 44px 92px,  rgba(255,243,196,.46) 0 94%, transparent 100%) 0 0/210px 150px repeat,
-      radial-gradient(circle 30px at 84px 74px,  rgba(255,243,196,.46) 0 94%, transparent 100%) 0 0/210px 150px repeat,
-      radial-gradient(circle 21px at 122px 90px, rgba(255,243,196,.46) 0 94%, transparent 100%) 0 0/210px 150px repeat,
-      radial-gradient(circle 13px at 150px 97px, rgba(255,243,196,.40) 0 94%, transparent 100%) 0 0/210px 150px repeat,
-      radial-gradient(circle 17px at 44px 92px,  rgba(255,247,214,.30) 0 94%, transparent 100%) 105px 75px/210px 150px repeat,
-      radial-gradient(circle 23px at 84px 74px,  rgba(255,247,214,.30) 0 94%, transparent 100%) 105px 75px/210px 150px repeat,
-      radial-gradient(circle 16px at 122px 90px, rgba(255,247,214,.30) 0 94%, transparent 100%) 105px 75px/210px 150px repeat}
+      url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='430' height='300' viewBox='0 0 430 300'%3E%3Cg fill='none' stroke='rgba(255,253,245,0.62)' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg transform='translate(-6,4)'%3E%3Cpath d='M43.4,132.0 A19.1,19.1 0 0 1 44.3,90.5 A19.1,19.1 0 0 1 81.5,72.2 A19.1,19.1 0 0 1 115.0,96.7 A19.1,19.1 0 0 1 108.6,137.7'/%3E%3Cpath d='M75.7,85.7 L82.5,86.5 L88.7,89.0 L94.0,92.9 L98.0,98.0 L100.5,103.8 L101.3,110.0 L100.6,116.0 L98.4,121.5 L94.9,126.2 L90.4,129.7 L85.3,131.9 L79.8,132.7 L74.5,132.1 L69.6,130.1 L65.4,127.0 L62.3,123.0 L60.3,118.4 L59.6,113.6 L60.2,108.9 L61.9,104.5 L64.7,100.8 L68.2,98.0 L72.3,96.3 L76.6,95.7 L80.8,96.2 L84.6,97.7 L87.9,100.2 L90.4,103.3 L91.9,106.9 L92.5,110.7 L92.0,114.5 L90.6,117.9 L88.5,120.8 L85.7,123.0 L82.5,124.4 L79.1,124.8 L75.8,124.4 L72.8,123.2 L70.2,121.3 L68.3,118.8 L67.0,116.0 L66.6,113.0 L67.0,110.1 L68.0,107.4 L69.7,105.1 L71.9,103.3 L74.5,102.3 L77.1,101.9 L79.7,102.2 L82.1,103.2 L84.1,104.7 L85.7,106.6'/%3E%3Cpath d='M120.1,82.0 A13.7,13.7 0 0 1 127.1,53.1 A13.7,13.7 0 0 1 155.4,43.5 A13.7,13.7 0 0 1 178.6,62.1 A13.7,13.7 0 0 1 175.4,91.8'/%3E%3Cpath d='M148.2,53.6 L153.5,54.2 L158.3,56.2 L162.4,59.2 L165.5,63.2 L167.4,67.7 L168.1,72.4 L167.5,77.1 L165.8,81.4 L163.1,85.0 L159.6,87.7 L155.6,89.4 L151.4,90.0 L147.3,89.6 L143.5,88.0 L140.2,85.6 L137.8,82.5 L136.3,79.0 L135.8,75.2 L136.2,71.6 L137.5,68.2 L139.7,65.3 L142.4,63.2 L145.6,61.8 L148.9,61.4 L152.2,61.8 L155.2,63.0 L157.7,64.8 L159.6,67.3 L160.8,70.1 L161.2,73.0 L160.9,75.9 L159.8,78.6 L158.1,80.8 L156.0,82.5 L153.5,83.6 L150.9,84.0 L148.3,83.6 L145.9,82.7 L144.0,81.2 L142.4,79.3 L141.5,77.1 L141.2,74.8 L141.4,72.5 L142.3,70.4 L143.6,68.6 L145.3,67.3 L147.3,66.5 L149.3,66.2 L151.3,66.4 L153.2,67.2 L154.8,68.3 L155.9,69.8'/%3E%3Cpath d='M184.3,108.2 A11.6,11.6 0 0 1 202.2,90.3 A11.6,11.6 0 0 1 225.1,101.0 A11.6,11.6 0 0 1 222.9,126.1'/%3E%3Cpath d='M204.7,97.5 L208.5,98.0 L211.9,99.4 L214.8,101.5 L217.0,104.3 L218.4,107.5 L218.8,110.9 L218.4,114.2 L217.2,117.2 L215.3,119.8 L212.8,121.7 L210.0,123.0 L207.0,123.4 L204.1,123.0 L201.4,122.0 L199.1,120.3 L197.4,118.1 L196.3,115.5 L195.9,112.9 L196.2,110.3 L197.2,107.9 L198.7,105.9 L200.6,104.3 L202.9,103.4 L205.2,103.0 L207.5,103.3 L209.7,104.2 L211.5,105.5 L212.8,107.2 L213.7,109.2 L214.0,111.3 L213.7,113.4 L213.0,115.2 L211.8,116.8 L210.2,118.0 L208.5,118.8 L206.6,119.1 L204.8,118.8 L203.1,118.2 L201.7,117.1 L200.6,115.8 L200.0,114.2 L199.7,112.5 L199.9,110.9 L200.5,109.4 L201.5,108.2 L202.7,107.2 L204.1,106.6 L205.5,106.4 L207.0,106.6 L208.3,107.1 L209.4,108.0 L210.2,109.0'/%3E%3Cpath d='M226,124 C248,156 278,176 310,180 C326,182 338,178 346,168'/%3E%3Cpath d='M218,140 C238,166 268,184 300,190 C320,193 336,188 346,168'/%3E%3Cpath d='M206,152 C226,176 254,194 288,199'/%3E%3C/g%3E%3Cg transform='translate(408,196) scale(-0.6,0.6)'%3E%3Cpath d='M43.4,132.0 A19.1,19.1 0 0 1 44.3,90.5 A19.1,19.1 0 0 1 81.5,72.2 A19.1,19.1 0 0 1 115.0,96.7 A19.1,19.1 0 0 1 108.6,137.7'/%3E%3Cpath d='M75.7,85.7 L82.5,86.5 L88.7,89.0 L94.0,92.9 L98.0,98.0 L100.5,103.8 L101.3,110.0 L100.6,116.0 L98.4,121.5 L94.9,126.2 L90.4,129.7 L85.3,131.9 L79.8,132.7 L74.5,132.1 L69.6,130.1 L65.4,127.0 L62.3,123.0 L60.3,118.4 L59.6,113.6 L60.2,108.9 L61.9,104.5 L64.7,100.8 L68.2,98.0 L72.3,96.3 L76.6,95.7 L80.8,96.2 L84.6,97.7 L87.9,100.2 L90.4,103.3 L91.9,106.9 L92.5,110.7 L92.0,114.5 L90.6,117.9 L88.5,120.8 L85.7,123.0 L82.5,124.4 L79.1,124.8 L75.8,124.4 L72.8,123.2 L70.2,121.3 L68.3,118.8 L67.0,116.0 L66.6,113.0 L67.0,110.1 L68.0,107.4 L69.7,105.1 L71.9,103.3 L74.5,102.3 L77.1,101.9 L79.7,102.2 L82.1,103.2 L84.1,104.7 L85.7,106.6'/%3E%3Cpath d='M120.1,82.0 A13.7,13.7 0 0 1 127.1,53.1 A13.7,13.7 0 0 1 155.4,43.5 A13.7,13.7 0 0 1 178.6,62.1 A13.7,13.7 0 0 1 175.4,91.8'/%3E%3Cpath d='M148.2,53.6 L153.5,54.2 L158.3,56.2 L162.4,59.2 L165.5,63.2 L167.4,67.7 L168.1,72.4 L167.5,77.1 L165.8,81.4 L163.1,85.0 L159.6,87.7 L155.6,89.4 L151.4,90.0 L147.3,89.6 L143.5,88.0 L140.2,85.6 L137.8,82.5 L136.3,79.0 L135.8,75.2 L136.2,71.6 L137.5,68.2 L139.7,65.3 L142.4,63.2 L145.6,61.8 L148.9,61.4 L152.2,61.8 L155.2,63.0 L157.7,64.8 L159.6,67.3 L160.8,70.1 L161.2,73.0 L160.9,75.9 L159.8,78.6 L158.1,80.8 L156.0,82.5 L153.5,83.6 L150.9,84.0 L148.3,83.6 L145.9,82.7 L144.0,81.2 L142.4,79.3 L141.5,77.1 L141.2,74.8 L141.4,72.5 L142.3,70.4 L143.6,68.6 L145.3,67.3 L147.3,66.5 L149.3,66.2 L151.3,66.4 L153.2,67.2 L154.8,68.3 L155.9,69.8'/%3E%3Cpath d='M184.3,108.2 A11.6,11.6 0 0 1 202.2,90.3 A11.6,11.6 0 0 1 225.1,101.0 A11.6,11.6 0 0 1 222.9,126.1'/%3E%3Cpath d='M204.7,97.5 L208.5,98.0 L211.9,99.4 L214.8,101.5 L217.0,104.3 L218.4,107.5 L218.8,110.9 L218.4,114.2 L217.2,117.2 L215.3,119.8 L212.8,121.7 L210.0,123.0 L207.0,123.4 L204.1,123.0 L201.4,122.0 L199.1,120.3 L197.4,118.1 L196.3,115.5 L195.9,112.9 L196.2,110.3 L197.2,107.9 L198.7,105.9 L200.6,104.3 L202.9,103.4 L205.2,103.0 L207.5,103.3 L209.7,104.2 L211.5,105.5 L212.8,107.2 L213.7,109.2 L214.0,111.3 L213.7,113.4 L213.0,115.2 L211.8,116.8 L210.2,118.0 L208.5,118.8 L206.6,119.1 L204.8,118.8 L203.1,118.2 L201.7,117.1 L200.6,115.8 L200.0,114.2 L199.7,112.5 L199.9,110.9 L200.5,109.4 L201.5,108.2 L202.7,107.2 L204.1,106.6 L205.5,106.4 L207.0,106.6 L208.3,107.1 L209.4,108.0 L210.2,109.0'/%3E%3Cpath d='M226,124 C248,156 278,176 310,180 C326,182 338,178 346,168'/%3E%3Cpath d='M218,140 C238,166 268,184 300,190 C320,193 336,188 346,168'/%3E%3Cpath d='M206,152 C226,176 254,194 288,199'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") 0 0/430px 300px repeat}
 
   /* 竹笺：竖着一片一片编起来的竹简。光靠一道缝看不出是竹片，
      得把每片的「鼓」画出来 —— 一片之内左亮右暗地收一道弧光，
@@ -362,12 +364,14 @@
       repeating-linear-gradient(0deg,
         rgba(74,46,14,.5) 0 2px, rgba(255,244,218,.5) 2px 4px, transparent 4px 138px) !important;
     background-color:#e3cba2 !important}
-  /* 金云笺样张：一朵云放不下，画半朵意思到就行 */
+  /* 金云笺样张：34px 见方搁不下整朵，viewBox 裁到左边那个大云头。
+     裁小了要同步加粗描边 —— 100 个用户单位缩到 34px 是 0.34 倍，
+     线宽得写 5.2 才落到屏幕上的一像素半，照正页那个 2.4 写等于没有。
+     位置尺寸得走 background-position / -size 单开，塞进 background-image 是整条作废。 */
   .good .pv.paper.p-yun{background-image:
-      radial-gradient(circle 7px  at 8px 24px,  rgba(255,243,196,.62) 0 94%, transparent 100%),
-      radial-gradient(circle 9.5px at 20px 18px, rgba(255,243,196,.62) 0 94%, transparent 100%),
-      radial-gradient(circle 6.5px at 30px 23px, rgba(255,243,196,.62) 0 94%, transparent 100%),
-      radial-gradient(circle at 20px 18px, transparent 9.5px, rgba(122,90,14,.34) 9.5px 11px, transparent 12px) !important;
+      url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='26 62 100 100'%3E%3Cg fill='none' stroke='rgba(255,253,245,0.78)' stroke-width='5.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M43.4,132.0 A19.1,19.1 0 0 1 44.3,90.5 A19.1,19.1 0 0 1 81.5,72.2 A19.1,19.1 0 0 1 115.0,96.7 A19.1,19.1 0 0 1 108.6,137.7'/%3E%3Cpath d='M75.7,85.7 L82.5,86.5 L88.7,89.0 L94.0,92.9 L98.0,98.0 L100.5,103.8 L101.3,110.0 L100.6,116.0 L98.4,121.5 L94.9,126.2 L90.4,129.7 L85.3,131.9 L79.8,132.7 L74.5,132.1 L69.6,130.1 L65.4,127.0 L62.3,123.0 L60.3,118.4 L59.6,113.6 L60.2,108.9 L61.9,104.5 L64.7,100.8 L68.2,98.0 L72.3,96.3 L76.6,95.7 L80.8,96.2 L84.6,97.7 L87.9,100.2 L90.4,103.3 L91.9,106.9 L92.5,110.7 L92.0,114.5 L90.6,117.9 L88.5,120.8 L85.7,123.0 L82.5,124.4 L79.1,124.8 L75.8,124.4 L72.8,123.2 L70.2,121.3 L68.3,118.8 L67.0,116.0 L66.6,113.0 L67.0,110.1 L68.0,107.4 L69.7,105.1 L71.9,103.3 L74.5,102.3 L77.1,101.9 L79.7,102.2 L82.1,103.2 L84.1,104.7 L85.7,106.6'/%3E%3C/g%3E%3C/svg%3E") !important;
+    background-position:center !important; background-size:cover !important;
+    background-repeat:no-repeat !important;
     background-color:#d8a92f !important}
   /* 书体的样张写个「永」字：八法都在这一个字里，一眼看得出是哪一路 */
   .good .pv.ft{transform:none;border-color:var(--line);color:var(--ink);font-size:20px}
@@ -625,11 +629,8 @@
     55%{transform:scale(.9) rotate(-7deg);opacity:1}
     100%{transform:scale(1) rotate(-7deg)}
   }
-  /* 这一格只包住字本身，不能写 flex:1。
-     写 flex:1 它会一直撑到行尾，于是点一行右边那片空白也算点在字上——
-     就打了勾、就迸了金粉，看着像「随便点屏幕哪儿都迸」。
-     行末的空白留给 .pen 的 margin-left:auto 顶开，那片是死的，点不响。 */
-  .tx{flex:0 1 auto;min-width:0;word-break:break-word;padding-top:1px;cursor:pointer}
+  /* flex:1 是有意的：这一格撑到行尾，点一行右边的空白也能打勾，手机上好点 */
+  .tx{flex:1;min-width:0;word-break:break-word;padding-top:1px;cursor:pointer}
   li.ok .tx{color:var(--dim);text-decoration:line-through;text-decoration-color:var(--accent);
     text-decoration-thickness:2px}
   li.ok .tx::after{content:"已批";display:inline-block;margin-left:8px;padding:0 4px;font-size:11px;
@@ -641,7 +642,7 @@
   /* 朱笔：每条右边单独一个，点了直接写朱批，不用先进 ⋮
      一律朱红描边，随时看得见（手机上没有 hover，藏着等于没有）。
      已经批过的填个淡底，还是一眼分得出哪几条留过话。 */
-  .pen{width:34px;height:34px;border-radius:5px;flex:none;margin-left:auto;font-size:13.5px;
+  .pen{width:34px;height:34px;border-radius:5px;flex:none;font-size:13.5px;
     display:inline-flex;align-items:center;justify-content:center;
     color:var(--accent);border:1px solid var(--accent);background:transparent}
   .pen:hover{background:var(--accent);color:var(--onacc)}
@@ -1076,7 +1077,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v34" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v35" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -2070,16 +2071,25 @@ function punch(el, kind){
   thud(kind);
 }
 
-/* 金粉迸散：点下去的地方崩开几粒金点。只放在「有事发生」的地方 ——
-   打勾、落印、出库；全局都放就成了噪音。整卷一次批完时 silent 立着，
-   由外头统一放一次。嫌花可以在内库上头那一行按「粉/素」关掉。 */
-function gold(el){
+/* 金粉迸散：崩开几粒金点。
+   给个元素就迸在那个元素正中（打勾、落印、出库都是这么用的）；
+   给一对坐标就迸在那儿 —— 底下那个全局的「点哪儿都迸」走的是这条。
+   整卷一次批完时 silent 立着，由外头统一放一次。
+   嫌花就到内库「落印特效」里挑「不迸」（不要钱），或者系统开减弱动态效果。
+   （早先内库顶上有个「粉/素」的小开关，后来撤了，别再照着注释找。） */
+let goldN = 0;                                    // 每真放一把加一，全局那处拿它判有没有人先迸过
+function gold(el, px, py){
   const g = G(), fx = FXS[g.fx] || {};
-  if (!el || silent || !fx.c) return;             // 「不迸」那一档没有类，就是什么都不迸
+  const byXY = el == null && typeof px === "number";
+  if ((!el && !byXY) || silent || !fx.c) return;  // 「不迸」那一档没有类，就是什么都不迸
   try { if (matchMedia("(prefers-reduced-motion: reduce)").matches) return; } catch(e){}
-  const r = el.getBoundingClientRect();
-  if (!r.width && !r.height) return;              // 没画出来的元素不放
-  const x = r.left + r.width / 2, y = r.top + r.height / 2;
+  let x = px, y = py;
+  if (!byXY){
+    const r = el.getBoundingClientRect();
+    if (!r.width && !r.height) return;            // 没画出来的元素不放
+    x = r.left + r.width / 2; y = r.top + r.height / 2;
+  }
+  goldN++;
   // 字符个头大，少迸两个、撒远一点，不然糊成一团
   const n = fx.e ? 5 : 7, made = [], f = document.createDocumentFragment();
   for (let i = 0; i < n; i++){
@@ -2098,7 +2108,21 @@ function gold(el){
   setTimeout(() => made.forEach(s => s.remove()), 860);
 }
 
-let silent = 0;                                   // 整卷一次批完时先攒着，末了只飘一个总数
+/* 点哪儿都迸：屏幕上随便点一下，手指底下就崩一把。
+   两个监听器是一对 —— 捕获那个先跑，把计数记一笔；冒泡那个跑在所有元素的
+   handler 后头，计数没动才补这一把。这样点印格、点铺子里的货，
+   还是各迸各的那一处（迸在印格/货样正中，不在手指底下），不会一下迸两把。
+   e.detail === 0 是键盘回车合成出来的 click，没有坐标，跳过。
+   「不迸」那一档、关了粉、开了减弱动态效果，都在 gold() 里挡掉了。 */
+let goldMark = 0;
+document.addEventListener("click", () => { goldMark = goldN; }, true);
+document.addEventListener("click", e => {
+  if (!e.detail) return;
+  if (goldN !== goldMark) return;                 // 已经有人迸过了，不再补
+  gold(null, e.clientX, e.clientY);
+});
+
+let silent = 0;                                 // 整卷一次批完时先攒着，末了只飘一个总数
 function coin(n, el){
   if (!n || silent) return;
   const host = el || $("#purse");
