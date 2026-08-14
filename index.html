@@ -878,8 +878,12 @@ const SEED_MD = `
 `.trim();
 
 /* 存储 key 与前两版一致，老数据直接接管 */
-const KEY = "checklist_v1";
-const BUILD = "v20";                              // 跟 sw.js 的 VERSION 一致，菜单里看得见
+/* 演武场：网址后头加 ?demo 就进一间全解锁的空屋子 —— 库银管够、内库全备、
+   六部满分（玉玺金云笺要海晏河清才敢用，所以得满）、也不荒疏，专为看皮肤。
+   存档另起一个键，跟真本各存各的：在里头怎么点、买什么、重开一局，都碰不到你自己的清单。 */
+const DEMO = /[?&]demo\b/.test(location.search);
+const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
+const BUILD = "v21" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -1750,13 +1754,14 @@ const MEDALS = [
   {id:"yuan",  n:"元日开笔", d:"元旦这天批下一件",               p:15, x:1},
 ];
 /* e 效率 · l 忠诚 · d 最近办差的日子 · k 第几任（下标）· v 空悬还差几件 · q 请辞中 · sd 今日说过话没 */
-const miDef = () => Object.fromEntries(MINISTRY.map(m => [m.id, {e:50, l:60, d:"", k:0, v:0, q:0, sd:""}]));
+const miDef = () => Object.fromEntries(MINISTRY.map(m =>
+  [m.id, {e: DEMO ? 100 : 50, l: DEMO ? 100 : 60, d:"", k:0, v:0, q:0, sd:""}]));
 // 准辞之后，那个部要批满几件才有新官到任
 const VAC = 3;
 // 空悬期间这个部按几分计入朝纲。比在位的底限 25 还低，所以「准辞了事」是要付账的
 const VACS = 20;
-const GDEF = () => ({ag:0, owe:0, tot:0, cnt:0, nc:0, day:"", tn:0, run:0, best:0, sfx:1, fx:1,
-                     own:Object.values(KIT).map(r => r.d), med:[],
+const GDEF = () => ({ag: DEMO ? 99999 : 0, owe:0, tot:0, cnt:0, nc:0, day:"", tn:0, run:0, best:0, sfx:1, fx:1,
+                     own: DEMO ? Object.keys(WARES) : Object.values(KIT).map(r => r.d), med:[],
                      seal:"zhun", paper:"xuan", font:"song", mount:"sumian", grain:"jiehang",
                      mi:miDef(), mday:""});
 function G(){
@@ -2090,6 +2095,7 @@ function scoreTick(it, on, el, mid){
 /* ── 荒疏：一个部多久没办差，效率忠诚就往下掉 ──
    每天进门结算一次。掉到 25 打住，不至于彻底崩盘。 */
 function decay(){
+  if (DEMO) return 0;                             // 演武场不荒疏：慢慢挑皮肤，朝纲不会掉下去
   const g = G(), t = ymd(Date.now());
   if (g.mday === t) return;
   const dayNo = s => Math.round(new Date(s + "T00:00:00").getTime() / 864e5);
@@ -2600,6 +2606,19 @@ decay();                                         // 结算这些天的荒疏
 setTimeout(sweep, 1400);
 paintPurse();
 render();
+
+/* 演武场挂块牌子，省得跟真本弄混；旁边留一条回去的路 */
+if (DEMO){
+  document.title = "演武场 · " + document.title;
+  const sub = $(".pagehead .sub");
+  if (sub){
+    sub.textContent = "演武场 · 全解锁试皮肤 · 存档与真本分开 · ";
+    const a = document.createElement("a");
+    a.href = "./"; a.textContent = "回真本";
+    a.style.cssText = "color:var(--gold);text-decoration:underline";
+    sub.appendChild(a);
+  }
+}
 
 /* ── 让浏览器把这份数据标成「持久」，别在清存储时顺手清掉 ─────
    支持的浏览器（含新版 iOS）会把本站存储列为 persistent，不参与自动回收。
