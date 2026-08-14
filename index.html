@@ -617,6 +617,9 @@
         <button data-m="sync"><span class="ml">☁ 驿传（两处同步） <b id="mSync"></b>
           <small>手机和电脑批的，合成同一份</small></span></button>
         <hr>
+        <button data-m="demo"><span class="ml" id="mDemo">⚔ 演武场（全解锁试皮肤）
+          <small>库银管够、内库全备，存档跟这边分开</small></span></button>
+        <hr>
         <button data-m="upd"><span class="ml">⟳ 查新版 <b id="mVer"></b>
           <small>没自动换新就点这里，清掉缓存重取</small></span></button>
       </div>
@@ -883,7 +886,7 @@ const SEED_MD = `
    存档另起一个键，跟真本各存各的：在里头怎么点、买什么、重开一局，都碰不到你自己的清单。 */
 const DEMO = /[?&]demo\b/.test(location.search);
 const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
-const BUILD = "v21" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v22" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -1441,6 +1444,9 @@ menu.addEventListener("click", async e => {
     toast(back ? `已焚，退库 ${back} 两` : "已焚");
   }
   else if (m === "sync"){ openSync(); }
+  /* 演武场进出。加到主屏幕之后没有地址栏，手打不了 ?demo，所以这里给一道门。
+     两边各存各的存档，来回走不会丢东西 */
+  else if (m === "demo") location.href = DEMO ? "./" : "./?demo";
   else if (m === "upd"){
     if (window.forceUpdate) forceUpdate();
     else toast("这是本地打开的文件，没有缓存这回事");
@@ -2490,6 +2496,9 @@ function syUI(msg, kind){
   dot.className = syOn() ? "on" + (kind === "bad" ? " bad" : kind === "go" ? " go" : "") : "";
   $("#mSync").textContent = syOn() ? "开" : "";
   const mv = $("#mVer"); if (mv) mv.textContent = BUILD;
+  const md = $("#mDemo");
+  if (md) md.innerHTML = DEMO ? "← 回真本<small>你自己的折子和国库都在那边</small>"
+                              : "⚔ 演武场（全解锁试皮肤）<small>库银管够、内库全备，存档跟这边分开</small>";
   const box = $("#syState"); if (!box) return;
   if (msg) { box.textContent = msg; return; }
   if (!syOn()){ box.textContent = "未接。填好下面三样再点「接上」。"; return; }
