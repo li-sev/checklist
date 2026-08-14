@@ -396,6 +396,13 @@
   .btns{display:flex;gap:9px;margin-top:14px}
   .btns .btn{flex:1}
 
+  /* 二次确认。z 要压过侧栏(70)：侧栏里也有能动刀子的事 */
+  .mask.ask{z-index:80;align-items:center;padding:16px}
+  .dlg.ask{max-width:380px;align-self:center;border-radius:6px}
+  .dlg.ask .akb{font-size:15px;line-height:1.9;letter-spacing:.5px}
+  .dlg.ask .akb b{color:var(--accent)}
+  .dlg.ask .akb small{display:block;color:var(--dim);font-size:13px;line-height:1.7;margin-top:8px}
+
   .empty{text-align:center;color:var(--dim);padding:34px 16px;line-height:2;letter-spacing:1px}
   .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:60;background:var(--ink);
     color:#f6ecd6;padding:10px 18px;border-radius:4px;font-size:15px;opacity:0;pointer-events:none;
@@ -620,6 +627,16 @@
   </div>
 </div></div>
 
+<!-- 且慢：花钱、动刀子的事都从这儿过一道 -->
+<div class="mask ask" id="mask7"><div class="dlg ask">
+  <h2 id="akT">且慢</h2>
+  <div class="akb" id="akB"></div>
+  <div class="btns">
+    <button class="btn" id="akNo">再想想</button>
+    <button class="btn pri" id="akYes">准</button>
+  </div>
+</div></div>
+
 <div class="herald" id="herald"><div class="in">
   <div class="k" id="hK">奉旨</div><div class="v" id="hV"></div><div class="d" id="hD"></div>
 </div></div>
@@ -688,7 +705,7 @@ const SEED_MD = `
 
 /* 存储 key 与前两版一致，老数据直接接管 */
 const KEY = "checklist_v1";
-const BUILD = "v12";                              // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v13";                              // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -699,6 +716,31 @@ function toast(m){
   const t = $("#toast"); t.textContent = m; t.classList.add("on");
   clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove("on"), 1900);
 }
+
+/* ── 且慢：花钱、动刀子的事，先问一句 ──
+   原先用浏览器自带的 confirm，从主屏幕打开时会顶出一行「li-sev.github.io 显示」，
+   跳戏，样式也不归我们管。这个是自家的，await 出 true/false。 */
+let askQ = null;
+function ask(title, body, okTxt){
+  return new Promise(res => {
+    if (askQ){ askQ(false); askQ = null; }        // 上一问还挂着就当没问过
+    askQ = res;
+    $("#akT").textContent = title;
+    $("#akB").innerHTML = body;
+    $("#akYes").textContent = okTxt || "准";
+    mask7.classList.add("on");
+    setTimeout(() => { try { $("#akNo").focus(); } catch(e){} }, 30);  // 焦点落在「再想想」，回车不会误批
+  });
+}
+function askEnd(v){
+  mask7.classList.remove("on");
+  const f = askQ; askQ = null;
+  if (f) f(v);
+}
+$("#akYes").onclick = () => { punch($("#akYes"), "big"); askEnd(true); };
+$("#akNo").onclick  = () => askEnd(false);
+mask7.addEventListener("click", e => { if (e.target === mask7) askEnd(false); });
+document.addEventListener("keydown", e => { if (askQ && e.key === "Escape") askEnd(false); });
 
 /* ============ 任意文字 → 分组 + 条目 ============ */
 function parse(text){
@@ -1164,10 +1206,12 @@ $("#gOk").onclick = () => {
   if (g){ g.title = $("#gName").value.trim(); g.m = $("#gMi").value; }
   closeGroup(); render(); save(true);
 };
-$("#gDel").onclick = () => {
+$("#gDel").onclick = async () => {
   const L = curList(), g = L.groups.find(x => x.id === editingG);
   if (!g) return closeGroup();
-  if (g.items.length && !confirm(`撤掉「${g.title || "未归卷"}」这一卷，连同卷内 ${g.items.length} 件？`)) return;
+  if (g.items.length && !await ask("撤卷",
+      `撤掉「<b>${esc(g.title || "未归卷")}</b>」这一卷，连同卷内 <b>${g.items.length}</b> 件。` +
+      `<small>批过的那些，挣来的库银和部里的功劳照数退回。</small>`, "撤")) return;
   const back = refund([g], L);
   L.groups = L.groups.filter(x => x.id !== editingG);
   closeGroup(); render(); save(true);
@@ -1186,7 +1230,7 @@ const menu = $("#menu");
 $("#btnMenu").onclick = e => { e.stopPropagation(); menu.classList.toggle("on"); };
 document.addEventListener("click", () => menu.classList.remove("on"));
 menu.addEventListener("click", e => e.stopPropagation());
-menu.addEventListener("click", e => {
+menu.addEventListener("click", async e => {
   const b = e.target.closest("[data-m]"); if (!b) return;
   const m = b.dataset.m; menu.classList.remove("on");
   const L = curList();
@@ -1206,7 +1250,9 @@ menu.addEventListener("click", e => {
   }
   else if (m === "dellist"){
     if (D.lists.length === 1) return toast("只剩这一本了，焚不得");
-    if (!confirm(`焚掉整本「${L.name}」？动手前先「存档」为宜。`)) return;
+    if (!await ask("焚书",
+      `焚掉整本「<b>${esc(L.name)}</b>」，共 <b>${L.groups.reduce((n,g)=>n+g.items.length,0)}</b> 件。` +
+      `<small>动手前先「存档」为宜。批过的库银和功劳照数退回。</small>`, "焚")) return;
     const back = refund(L.groups, L);
     D.lists = D.lists.filter(x => x.id !== L.id); D.cur = D.lists[0].id;
     render(); save(true);
@@ -1716,40 +1762,64 @@ $("#ihClose").onclick = () => mask6.classList.remove("on");
 $("#purse").onclick = openShop;
 
 /* 赏赐：国库出银换忠诚。申饬：不花钱，效率上去但忠诚下来 */
-mask6.addEventListener("click", e => {
+mask6.addEventListener("click", async e => {
   const b = e.target.closest("[data-mi]"); if (!b) return;
   const g = G(), m = MI[b.dataset.id];
-  punch(b.closest(".mini"), "big");
+  punch(b);
   if (b.dataset.mi === "give"){
     if (g.owe) return toast(`国库尚欠 ${g.owe} 两，先把亏空填上`);
     if (g.ag < 40) return toast(`国库只剩 ${g.ag} 两，赏不动`);
+    const ok = await ask("赏赐",
+      `赏<b>${m.n}</b>银 <b>40 两</b>，忠诚 +12、效率 +2。` +
+      `<small>国库现有 ${g.ag} 两，赏完还剩 ${g.ag - 40} 两。</small>`, "赏");
+    if (!ok) return;
+    if (g.ag < 40) return toast(`国库只剩 ${g.ag} 两，赏不动`);
     g.ag -= 40; bump(m.id, 2, 12);
+    punch(b.closest(".mini"), "big");
     toast(`赏${m.n}银四十两，上下感戴`);
   } else {
     const room = g.mi[m.id].l - 25;                // 申饬压不到底限以下，压穿了要出事
     if (room <= 0) return toast(`${m.n}忠诚已在底限，再申饬要出事`);
-    bump(m.id, 9, -Math.min(7, room));
+    const ok = await ask("申饬",
+      `申饬<b>${m.n}</b>，效率 +9、忠诚 −${Math.min(7, room)}。` +
+      `<small>不花银子，但人心掉下去要慢慢养回来。</small>`, "申饬");
+    if (!ok) return;
+    const r2 = g.mi[m.id].l - 25;
+    if (r2 <= 0) return toast(`${m.n}忠诚已在底限，再申饬要出事`);
+    bump(m.id, 9, -Math.min(7, r2));
+    punch(b.closest(".mini"), "big");
     toast(`申饬${m.n}，办事是快了，人心凉了几分`);
   }
   paintPurse(); paintShop(); save(true);
 });
 
-mask6.addEventListener("click", e => {
+mask6.addEventListener("click", async e => {
   const b = e.target.closest("[data-buy]"); if (!b) return;
   const g = G(), k = b.dataset.buy, kind = b.dataset.kind;
   const v = (kind === "seal" ? SEALS : PAPERS)[k];
-  punch(b, g.own.includes(k) ? "" : "big");
-  if (!g.own.includes(k)){
+  const had = g.own.includes(k);
+  punch(b, had ? "" : "big");
+  if (!had){
     if (g.ag < v.p) return toast(`还差 ${v.p - g.ag + (g.owe || 0)} 两${g.owe ? "（含亏空）" : ""}`);
+    /* 手一滑就是几十两，先问一句。买过的换来换去不花钱，不必问 */
+    const ok = await ask("内务府请示",
+      `购「<b>${v.n}</b>」，出库 <b>${v.p} 两</b>。` +
+      `<small>国库现有 ${g.ag} 两，买下还剩 ${g.ag - v.p} 两。买过的就一直在，随时换回来。</small>`,
+      "出库");
+    if (!ok) return;
+    if (g.ag < v.p) return toast("库银不够了");    // 问的这会儿银子可能已经变了
     g.ag -= v.p; g.own.push(k);
+    punch(b, "big");
     toast(`内务府已备下「${v.n}」`);
   }
   if (kind === "seal") g.seal = k; else g.paper = k;
   paintPurse(); paintShop(); save(true);
   if (kind === "seal") render();                  // 印章换了，每一条的印都要重画
 });
-$("#ihReset").onclick = () => {
-  if (!confirm("国库、六部、治绩、买过的印章纸色，全部归零重来。折子本身不动。")) return;
+$("#ihReset").onclick = async () => {
+  if (!await ask("重开一局",
+    "国库、六部、治绩、买过的印章纸色，<b>全部归零</b>重来。" +
+    "<small>折子本身不动，一件都不会少。</small>", "重开")) return;
   D.g = GDEF();
   for (const l of D.lists) for (const gg of l.groups){
     delete gg.pg;
@@ -1889,8 +1959,10 @@ $("#syOk").onclick = async () => {
 };
 $("#syPull").onclick = () => syncPull(false);
 $("#syPush").onclick = () => syncPush(false);
-$("#syOff").onclick = () => {
-  if (!confirm("断了驿传，并把这台设备上存的令牌删掉？折子本身不动。")) return;
+$("#syOff").onclick = async () => {
+  if (!await ask("断驿传",
+    "断了驿传，并把这台设备上存的<b>令牌删掉</b>。" +
+    "<small>折子本身不动。要再接，得重填一次令牌。</small>", "断")) return;
   SY = null;
   try { localStorage.removeItem(SYKEY); } catch(e){}
   syUI(null); toast("已断，令牌已删");
