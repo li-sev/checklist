@@ -327,7 +327,7 @@
   @media (min-width:520px){ .mis{grid-template-columns:1fr 1fr} }
   .mini{border:1px solid var(--line);border-radius:5px;padding:8px 10px;background:var(--card)}
   .mini.sick{border-color:#b3402c;background:rgba(179,64,44,.07)}
-  .mini.good{border-color:var(--gold);background:rgba(169,134,63,.08)}
+  .mini.fine{border-color:var(--gold);background:rgba(169,134,63,.08)}
   /* 递了牌子的那一格：红边，一眼看得见有人要走 */
   .mini.quit{border-color:#b3402c;background:rgba(179,64,44,.09)}
   .mini.vac{border-style:dashed;opacity:.8}
@@ -958,7 +958,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v26" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v27" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -2372,7 +2372,7 @@ function miHTML(m, g, load){
     <div class="mib"><button class="btn" disabled>候补中 · 按 ${VACS} 分计</button></div>
   </div>`;
   const md = moodOf(s.l);
-  return `<div class="mini${s.q ? " quit" : sc < 40 ? " sick" : sc >= 85 ? " good" : ""}">
+  return `<div class="mini${s.q ? " quit" : sc < 40 ? " sick" : sc >= 85 ? " fine" : ""}">
     <div class="mih"><b>${m.n}</b><span class="mid">${m.d}</span>
       <span class="mn">${load} 件待办</span></div>
     <div class="mps"><span class="pn">尚书 ${p}</span>
