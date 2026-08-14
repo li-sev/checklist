@@ -191,6 +191,10 @@
     color:var(--dim);background:var(--card)}
   .med.got{border-color:var(--gold);color:var(--gold);background:rgba(169,134,63,.09);font-weight:700}
   .med small{display:block;font-size:11px;letter-spacing:0;font-weight:400;opacity:.8;margin-top:2px}
+  .med b{font-weight:700}
+  .med .mp{font:11px/1 ui-monospace,Consolas,monospace;font-style:normal;color:var(--gold);
+    margin-left:6px;letter-spacing:0}
+  .med.got .mp{opacity:.7}
 
   .app{display:flex;gap:22px;max-width:1060px;margin:0 auto;align-items:flex-start}
   .wrap{flex:1;min-width:0;max-width:720px}
@@ -1324,17 +1328,19 @@ const MINISTRY = [
 const MI = Object.fromEntries(MINISTRY.map(m => [m.id, m]));
 /* 六部平均分决定朝纲 */
 const COURT = [[0,"朝纲不振"],[40,"隐忧渐生"],[55,"四海承平"],[70,"政通人和"],[85,"海晏河清"]];
+/* 治绩：难的赏得多。p 是入库的两数，摆在牌子上，一眼看得见值多少。
+   十件全挣到共 240 两——铺子里全套要 720 两，光靠治绩买不完，还得老实批折子。 */
 const MEDALS = [
-  {id:"first", n:"初御朱笔", d:"批下头一件"},
-  {id:"vol",   n:"一卷功成", d:"整整一卷批完"},
-  {id:"six",   n:"六部齐备", d:"六个部都派到差事"},
-  {id:"qing",  n:"海晏河清", d:"六部均分到八十五"},
-  {id:"rich",  n:"国库充盈", d:"库银存到五百两"},
-  {id:"d20",   n:"宵衣旰食", d:"一日之内批满二十件"},
-  {id:"night", n:"秉烛达旦", d:"子夜到卯时之间批折"},
-  {id:"run7",  n:"勤政不辍", d:"连批七日"},
-  {id:"c100",  n:"日理万机", d:"累计批过一百件"},
-  {id:"note10",n:"御笔亲批", d:"写下十条朱批"},
+  {id:"first", n:"初御朱笔", d:"批下头一件",         p:5},
+  {id:"vol",   n:"一卷功成", d:"整整一卷批完",       p:10},
+  {id:"night", n:"秉烛达旦", d:"子夜到卯时之间批折",  p:10},
+  {id:"note10",n:"御笔亲批", d:"写下十条朱批",       p:15},
+  {id:"six",   n:"六部齐备", d:"六个部都派到差事",    p:20},
+  {id:"d20",   n:"宵衣旰食", d:"一日之内批满二十件",  p:25},
+  {id:"rich",  n:"国库充盈", d:"库银存到五百两",      p:25},
+  {id:"run7",  n:"勤政不辍", d:"连批七日",           p:40},
+  {id:"c100",  n:"日理万机", d:"累计批过一百件",      p:40},
+  {id:"qing",  n:"海晏河清", d:"六部均分到八十五",    p:50},
 ];
 const miDef = () => Object.fromEntries(MINISTRY.map(m => [m.id, {e:50, l:60, d:""}]));
 const GDEF = () => ({ag:0, owe:0, tot:0, cnt:0, nc:0, day:"", tn:0, run:0, best:0, sfx:1,
@@ -1494,8 +1500,8 @@ function medal(id){
   const g = G(); if (g.med.includes(id)) return;
   const m = MEDALS.find(x => x.id === id); if (!m) return;
   g.med.push(id);
-  earn(20);                                       // 每件治绩入库二十两（有亏空先抵）
-  herald("载入实录", m.n, m.d + " · 入库二十两");
+  earn(m.p);                                      // 按这件治绩的赏格入库（有亏空先抵）
+  herald("载入实录", m.n, `${m.d} · 入库 ${m.p} 两`);
 }
 /* 今天头一回批折：结算连批天数，返回该给的加赏 */
 function touchDay(){
@@ -1677,8 +1683,9 @@ function paintShop(){
   $("#ihMi").innerHTML = MINISTRY.map(m => miHTML(m, g, load[m.id])).join("");
   $("#ihSeal").innerHTML  = Object.entries(SEALS).map(([k,v]) => goodHTML(k,v,"seal",g)).join("");
   $("#ihPaper").innerHTML = Object.entries(PAPERS).map(([k,v]) => goodHTML(k,v,"paper",g)).join("");
-  $("#ihMed").innerHTML = MEDALS.map(m =>
-    `<span class="med${g.med.includes(m.id)?" got":""}">${m.n}<small>${m.d}</small></span>`).join("");
+  $("#ihMed").innerHTML = MEDALS.map(m => { const got = g.med.includes(m.id);
+    return `<span class="med${got?" got":""}"><b>${m.n}</b><i class="mp">${
+      got ? "已入 " + m.p : m.p} 两</i><small>${m.d}</small></span>`; }).join("");
 }
 /* 朝廷 / 内库分两页，省得一长条摊到底 */
 $("#ihTabs").addEventListener("click", e => {
