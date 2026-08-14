@@ -18,6 +18,8 @@
     --bg:#e9dcc0; --card:#fbf4e2; --ink:#2b2119; --dim:#8a7960; --line:#d8c8a6;
     --accent:#9b2d20; --done:#9b2d20; --gold:#a9863f; --link:#2f5468;
     --soft:#f2e8d0; --shadow:0 8px 26px rgba(60,40,18,.22);
+    /* 压在朱红上头的那点字色。万年红、藏蓝这些底色，朱红成了金，就得换深色压字 */
+    --onacc:#fdf3e0;
     /* 纸纹的两笔：界行的线、纸里的纤维斑。抽成变量，纸色才好各染各的 */
     --rule:rgba(90,60,20,.05); --fiber:rgba(120,90,40,.05);
   }
@@ -28,7 +30,8 @@
            --rule:rgba(220,190,140,.055); --fiber:rgba(220,190,140,.045); }
   }
   /* 内务府买来的纸色。写在 body 上，压过上面 :root 那一套（含深色模式） */
-  body.pp-jin{ --bg:#eadfba; --card:#fdf6df; --line:#dcc98f; --gold:#9a7c2e; --soft:#f6edcf;
+  /* 洒金笺：底子本就是白的，金是洒上去的碎屑 —— 碎屑另铺一层，见 #fleck */
+  body.pp-jin{ --bg:#fbf6e7; --card:#fffdf5; --line:#e3d6b0; --gold:#a8842c; --soft:#f8f2de;
                --accent:#8d3a15; --done:#8d3a15; }
   body.pp-qing{ --bg:#dde5d6; --card:#f4f8ee; --ink:#242c22; --dim:#6f7d67; --line:#c2cfb6;
                 --accent:#3f6b46; --done:#3f6b46; --gold:#7e8f56; --link:#2c5b63; --soft:#e8efe0; }
@@ -37,12 +40,12 @@
                --accent:#8a2f14; --done:#8a2f14; --link:#3f6480;
                --shadow:0 8px 26px rgba(120,92,26,.24) }
   body.pp-lan{ --bg:#141a26; --card:#1e2637; --ink:#dfe6f2; --dim:#8593ab; --line:#33405a;
-               --accent:#d4a24a; --done:#d4a24a; --gold:#d4a24a; --link:#7fa8cf; --soft:#26304400;
+               --accent:#d4a24a; --done:#d4a24a; --gold:#d4a24a; --link:#7fa8cf; --onacc:#141a26;
                --soft:#263044; --shadow:0 8px 26px rgba(0,0,0,.65);
                --rule:rgba(190,210,255,.05); --fiber:rgba(190,210,255,.04) }
   /* 朱丝栏：米白纸上打朱红界行。它跟别的纸色不同 —— 改的是界行本身的颜色 */
-  body.pp-zhu{ --bg:#f3ead2; --card:#fffaee; --line:#e0cfae; --soft:#f8f0dc;
-               --rule:rgba(155,45,32,.17); --gold:#9c7a34 }
+  body.pp-zhu{ --bg:#f6efdc; --card:#fffbf3; --line:#e3bfae; --soft:#fbf2e6;
+               --rule:rgba(160,42,30,.38); --gold:#9c7a34; --dim:#8a6f5e }
   /* 雪浪笺：极白，近乎无色。写字的地方越干净，朱笔越跳 */
   body.pp-xue{ --bg:#f2f3ef; --card:#ffffff; --ink:#22252a; --dim:#7d8288; --line:#dcded8;
                --soft:#f7f8f5; --gold:#8d8a6e; --link:#38566b;
@@ -56,14 +59,38 @@
   /* 万年红：大红洒金蜡笺，年节贴门的那种纸。字用金，底用朱 */
   body.pp-hong{ --bg:#7e1c14; --card:#8f2318; --ink:#f7e3c0; --dim:#d9b48c; --line:#a84231;
                 --accent:#f0cf86; --done:#f0cf86; --gold:#f0cf86; --link:#f2d9a8; --soft:#96291c;
+                --onacc:#6d1710;
                 --rule:rgba(255,225,170,.07); --fiber:rgba(255,225,170,.08);
                 --shadow:0 8px 26px rgba(60,10,6,.5) }
+
+  /* 洒金的金屑、万年红蜡笺上的斑：另铺一张贴在最底下（压在正文下、纸色上）。
+     不去挤 body 的 background-image —— 那一格让给纸纹了。
+     几层圆点各用一个互质的间距错开，看着才像随手洒的，不像打的格子 */
+  #fleck{position:fixed;inset:0;z-index:-1;pointer-events:none;display:none}
+  body.pp-jin #fleck, body.pp-hong #fleck{display:block}
+  body.pp-jin #fleck{background-image:
+      radial-gradient(circle at 17% 23%, rgba(186,146,46,.85) 0 1.8px, transparent 2.4px),
+      radial-gradient(circle at 63% 8%,  rgba(206,172,74,.62) 0 1.2px, transparent 1.8px),
+      radial-gradient(circle at 82% 61%, rgba(176,136,40,.75) 0 2.2px, transparent 2.8px),
+      radial-gradient(circle at 34% 77%, rgba(198,164,58,.55) 0 1.4px, transparent 2px);
+    background-size:113px 97px, 71px 83px, 149px 131px, 89px 109px}
+  body.pp-hong #fleck{background-image:
+      radial-gradient(circle at 21% 31%, rgba(246,222,158,.5) 0 1.9px, transparent 2.5px),
+      radial-gradient(circle at 68% 12%, rgba(246,222,158,.36) 0 1.2px, transparent 1.8px),
+      radial-gradient(circle at 87% 66%, rgba(246,222,158,.44) 0 2.2px, transparent 2.8px);
+    background-size:107px 89px, 73px 79px, 139px 127px}
 
   /* ── 书体：整页的字形。一律用系统自带的字体，没装就自己退回宋体，不引任何外部资源 ── */
   body.ft-kai,  .pv.ft-kai { font-family:"Kaiti SC","STKaiti","KaiTi","DFKai-SB",serif }
   body.ft-fang, .pv.ft-fang{ font-family:"FangSong","STFangsong","FangSong_GB2312","Songti SC",serif }
   body.ft-li,   .pv.ft-li  { font-family:"Baoli SC","Libian SC","LiSu","STLiti",serif }
   body.ft-xing, .pv.ft-xing{ font-family:"Xingkai SC","STXingkai","Weibei SC","Hannotate SC",cursive,serif }
+
+  /* ── 玉玺盖出来是金的，不是朱的。别的印一律随朱笔 ── */
+  body.sl-xi li.ok .bx{background:var(--gold);border-color:var(--gold);color:var(--onacc)}
+  body.sl-xi li:hover .bx{border-color:var(--gold)}
+  body.sl-xi .pagehead .seal{border-color:var(--gold);color:var(--gold)}
+  .good[data-buy="xi"] .pv{border-color:var(--gold);color:var(--gold)}
 
   /* ── 纸纹：底下这张纸怎么打格。改的是 body 的背景，跟纸色各管各的 ── */
   body.gr-wu  { background-image:radial-gradient(var(--fiber) 1px,transparent 1px);
@@ -123,7 +150,7 @@
     font:13px/1 inherit;color:var(--ink);overflow:hidden}
   .purse:hover{border-color:var(--accent)}
   .purse>span{padding:6px 10px;display:inline-flex;align-items:center;gap:5px;letter-spacing:1px;white-space:nowrap}
-  .purse .rk{background:var(--accent);color:#fdf3e0;font-weight:700}
+  .purse .rk{background:var(--accent);color:var(--onacc);font-weight:700}
   .purse .ag{color:var(--gold);font-weight:700;border-right:1px solid var(--line)}
   .purse .ag b{font:15px/1 ui-monospace,Consolas,monospace}
   .purse .rn{color:var(--dim);font-size:12px}
@@ -163,9 +190,7 @@
   }
 
   /* ── 朝廷 / 内库：抬头一行把国库和朝纲摆平，底下切页签 ── */
-  /* 响/粉两个圆钮并排，窄屏挤，两钮之间的空当收窄些 */
-  .ih .ihtop{display:flex;align-items:center;gap:11px;margin-bottom:7px}
-  .ih .ihtop .sfx + .sfx{margin-left:-5px}
+  .ih .ihtop{display:flex;align-items:center;gap:12px;margin-bottom:7px}
   .ih .ihv{display:flex;align-items:baseline;gap:5px;line-height:1}
   .ih .ihv .l{font-size:11px;letter-spacing:3px;color:var(--dim);flex:none}
   .ih .ihv b{font-family:ui-monospace,Consolas,monospace;font-size:25px;font-weight:700;color:var(--gold)}
@@ -173,9 +198,6 @@
   .ih .ihv.r{margin-left:auto}
   .ih .ihv.r b{font-family:inherit;font-size:16px;letter-spacing:3px;color:var(--accent)}
   .ih.owe .ihv b{color:var(--accent)}
-  .sfx{width:30px;height:30px;flex:none;border-radius:50%;border:1px solid var(--line);
-    background:var(--card);font-size:12px;color:var(--dim);letter-spacing:0;padding:0}
-  .sfx.on{border-color:var(--gold);color:var(--gold)}
   .tabs{display:flex;margin:11px 0;border:1px solid var(--line);border-radius:6px;overflow:hidden}
   /* 四个页签并排，字距收紧些，窄屏才挤得下 */
   .tab{flex:1;min-height:40px;border:0;background:var(--card);font-size:14.5px;letter-spacing:1.5px;
@@ -183,7 +205,7 @@
   .tab i{font-style:normal;font-size:10.5px;letter-spacing:0;opacity:.72;margin-left:3px;
     font-family:ui-monospace,Consolas,monospace}
   .tab+.tab{border-left:1px solid var(--line)}
-  .tab.on{background:var(--accent);color:#fdf3e0;font-weight:700}
+  .tab.on{background:var(--accent);color:var(--onacc);font-weight:700}
   .pane{display:none}
   .pane.on{display:block;animation:panein .16s ease-out}
   @keyframes panein{0%{opacity:0;transform:translateY(5px)}100%{opacity:1;transform:none}}
@@ -193,9 +215,9 @@
   .sheet label.first{margin-top:0}
 
   /* ── 打击感：按下去就陷，松开弹回来 ── */
-  .btn,.good,.tab,.icon,.sfx,.pen,.dots{
+  .btn,.good,.tab,.icon,.pen,.dots{
     transition:transform .08s cubic-bezier(.3,.9,.3,1),background .12s,border-color .12s,color .12s}
-  .btn:active,.good:active,.tab:active,.icon:active,.sfx:active,.pen:active,.dots:active{transform:scale(.93)}
+  .btn:active,.good:active,.tab:active,.icon:active,.pen:active,.dots:active{transform:scale(.93)}
   .btn.pri:active{transform:translateY(2px) scale(.985);box-shadow:0 0 0 rgba(90,20,12,.25)}
   li .bx:active{transform:scale(.84) rotate(-12deg)}
   li.ok .bx:active{transform:scale(.84) rotate(-12deg)}
@@ -209,7 +231,7 @@
   .ring{animation:hit .23s cubic-bezier(.2,1.5,.35,1), ring .5s ease-out}
   @media (prefers-reduced-motion:reduce){
     .hit,.ring,.pane.on{animation:none}
-    .btn:active,.good:active,.tab:active,.icon:active,.sfx:active,.pen:active,.dots:active{transform:none}
+    .btn:active,.good:active,.tab:active,.icon:active,.pen:active,.dots:active{transform:none}
     .spark{display:none}
   }
 
@@ -241,6 +263,17 @@
       repeating-linear-gradient(45deg, var(--rule) 0 1px,transparent 1px 21.2px),
       repeating-linear-gradient(-45deg,var(--rule) 0 1px,transparent 1px 21.2px)}
   .pv.gp.m-su  {}
+  /* 特效样张：三粒迸出去的点 */
+  .pv.gp.x-wu  {}
+  .pv.gp.x-jin {background-image:radial-gradient(circle at 30% 34%,#c8a24a 0 2px,transparent 2.5px),
+                                 radial-gradient(circle at 68% 30%,#c8a24a 0 1.5px,transparent 2px),
+                                 radial-gradient(circle at 52% 70%,#c8a24a 0 1.8px,transparent 2.3px)}
+  .pv.gp.x-zhu {background-image:radial-gradient(circle at 30% 34%,var(--accent) 0 2px,transparent 2.5px),
+                                 radial-gradient(circle at 68% 30%,var(--accent) 0 1.5px,transparent 2px),
+                                 radial-gradient(circle at 52% 70%,var(--accent) 0 1.8px,transparent 2.3px)}
+  .pv.gp.x-mo  {background-image:radial-gradient(circle at 30% 34%,var(--ink) 0 2px,transparent 2.5px),
+                                 radial-gradient(circle at 68% 30%,var(--ink) 0 1.5px,transparent 2px),
+                                 radial-gradient(circle at 52% 70%,var(--ink) 0 1.8px,transparent 2.3px)}
   .pv.gp.m-hui {box-shadow:inset 0 0 0 1px var(--bg),inset 0 0 0 2px var(--gold)}
   .pv.gp.m-yun {background-image:
       radial-gradient(circle at 0 0,      transparent 9px,var(--gold) 9px 10px,transparent 11px),
@@ -249,8 +282,11 @@
 
   /* 金粉：点下去迸开的那几粒。位置由 --dx/--dy 定，各飞各的 */
   .spark{position:fixed;z-index:96;pointer-events:none;width:4px;height:4px;margin:-2px 0 0 -2px;
-    border-radius:50%;background:var(--gold);box-shadow:0 0 5px var(--gold);
+    border-radius:50%;background:var(--gold);
     animation:spark .62s cubic-bezier(.2,.7,.3,1) forwards}
+  body.fx-jin .spark{background:#c8a24a;box-shadow:0 0 5px rgba(200,162,74,.9)}
+  body.fx-zhu .spark{background:var(--accent);box-shadow:0 0 5px var(--accent);width:5px;height:5px}
+  body.fx-mo  .spark{background:var(--ink);box-shadow:0 0 4px rgba(0,0,0,.4);opacity:.85}
   @keyframes spark{
     0%{opacity:0;transform:translate(0,0) scale(.4)}
     14%{opacity:1;transform:translate(calc(var(--dx) * .35),calc(var(--dy) * .35)) scale(1)}
@@ -266,6 +302,9 @@
   /* 恩典之物：朝纲不到，摆在那儿看着，够不着 */
   .good.lock{opacity:.62;border-style:dashed}
   .good.lock .pv{border-color:var(--dim);color:var(--dim)}
+  /* 本机没装的字：摆着让你知道有这么一样，但不卖也点不动 */
+  .good.na{opacity:.45;border-style:dotted}
+  .good.na .pv{border-color:var(--dim);color:var(--dim)}
   .good.lock .pz{color:var(--dim)}
   /* 六部 */
   .mis{display:grid;gap:6px}
@@ -357,7 +396,7 @@
     padding:0 16px;border-radius:6px;border:1px solid var(--line);background:var(--card);font-size:16px;
     letter-spacing:1px}
   .btn:hover{border-color:var(--accent)}
-  .btn.pri{background:var(--accent);color:#fdf3e0;border-color:var(--accent);font-weight:700;
+  .btn.pri{background:var(--accent);color:var(--onacc);border-color:var(--accent);font-weight:700;
     box-shadow:0 2px 0 rgba(90,20,12,.25)}
   .btn.pri:hover{filter:brightness(1.08)}
   .btn.wide{width:100%}
@@ -377,8 +416,10 @@
   #listSel:hover{border-color:var(--accent)}
   .bar{height:10px;background:var(--soft);border:1px solid var(--line);border-radius:2px;
     overflow:hidden;margin:14px 0 6px}
+  /* 进度条跟着纸色走。原先第二段写死一支暗红，换成绿纸就是红绿双拼 */
   .bar>i{display:block;height:100%;width:0;transition:width .3s;
-    background:linear-gradient(180deg,var(--accent),#7d2019)}
+    background:var(--accent);
+    background:linear-gradient(180deg,var(--accent),color-mix(in srgb,var(--accent) 74%,#000))}
   .lab{display:flex;justify-content:space-between;font-size:14px;color:var(--dim);margin-bottom:14px;
     letter-spacing:1px}
   #searchWrap{display:none;margin-bottom:10px}
@@ -423,7 +464,7 @@
   .gh .gc{font:13px/1 ui-monospace,Consolas,monospace;color:var(--dim);flex:none;margin-left:auto}
   .gall{flex:none;font-size:12px;letter-spacing:2px;color:var(--accent);border:1px solid var(--accent);
     border-radius:3px;padding:4px 8px;opacity:.72;line-height:1}
-  .gall:hover{opacity:1;background:var(--accent);color:#fdf3e0}
+  .gall:hover{opacity:1;background:var(--accent);color:var(--onacc)}
   .dots{width:38px;height:38px;border-radius:5px;flex:none;color:var(--dim);font-size:18px;
     display:inline-flex;align-items:center;justify-content:center}
   .dots:hover{background:var(--soft);color:var(--accent)}
@@ -438,10 +479,10 @@
     color:transparent;letter-spacing:0;overflow:hidden;text-align:center}
   li .bx.tiny{font-size:9px;line-height:1.05;white-space:normal;word-break:break-all;padding:1px}
   li:hover .bx{border-color:var(--accent);color:rgba(155,45,32,.3)}
-  li.ok .bx{border:1.5px solid var(--accent);border-radius:3px;background:var(--accent);color:#fdf3e0;
+  li.ok .bx{border:1.5px solid var(--accent);border-radius:3px;background:var(--accent);color:var(--onacc);
     transform:rotate(-7deg);
     box-shadow:inset 0 0 0 1.5px rgba(253,243,224,.9), 0 1px 3px rgba(90,20,12,.35)}
-  li.ok:hover .bx{color:#fdf3e0}
+  li.ok:hover .bx{color:var(--onacc)}
   li .bx.stamp{animation:stamp .26s ease-out}
   @keyframes stamp{
     0%{transform:scale(1.9) rotate(-16deg);opacity:.15}
@@ -463,9 +504,9 @@
   .pen{width:34px;height:34px;border-radius:5px;flex:none;font-size:13.5px;
     display:inline-flex;align-items:center;justify-content:center;
     color:var(--accent);border:1px solid var(--accent);background:transparent}
-  .pen:hover{background:var(--accent);color:#fdf3e0}
+  .pen:hover{background:var(--accent);color:var(--onacc)}
   li.hasnote .pen{background:rgba(155,45,32,.14);font-weight:700}
-  li.hasnote .pen:hover{background:var(--accent);color:#fdf3e0}
+  li.hasnote .pen:hover{background:var(--accent);color:var(--onacc)}
   /* 朱批：写在事由底下的一段朱笔小字 */
   .note{flex-basis:100%;width:100%;margin:2px 0 1px 39px;padding:7px 11px;cursor:pointer;
     background:rgba(155,45,32,.06);border-left:2px solid var(--accent);border-radius:0 4px 4px 0;
@@ -563,7 +604,7 @@
     border-left:4px solid var(--accent);border-radius:4px;padding:10px 14px;box-shadow:var(--shadow);
     font-size:15px;max-width:92vw}
   .newver.on{display:flex}
-  .newver button{border:1px solid var(--accent);background:var(--accent);color:#fdf3e0;border-radius:3px;
+  .newver button{border:1px solid var(--accent);background:var(--accent);color:var(--onacc);border-radius:3px;
     padding:7px 12px;font:inherit;font-size:15px;cursor:pointer;letter-spacing:1px;flex:none}
   .newver .x{background:transparent;color:var(--dim);border-color:transparent;padding:7px 4px}
   body.drag::after{content:"松手，此件即刻收进来";position:fixed;inset:12px;border:3px dashed var(--accent);
@@ -580,6 +621,7 @@
 </style>
 </head>
 <body>
+<i id="fleck"></i>
 <div class="pagehead">
   <div class="ttl">奏事处</div>
   <div class="sub">朱笔一点，此事便算办了</div>
@@ -746,8 +788,6 @@
   <div class="ihtop">
     <div class="ihv"><span class="l">国库</span><b id="ihAgN">0</b><span class="u">两</span></div>
     <div class="ihv r"><span class="l">朝纲</span><b class="rk" id="ihRank">四海承平</b></div>
-    <button class="sfx on" id="ihSfx" title="点下去的响动">响</button>
-    <button class="sfx on" id="ihFx" title="点下去迸开的金粉">粉</button>
   </div>
   <div class="rankbar"><i id="ihBar" style="width:0"></i></div>
   <div class="ranktip" id="ihTip"></div>
@@ -780,7 +820,7 @@
     <div class="meds" id="ihMed"></div>
     <div class="hint">难的赏得多，牌子上标着各值几两。挣到就一次入库，不会撤销，也不会重复给。<br>
       写着<b>？</b>的五件是秘录：条目不公开，撞上了自然入册 —— 想凑是凑不着的。<br>
-      三十件全挣到共 589 两，仍买不下整个内库（2780 两）</div>
+      三十件全挣到共 589 两，仍买不下整个内库（3050 两）</div>
   </div>
 
   <div class="pane" data-pane="store">
@@ -794,8 +834,10 @@
     <div class="goods" id="ihG-font"></div>
     <label>装裱 <small>贴着四边的一圈边饰</small></label>
     <div class="goods" id="ihG-mount"></div>
+    <label>落印特效 <small>打勾那一下，点中的地方迸出什么</small></label>
+    <div class="goods" id="ihG-fx"></div>
     <div class="hint">买过的就一直在，随时换回来，换的时候不花钱。库银在上头那一行。<br>
-      五档各管各的，怎么搭都行。虚线框的两样是恩典之物：银子够也得朝纲够，跌下去就暂时不敢用了</div>
+      六档各管各的，怎么搭都行。虚线框的两样是恩典之物：银子够也得朝纲够，跌下去就暂时不敢用了</div>
   </div>
 
   <div class="btns">
@@ -885,8 +927,10 @@ const SEED_MD = `
    六部满分（玉玺金云笺要海晏河清才敢用，所以得满）、也不荒疏，专为看皮肤。
    存档另起一个键，跟真本各存各的：在里头怎么点、买什么、重开一局，都碰不到你自己的清单。 */
 const DEMO = /[?&]demo\b/.test(location.search);
+/* 演武场里六部、荒疏、请辞一概照真的来 —— 要试的就是这一套。只两处不同：
+   库银管够、内库的东西全在手上，且恩典之物不看朝纲脸色（不然玉玺压根试不着） */
 const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
-const BUILD = "v22" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v23" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -1552,7 +1596,7 @@ const SEALS = {
   tick:{t:"✓",      p:60,  n:"素印"},
   zhen:{t:"朕知道了", p:150, n:"朕知道了", sm:true},
   /* r = 要朝纲到这个分数才配用。买得起也没用，得先把六部治明白 */
-  xi:  {t:"敕",     p:400, n:"玉玺·敕", r:85},
+  xi:  {t:"敕",     p:400, n:"玉玺·敕", r:85, c:"sl-xi"},
 };
 const PAPERS = {
   xuan:{n:"宣纸",     p:0,   c:"",        sw:"#e9dcc0"},
@@ -1569,11 +1613,29 @@ const PAPERS = {
    所以样张里的「永」字长什么样，以你自己这台为准。 */
 const FONTS = {
   song:    {n:"宋体", p:0,   c:"",         t:"永"},
-  kaiti:   {n:"楷体", p:60,  c:"ft-kai",   t:"永"},
-  fangsong:{n:"仿宋", p:60,  c:"ft-fang",  t:"永"},
-  lishu:   {n:"隶书", p:90,  c:"ft-li",    t:"永"},
-  xingkai: {n:"行楷", p:120, c:"ft-xing",  t:"永"},
+  kaiti:   {n:"楷体", p:60,  c:"ft-kai",   t:"永", f:'"Kaiti SC","STKaiti","KaiTi","DFKai-SB"'},
+  fangsong:{n:"仿宋", p:60,  c:"ft-fang",  t:"永", f:'"FangSong","STFangsong","FangSong_GB2312"'},
+  lishu:   {n:"隶书", p:90,  c:"ft-li",    t:"永", f:'"Baoli SC","Libian SC","LiSu","STLiti"'},
+  xingkai: {n:"行楷", p:120, c:"ft-xing",  t:"永", f:'"Xingkai SC","STXingkai","Weibei SC","Hannotate SC"'},
 };
+/* 这台机器上到底装没装这几种字：拿 canvas 量同一行字的宽度，跟兜底字体量出来的比 ——
+   分毫不差就是没装，浏览器悄悄退回宋体了。没装的不上架：买回来跟宋体一模一样，那是骗钱。
+   安卓机常常一种都没有，苹果一般四种都在。 */
+const hasFont = (() => {
+  const cache = {}, probe = "永州之野产异蛇黑质而白章國";
+  let cx = null;
+  return fam => {
+    if (!fam) return true;
+    if (fam in cache) return cache[fam];
+    let ok = true;
+    try{
+      cx = cx || document.createElement("canvas").getContext("2d");
+      const w = f => { cx.font = "32px " + f; return cx.measureText(probe).width; };
+      ok = ["serif", "monospace", "sans-serif"].some(base => w(fam + "," + base) !== w(base));
+    }catch(e){ ok = true; }                       // 量不出来就当有，别把东西藏没了
+    return (cache[fam] = ok);
+  };
+})();
 /* 装裱：贴着屏幕四边的一圈边饰 */
 const MOUNTS = {
   sumian: {n:"素面",   p:0,   c:"",        pv:"m-su"},
@@ -1588,7 +1650,14 @@ const GRAINS = {
   fangge: {n:"方格",   p:60, c:"gr-fang",  pv:"g-fang"},
   mizige: {n:"米字格", p:90, c:"gr-mi",    pv:"g-mi"},
 };
-/* 内库五档。cur 是「眼下用的是哪一样」存在 g 的哪个字段上，d 是那一档白送的那样。
+/* 落印特效：打勾那一下，点中的地方迸出什么。素的就是什么都不迸 */
+const FXS = {
+  fxno:  {n:"不迸",     p:0,   c:"",       pv:"x-wu"},
+  fxmo:  {n:"墨星",     p:50,  c:"fx-mo",  pv:"x-mo"},
+  fxjin: {n:"金粉迸散", p:90,  c:"fx-jin", pv:"x-jin"},
+  fxzhu: {n:"朱砂溅",   p:130, c:"fx-zhu", pv:"x-zhu"},
+};
+/* 内库六档。cur 是「眼下用的是哪一样」存在 g 的哪个字段上，d 是那一档白送的那样。
    加一档只要往这儿添一行，面板、买卖、存档、朝纲收放一概不用另写。 */
 const KIT = {
   seal:  {list:SEALS,  cur:"seal",  d:"zhun",    lab:"印章"},
@@ -1596,6 +1665,7 @@ const KIT = {
   font:  {list:FONTS,  cur:"font",  d:"song",    lab:"书体"},
   mount: {list:MOUNTS, cur:"mount", d:"sumian",  lab:"装裱"},
   grain: {list:GRAINS, cur:"grain", d:"jiehang", lab:"纸纹"},
+  fx:    {list:FXS,    cur:"fx",    d:"fxno",    lab:"特效"},
 };
 /* 内库所有货色摊平成一张表，找东西不用管它属哪一档 */
 const WARES = Object.assign({}, ...Object.values(KIT).map(r => r.list));
@@ -1720,7 +1790,7 @@ const COURT = [
 ];
 /* 治绩：难的赏得多。p 是入库的两数，摆在牌子上，一眼看得见值多少。
    带 x 的五件是彩蛋：条目不写出来，撞上了才入册 —— 所以别去凑，凑不着。
-   三十件全挣到共 589 两，铺子里全套要 2780 两，光靠治绩仍旧买不完，还得老实批折子。 */
+   三十件全挣到共 589 两，铺子里全套要 3050 两，光靠治绩仍旧买不完，还得老实批折子。 */
 const MEDALS = [
   /* 批折子 */
   {id:"first", n:"初御朱笔", d:"批下头一件",           p:5},
@@ -1760,15 +1830,14 @@ const MEDALS = [
   {id:"yuan",  n:"元日开笔", d:"元旦这天批下一件",               p:15, x:1},
 ];
 /* e 效率 · l 忠诚 · d 最近办差的日子 · k 第几任（下标）· v 空悬还差几件 · q 请辞中 · sd 今日说过话没 */
-const miDef = () => Object.fromEntries(MINISTRY.map(m =>
-  [m.id, {e: DEMO ? 100 : 50, l: DEMO ? 100 : 60, d:"", k:0, v:0, q:0, sd:""}]));
+const miDef = () => Object.fromEntries(MINISTRY.map(m => [m.id, {e:50, l:60, d:"", k:0, v:0, q:0, sd:""}]));
 // 准辞之后，那个部要批满几件才有新官到任
 const VAC = 3;
 // 空悬期间这个部按几分计入朝纲。比在位的底限 25 还低，所以「准辞了事」是要付账的
 const VACS = 20;
-const GDEF = () => ({ag: DEMO ? 99999 : 0, owe:0, tot:0, cnt:0, nc:0, day:"", tn:0, run:0, best:0, sfx:1, fx:1,
+const GDEF = () => ({ag: DEMO ? 99999 : 0, owe:0, tot:0, cnt:0, nc:0, day:"", tn:0, run:0, best:0, sfx:1,
                      own: DEMO ? Object.keys(WARES) : Object.values(KIT).map(r => r.d), med:[],
-                     seal:"zhun", paper:"xuan", font:"song", mount:"sumian", grain:"jiehang",
+                     seal:"zhun", paper:"xuan", font:"song", mount:"sumian", grain:"jiehang", fx:"fxno",
                      mi:miDef(), mday:""});
 function G(){
   if (!D.g || typeof D.g !== "object") D.g = GDEF();
@@ -1854,7 +1923,7 @@ function punch(el, kind){
    由外头统一放一次。嫌花可以在内库上头那一行按「粉/素」关掉。 */
 function gold(el){
   const g = G();
-  if (!g.fx || silent || !el) return;
+  if (!el || silent || !(FXS[g.fx] || {}).c) return;   // 「不迸」那一档没有类，就是什么都不迸
   try { if (matchMedia("(prefers-reduced-motion: reduce)").matches) return; } catch(e){}
   const r = el.getBoundingClientRect();
   if (!r.width && !r.height) return;              // 没画出来的元素不放
@@ -2101,7 +2170,6 @@ function scoreTick(it, on, el, mid){
 /* ── 荒疏：一个部多久没办差，效率忠诚就往下掉 ──
    每天进门结算一次。掉到 25 打住，不至于彻底崩盘。 */
 function decay(){
-  if (DEMO) return 0;                             // 演武场不荒疏：慢慢挑皮肤，朝纲不会掉下去
   const g = G(), t = ymd(Date.now());
   if (g.mday === t) return;
   const dayNo = s => Math.round(new Date(s + "T00:00:00").getTime() / 864e5);
@@ -2210,20 +2278,31 @@ function paintPurse(){
     const c = (r.list[g[r.cur]] || {}).c;
     if (c) document.body.classList.add(c);
   }
+  /* 手机上地址栏/状态栏那一条也得跟着纸色走 —— 不然绿纸顶上顶着一条红边。
+     六档没动过就不重算：getComputedStyle 每打一个勾跑一趟不值当 */
+  const sk = Object.values(KIT).map(r => g[r.cur]).join("|");
+  const tc = document.querySelector('meta[name="theme-color"]');
+  if (tc && tc.dataset.k !== sk){
+    tc.dataset.k = sk;
+    try { tc.setAttribute("content", getComputedStyle(document.body).backgroundColor); } catch(e){}
+  }
 }
-// 这四档一共可能往 body 上挂哪些类，开局算一次
+// 这几档一共可能往 body 上挂哪些类，开局算一次
 const SKINCLS = Object.values(KIT).flatMap(r => Object.values(r.list).map(v => v.c)).filter(Boolean);
 
 /* ── 内务府面板 ── */
 const mask6 = $("#mask6");
 function goodHTML(k, v, kind, g){
   const own = g.own.includes(k), cur = g[KIT[kind].cur] === k;
-  const locked = v.r && courtScore() < v.r;       // 恩典之物：朝纲不到就摆在那儿看着
+  const locked = !DEMO && v.r && courtScore() < v.r;  // 恩典之物：朝纲不到就摆在那儿看着
   /* 样张：印章画那一方印，书体写个「永」字，纸色是一块颜色，装裱纸纹缩一个小样 */
   const pv = kind === "seal"  ? `<span class="pv${v.sm ? " tiny" : ""}">${esc(v.t)}</span>`
            : kind === "font"  ? `<span class="pv ft ${v.c}">${esc(v.t)}</span>`
            : v.sw             ? `<span class="pv paper" style="background:${v.sw}"></span>`
            : `<span class="pv gp ${v.pv}"></span>`;
+  // 本机没装这种字：上架也没用，买回来跟宋体一个样
+  if (kind === "font" && !hasFont(v.f)) return `<button class="good na" disabled>${pv}
+    <span class="nm">${esc(v.n)}</span><span class="pz">本机没装</span></button>`;
   const tag = locked ? (own ? "暂不敢用" : courtOf(v.r)[1] + "方可")
             : cur    ? ""
             : own    ? "已有 · 换上" : v.p + " 两";
@@ -2237,6 +2316,7 @@ function goodHTML(k, v, kind, g){
 function enforceRank(){
   const g = G(), sc = courtScore();
   let off = 0;
+  if (DEMO) return 0;                             // 演武场不收东西：试到一半被收走就没法看了
   for (const r of Object.values(KIT)){
     const v = r.list[g[r.cur]];
     if (v && v.r && sc < v.r){ g[r.cur] = r.d; off = 1; }
@@ -2285,10 +2365,6 @@ function paintShop(){
   $("#ihAgN").textContent = g.owe ? "-" + g.owe : g.ag;
   $("#ihBox").classList.toggle("owe", !!g.owe);
   $("#ihTip").classList.toggle("owe", !!g.owe);
-  $("#ihSfx").classList.toggle("on", !!g.sfx);
-  $("#ihSfx").textContent = g.sfx ? "响" : "静";
-  $("#ihFx").classList.toggle("on", !!g.fx);
-  $("#ihFx").textContent = g.fx ? "粉" : "素";
   $("#ihAg").textContent =
     `批过 ${g.cnt} 件 · 朱批 ${g.nc} 条 · 勤政 ${g.run} 日（最长 ${g.best} 日）`;
   // 每个部手上还压着多少件没批的
@@ -2323,20 +2399,6 @@ $("#ihTabs").addEventListener("click", e => {
   punch(b);
   mask6.querySelector(".dlg").scrollTop = 0;
 });
-$("#ihSfx").onclick = () => {
-  const g = G(); g.sfx = g.sfx ? 0 : 1;
-  $("#ihSfx").classList.toggle("on", !!g.sfx);
-  $("#ihSfx").textContent = g.sfx ? "响" : "静";
-  if (g.sfx) punch($("#ihSfx"));
-  save(true);
-};
-$("#ihFx").onclick = () => {
-  const g = G(); g.fx = g.fx ? 0 : 1;
-  $("#ihFx").classList.toggle("on", !!g.fx);
-  $("#ihFx").textContent = g.fx ? "粉" : "素";
-  if (g.fx) gold($("#ihFx"));                     // 开的时候当场迸一下，让人知道是什么东西
-  save(true);
-};
 function openShop(){ paintShop(); mask6.classList.add("on"); }
 mask6.addEventListener("click", e => { if (e.target === mask6) mask6.classList.remove("on"); });
 $("#ihClose").onclick = () => mask6.classList.remove("on");
@@ -2410,7 +2472,7 @@ mask6.addEventListener("click", async e => {
   const g = G(), k = b.dataset.buy, kind = b.dataset.kind;
   const v = (KIT[kind] || {list:{}}).list[k]; if (!v) return;
   const had = g.own.includes(k);
-  if (v.r && courtScore() < v.r){                 // 恩典之物，钱到了也不行，得朝纲到
+  if (!DEMO && v.r && courtScore() < v.r){        // 恩典之物，钱到了也不行，得朝纲到
     punch(b);
     return toast(had ? `朝纲已不及${courtOf(v.r)[1]}，「${v.n}」暂不敢用`
                      : `${courtOf(v.r)[1]}（六部均分 ${v.r}）方能用「${v.n}」`);
