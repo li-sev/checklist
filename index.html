@@ -434,7 +434,7 @@
       linear-gradient(var(--gold),var(--gold)) right bottom/36px 2px no-repeat,
       linear-gradient(var(--gold),var(--gold)) right bottom/2px 36px no-repeat}
 
-  /* 恩典一览：哪一档给什么，够到没够到一眼看得见 */
+  /* 朝纲五档一览：哪一档给什么，走到没走到一眼看得见 */
   .boons{display:grid;gap:5px}
   .boon{display:flex;align-items:baseline;gap:9px;padding:7px 10px;border:1px solid var(--line);
     border-radius:4px;background:var(--card);opacity:.5;font-size:13px}
@@ -653,7 +653,7 @@
 
   <div class="tabs" id="ihTabs">
     <button class="tab on" data-tab="court">朝廷</button>
-    <button class="tab" data-tab="boon">恩典</button>
+    <button class="tab" data-tab="boon">朝纲</button>
     <button class="tab" data-tab="med">治绩<i id="ihMedN"></i></button>
     <button class="tab" data-tab="store">内库</button>
   </div>
@@ -667,9 +667,10 @@
   </div>
 
   <div class="pane" data-pane="boon">
-    <label class="first">恩典 <small>朝纲到了自然有，跌下去自然收回</small></label>
+    <label class="first">朝纲五档 <small>六部均分落在哪一档，这一档就给什么</small></label>
     <div class="boons" id="ihBoon"></div>
-    <div class="hint">这几样不用买，也买不着，只跟着六部均分走。<br>
+    <div class="hint">上头那条杠就是六部均分，落在哪一档，这一档写的就作数。<br>
+      头两档是罚不是赏 —— 朝纲不振时一件只入 1 两。<br>
       倍率只乘底数（一件 2 两 / 整卷 10 两），勤政加赏和治绩赏格不乘</div>
   </div>
 
@@ -773,7 +774,7 @@ const SEED_MD = `
 
 /* 存储 key 与前两版一致，老数据直接接管 */
 const KEY = "checklist_v1";
-const BUILD = "v17";                              // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v18";                              // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -1548,7 +1549,7 @@ function voice(mid, kind){
   return `${p}：${line}`;
 }
 /* 六部平均分决定朝纲。
-   [门槛, 名号, 入库倍率, 这一档的恩典]
+   [门槛, 名号, 入库倍率, 这一档给什么]
    —— 朝纲不只是个好看的分数：它决定同一件折子入库几两，还管着几样只能靠治理换来的东西。
       倍率只乘底数（一件 2 两 / 整卷 10 两），勤政加赏和治绩赏格不乘，免得滚雪球。 */
 const COURT = [
@@ -2029,7 +2030,7 @@ function paintShop(){
     load[mid] += gg.items.filter(i => !i.done).length;
   }
   $("#ihMi").innerHTML = MINISTRY.map(m => miHTML(m, g, load[m.id])).join("");
-  // 恩典一览：够到的亮着，眼下这一档描红，够不到的暗着当个念想
+  // 五档一览：走过的亮着，眼下这一档描红，还没到的暗着当个念想
   $("#ihBoon").innerHTML = COURT.map((x, i) => {
     const got = sc >= x[0], now = x === c;
     return `<div class="boon${got?" got":""}${now?" now":""}${i < 2 ? " bad" : ""}">
@@ -2043,7 +2044,7 @@ function paintShop(){
     return `<span class="med${got?" got":""}"><b>${m.n}</b><i class="mp">${
       got ? "已入 " + m.p : m.p} 两</i><small>${m.d}</small></span>`; }).join("");
 }
-/* 朝廷 / 恩典 / 治绩 / 内库分四页，省得一长条摊到底 */
+/* 朝廷 / 朝纲 / 治绩 / 内库分四页，省得一长条摊到底 */
 $("#ihTabs").addEventListener("click", e => {
   const b = e.target.closest(".tab"); if (!b || b.classList.contains("on")) return;
   $$("#ihTabs .tab").forEach(x => x.classList.toggle("on", x === b));
