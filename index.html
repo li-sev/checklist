@@ -178,6 +178,22 @@
   .mini{border:1px solid var(--line);border-radius:5px;padding:8px 10px;background:var(--card)}
   .mini.sick{border-color:#b3402c;background:rgba(179,64,44,.07)}
   .mini.good{border-color:var(--gold);background:rgba(169,134,63,.08)}
+  /* 递了牌子的那一格：红边，一眼看得见有人要走 */
+  .mini.quit{border-color:#b3402c;background:rgba(179,64,44,.09)}
+  .mini.vac{border-style:dashed;opacity:.8}
+  /* 坐在这个部里的人 */
+  .mps{display:flex;align-items:baseline;gap:7px;margin:0 0 3px;flex-wrap:wrap}
+  .mps .pn{font-size:14px;letter-spacing:1.5px;color:var(--ink)}
+  .mps .trm{font-size:11px;color:var(--dim);letter-spacing:1px}
+  .mps .mood{margin-left:auto;font-size:11.5px;letter-spacing:1px;flex:none;
+    padding:1px 7px;border:1px solid var(--line);border-radius:9px;color:var(--dim);background:var(--soft)}
+  .mps .mood.hi{color:var(--gold);border-color:var(--gold)}
+  .mps .mood.lo{color:#b3402c;border-color:#b3402c}
+  .mps .mood.q{color:#b3402c;border-color:#b3402c;margin-left:auto}
+  /* 他自己那一句 */
+  .msay{font-size:12.5px;line-height:1.65;color:var(--dim);margin:0 0 6px;
+    padding-left:8px;border-left:2px solid var(--line)}
+  .mini.quit .msay{color:#b3402c;border-left-color:#b3402c}
   .mih{display:flex;align-items:baseline;gap:7px;margin-bottom:5px;flex-wrap:wrap}
   .mih b{font-size:16px;letter-spacing:2px}
   .mih .mid{font-size:12px;color:var(--dim);letter-spacing:1px}
@@ -640,7 +656,8 @@
 
   <div class="pane on" data-pane="court">
     <div class="mis" id="ihMi"></div>
-    <div class="hint">每一卷折子归一个部办，久不派差人心就散</div>
+    <div class="hint">每一卷折子归一个部办，那个部的尚书就是替你办这件事的人。<br>
+      久不派差人心就散；忠诚跌到三十，他会递牌子请辞 —— 留人要花银子，准辞则这个部空着</div>
     <label>恩典 <small>朝纲到了自然有，跌下去自然收回</small></label>
     <div class="boons" id="ihBoon"></div>
     <label>治绩 <small>不卖，只能挣</small></label>
@@ -741,7 +758,7 @@ const SEED_MD = `
 
 /* 存储 key 与前两版一致，老数据直接接管 */
 const KEY = "checklist_v1";
-const BUILD = "v14";                              // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v15";                              // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -883,7 +900,8 @@ function render(){
           <span class="gt">${gtHTML(g)}</span>
           <span class="gc" data-gc="${g.id}"></span>
         </span>
-        <span class="mtag" title="这一卷归${MI[miOf(g)].n}办，可在 ⋮ 里改">${MI[miOf(g)].n}</span>
+        <span class="mtag" title="这一卷归${MI[miOf(g)].n}${who(miOf(g)) ? " " + who(miOf(g)) + " 办" : "办（此位空悬）"}，可在 ⋮ 里改">${
+          MI[miOf(g)].n}${who(miOf(g)) ? " " + who(miOf(g)) : ""}</span>
         <button class="gall" data-act="gall" title="${allDone(g) ? "整卷收回朱批" : "这一卷一次批完"}"
           ${g.items.length ? "" : "hidden"}>${allDone(g) ? "撤批" : "全批"}</button>
         <button class="dots" data-act="gmore" title="改卷名 / 交哪个部 / 调次序 / 撤卷">⋮</button>
@@ -1221,7 +1239,7 @@ function openGroup(gid){
   const g = curList().groups.find(x => x.id === gid); if (!g) return;
   editingG = gid; $("#gName").value = g.title;
   $("#gMi").innerHTML = MINISTRY.map(m =>
-    `<option value="${m.id}">${m.n} · ${m.d}</option>`).join("");
+    `<option value="${m.id}">${m.n}${who(m.id) ? " · " + who(m.id) : "（空悬）"} · ${m.d}</option>`).join("");
   $("#gMi").value = miOf(g);
   mask3.classList.add("on"); $("#gName").focus();
 }
@@ -1419,6 +1437,103 @@ const MINISTRY = [
   {id:"gong", n:"工部", d:"营造屯田水利"},
 ];
 const MI = Object.fromEntries(MINISTRY.map(m => [m.id, m]));
+/* 部里坐着的是人。名字按顺序用：头一任走了，第二任接上，六位备着够用一辈子 */
+const PEOPLE = {
+  li:   ["周慎行", "苏文瀚", "崔敬之", "闻人恪", "陆秉钧", "邵持中"],
+  hu:   ["沈砚",   "计敏中", "钱如晦", "曹廪",   "严缄",   "贾守拙"],
+  rite: ["柳明徽", "温如璋", "薛仪",   "郑允中", "谢兰台", "傅雅言"],
+  bing: ["韩烈",   "岳重",   "石破",   "凌霄",   "任奔",   "闵铁衣"],
+  xing: ["裴无咎", "冷秋",   "白执法", "商鞅之", "游断",   "章明刑"],
+  gong: ["陶九章", "梁栋",   "鲁墨",   "范匠",   "宋斧",   "毕营"],
+};
+/* 台词按部走，不按人走 —— 换了个人，说的还是那一套，这本身也是句笑话。
+   w 领差 / v 整卷 / g 谢赏 / s 挨训 / i 荒疏 / q 请辞 / k 挽留 / a 到任 */
+const SAY = {
+  li: {
+    w: ["臣已知悉，容臣照例办理", "此事在册，臣依例呈进", "谨遵钧旨，不敢有误"],
+    v: "此卷已毕，臣拟具册存查",
+    g: "无功受禄，臣愧不敢当 —— 不过还是收下了",
+    s: "臣有失察之处，容臣自陈",
+    i: "吏部久无差事，属官们都在廊下晒太阳",
+    q: "臣才疏位重，久尸其位，乞解印绶",
+    k: "既蒙留任，臣再勉力数年",
+    a: "新掌铨政，臣先把名册理一遍",
+  },
+  hu: {
+    w: ["这一笔臣记下了，分毫不差", "库里的账，臣夜里都对得清", "又一件，臣这就入册"],
+    v: "整卷核过，账目相符，这就归档",
+    g: "四十两……臣先入了账，回头造册",
+    s: "臣知罪。可钱粮的事，急不得也省不得",
+    i: "户部闲了这些日子，笔都干了",
+    q: "臣年事已高，账也算不动了，乞骸骨",
+    k: "既蒙不弃，这本烂账臣再算几年",
+    a: "臣接手先盘库，前任的账未必清",
+  },
+  rite: {
+    w: ["于礼合宜，臣即办理", "此事有旧例可循，不难", "臣按仪注办去"],
+    v: "一卷终始有序，合乎体统",
+    g: "谢恩。此赏臣当书于家训",
+    s: "臣领训。然礼不可废，还请三思",
+    i: "礼部这些天连一炷香都没点",
+    q: "臣不能正朝仪，无颜居此位，请辞",
+    k: "既留臣，臣当以礼报之",
+    a: "臣初到，先请修一修仪注",
+  },
+  bing: {
+    w: ["得令！", "臣这就去办，不必多说", "一句话的事，臣办了"],
+    v: "整卷拿下，兵部不含糊",
+    g: "痛快！这四十两臣拿去犒赏底下人",
+    s: "臣挨这一顿，认。下回还这么干",
+    i: "兵部的刀都生锈了，陛下还记得有这么个部么",
+    q: "臣这把老骨头留着无用，请归田",
+    k: "既然留我，那就再打几年",
+    a: "臣到任头一件事：把人马点一遍",
+  },
+  xing: {
+    w: ["依律当办，臣办了", "已阅，无异议", "臣录了案"],
+    v: "此卷了结，无可议者",
+    g: "赏罚有度，臣受之",
+    s: "臣无辩。请示所犯何条",
+    i: "刑部案上空了多日 —— 未必是好事",
+    q: "臣请去职，另择贤能",
+    k: "既留，臣仍旧照律办事",
+    a: "臣初莅刑曹，旧案先看一遍",
+  },
+  gong: {
+    w: ["料备齐了，臣这就开工", "此事三日可成", "臣带人去做"],
+    v: "整卷完工，验收无碍",
+    g: "这四十两，臣拿去添两车好木料",
+    s: "臣受着。可工期是工期，催不出来",
+    i: "工部的场子都长草了",
+    q: "臣手也抖了，尺也拿不稳，请老还乡",
+    k: "既留臣，这摊活儿臣接着干",
+    a: "臣先去各处工地走一趟",
+  },
+};
+/* 心情按忠诚分档：[门槛, 名号, 这一档的样子] */
+const MOOD = [
+  [0,  "乞骸骨", "牌子递上来了"],
+  [31, "离心",   "面子上还在，心思不在了"],
+  [45, "有怨言", "办是办，脸色不大好看"],
+  [60, "安分",   "不冷不热，本分办事"],
+  [80, "尽心",   "肯替你熬夜的那种"],
+];
+const moodOf = l => { let r = MOOD[0]; for (const x of MOOD) if (l >= x[0]) r = x; return r; };
+/* 这个部现在是谁。空悬时返回 null */
+const who = mid => {
+  const s = G().mi[mid];
+  if (!s || s.v > 0) return null;
+  const list = PEOPLE[mid] || ["某"];
+  return list[(s.k || 0) % list.length];
+};
+/* 挑一句台词。同一情形有好几句就轮着说，不至于翻来覆去一句话 */
+let sayN = 0;
+function voice(mid, kind){
+  const p = who(mid), t = (SAY[mid] || {})[kind];
+  if (!p || !t) return "";
+  const line = Array.isArray(t) ? t[(sayN++) % t.length] : t;
+  return `${p}：${line}`;
+}
 /* 六部平均分决定朝纲。
    [门槛, 名号, 入库倍率, 这一档的恩典]
    —— 朝纲不只是个好看的分数：它决定同一件折子入库几两，还管着几样只能靠治理换来的东西。
@@ -1444,7 +1559,12 @@ const MEDALS = [
   {id:"c100",  n:"日理万机", d:"累计批过一百件",      p:40},
   {id:"qing",  n:"海晏河清", d:"六部均分到八十五",    p:50},
 ];
-const miDef = () => Object.fromEntries(MINISTRY.map(m => [m.id, {e:50, l:60, d:""}]));
+/* e 效率 · l 忠诚 · d 最近办差的日子 · k 第几任（下标）· v 空悬还差几件 · q 请辞中 · sd 今日说过话没 */
+const miDef = () => Object.fromEntries(MINISTRY.map(m => [m.id, {e:50, l:60, d:"", k:0, v:0, q:0, sd:""}]));
+// 准辞之后，那个部要批满几件才有新官到任
+const VAC = 3;
+// 空悬期间这个部按几分计入朝纲。比在位的底限 25 还低，所以「准辞了事」是要付账的
+const VACS = 20;
 const GDEF = () => ({ag:0, owe:0, tot:0, cnt:0, nc:0, day:"", tn:0, run:0, best:0, sfx:1,
                      own:["zhun","xuan"], seal:"zhun", paper:"xuan", med:[],
                      mi:miDef(), mday:""});
@@ -1457,8 +1577,16 @@ function G(){
   if (!D.g.mi || typeof D.g.mi !== "object") D.g.mi = miDef();
   for (const m of MINISTRY){                                    // 缺哪个部补哪个
     const s = D.g.mi[m.id];
-    if (!s || typeof s !== "object") D.g.mi[m.id] = {e:50, l:60, d:""};
-    else { if (typeof s.e !== "number") s.e = 50; if (typeof s.l !== "number") s.l = 60; }
+    if (!s || typeof s !== "object") D.g.mi[m.id] = {e:50, l:60, d:"", k:0, v:0, q:0, sd:""};
+    else {
+      if (typeof s.e !== "number") s.e = 50;
+      if (typeof s.l !== "number") s.l = 60;
+      // 六部有人了是后加的：老存档一律算头一任在位
+      if (typeof s.k !== "number") s.k = 0;
+      if (typeof s.v !== "number") s.v = 0;
+      if (typeof s.q !== "number") s.q = 0;
+      if (typeof s.sd !== "string") s.sd = "";
+    }
   }
   return D.g;
 }
@@ -1467,7 +1595,8 @@ const clamp = (v, lo, hi) => v < lo ? lo : v > hi ? hi : v;
 function courtScore(){
   const g = G();
   let s = 0;
-  for (const m of MINISTRY) s += (g.mi[m.id].e + g.mi[m.id].l) / 2;
+  // 空悬的部按 20 计 —— 比在位的最低分还低。准辞省事，但要在朝纲上付账
+  for (const m of MINISTRY){ const x = g.mi[m.id]; s += x.v > 0 ? VACS : (x.e + x.l) / 2; }
   return Math.round(s / MINISTRY.length);
 }
 const courtOf = s => { let r = COURT[0]; for (const x of COURT) if (s >= x[0]) r = x; return r; };
@@ -1582,13 +1711,59 @@ function refund(groups, L){
   if (back) earn(-back);
   return back;
 }
+/* 说话。ms 是往后挪多久 —— toast 只有一条，挤在一起会把入库几两那句盖掉 */
+function speak(mid, kind, ms){
+  const line = voice(mid, kind);
+  if (line) setTimeout(() => toast(line), ms || 0);
+}
+/* 一个部一天只开一次口。天天六句一样的话，再有趣也烦 */
+function sayOnce(mid, ms){
+  const s = G().mi[mid], t = ymd(Date.now());
+  if (!s || s.v > 0 || s.sd === t) return;
+  s.sd = t;
+  speak(mid, "w", ms);
+}
+/* 忠诚跌到底，人是要走的。递上牌子，等你一句话：挽留，还是准辞 */
+function checkQuit(mid){
+  const s = G().mi[mid];
+  if (s.v > 0) return;
+  if (s.q){
+    // 牌子递上来了，但人心养回四十，他自己就把牌子收回去了 —— 留个缓冲，免得在门槛上来回跳
+    if (s.l >= 40){ s.q = 0; speak(mid, "k", 600); }
+    return;
+  }
+  if (s.l > 30) return;
+  s.q = 1;
+  const p = who(mid);
+  herald("乞骸骨", `${MI[mid].n} ${p}`, "递了牌子。挽留还是准辞，在朝廷里定");
+  setTimeout(() => toast(voice(mid, "q")), 900);
+}
+/* 新官到任。
+   接的是同一个烂摊子，所以效率也从头学起 —— 不这么定的话就成了：
+   申饬把效率刷上去、忠诚刷下去，再准辞换个新人把忠诚白拿回来，如此往复。 */
+function appoint(mid){
+  const s = G().mi[mid];
+  s.k = (s.k || 0) + 1; s.v = 0; s.q = 0;
+  s.e = 40; s.l = 40; s.sd = "";
+  const p = who(mid);
+  herald("新任到部", `${MI[mid].n} ${p}`, `第 ${s.k + 1} 任 · 生手，得带一带`);
+  setTimeout(() => toast(voice(mid, "a")), 900);
+}
 /* 某个部办了差：效率和忠诚都涨；退回时照数扣 */
 function bump(mid, de, dl){
   const g = G(), s = g.mi[mid]; if (!s) return;
   const before = COURT.indexOf(courtOf(courtScore()));
+  if (s.v > 0){
+    /* 空悬：这个部现在没人。批折子算是催着补缺，批满几件新官就到任。
+       在那之前效率忠诚都冻着 —— 没人可涨，也没人可扣 */
+    if (de > 0){ s.d = ymd(Date.now()); if (--s.v <= 0) appoint(mid); }
+    if (COURT.indexOf(courtOf(courtScore())) !== before) paintPurse();
+    return;
+  }
   s.e = clamp(s.e + de, 0, 100);
   s.l = clamp(s.l + dl, 0, 100);
   if (de > 0) s.d = ymd(Date.now());                 // 记下这个部最近一次办差的日子
+  checkQuit(mid);
   const now = courtScore(), after = COURT.indexOf(courtOf(now));
   // 升降都报一声，并且把这一档给什么、收什么说清楚 —— 不然朝纲高了也不知道图什么
   if (after > before) herald("朝野称颂", COURT[after][1], COURT[after][3]);
@@ -1603,7 +1778,9 @@ function scoreGroup(g){
   const amt = Math.round(10 * mult());
   g.pg = amt;                                     // 存实数，撤卷照数退（老存档里这儿是个 1）
   earn(amt); bump(mid, 6, 5); medal("vol");
-  toast(`${MI[mid].n}「${g.title || "这一卷"}」整卷办结，入库 ${amt} 两`);
+  const p = who(mid);
+  toast(`${MI[mid].n}${p ? " " + p : ""}「${g.title || "这一卷"}」整卷办结，入库 ${amt} 两`);
+  speak(mid, "v", 2000);                          // 银子那句先亮着，人再出来说一句
 }
 function medal(id){
   const g = G(); if (g.med.includes(id)) return;
@@ -1636,6 +1813,7 @@ function scoreTick(it, on, el, mid){
     earn(it.p, el);
     if (mid) bump(mid, 2, 1);
     if (bonus) toast(`勤政第 ${g.run} 日，加征 ${bonus} 两`);
+    if (mid) sayOnce(mid, bonus ? 2000 : 0);      // 今日头一回派到这个部，他出来应一声
     if (g.cnt === 1) medal("first");
     if (g.cnt >= 100) medal("c100");
     if (g.tn >= 20) medal("d20");
@@ -1667,7 +1845,7 @@ function decay(){
   let worst = null;
   for (const m of MINISTRY){
     const s = g.mi[m.id];
-    if (!s.d) continue;                            // 从没派过差的部不算荒疏
+    if (!s.d || s.v > 0) continue;                 // 从没派过差的、以及空悬没人的，不算荒疏
     const idle = today - dayNo(s.d);
     if (idle < grace) continue;                    // 这几天之内不算冷落
     const hit = Math.min(gap, idle - grace + 1) * 1.5;   // 每荒疏一天掉 1.5
@@ -1676,9 +1854,12 @@ function decay(){
     s.l = clamp(s.l - hit * .7, 25, 100);
     if (!worst || idle > worst[1]) worst = [m, idle];
   }
+  for (const m of MINISTRY) checkQuit(m.id);       // 凉了这些日子，有人要递牌子了
   g.mday = t;
-  if (worst) setTimeout(() =>
-    toast(`${worst[0].n}已 ${worst[1]} 日无差可办，人心浮动`), 1600);
+  if (worst) setTimeout(() => {
+    toast(`${worst[0].n}已 ${worst[1]} 日无差可办，人心浮动`);
+    speak(worst[0].id, "i", 2000);                 // 冷落谁，谁自己出来说
+  }, 1600);
 }
 function scoreNote(it, has){
   const g = G();
@@ -1722,6 +1903,11 @@ function mergeGame(f){
     a.e = clamp(Math.max(a.e, b.e || 0), 0, 100);
     a.l = clamp(Math.max(a.l, b.l || 0), 0, 100);
     if ((b.d || "") > (a.d || "")) a.d = b.d;
+    /* 人事以「换过的人多」那边为准：一台准了辞、另一台还蒙在鼓里，
+       两边同步之后该走的人不能又坐回去。空悬取还差得少的那个（活干过就是干过） */
+    if ((b.k || 0) > (a.k || 0)){ a.k = b.k; a.v = b.v || 0; a.q = b.q || 0; }
+    else if ((b.k || 0) === (a.k || 0)) a.v = Math.min(a.v || 0, b.v || 0);
+    if (a.v <= 0) a.q = a.l <= 30 ? Math.max(a.q || 0, b.q || 0) : 0;
   }
   if ((f.mday || "") > (g.mday || "")) g.mday = f.mday;
 }
@@ -1777,20 +1963,36 @@ function enforceRank(){
   if (PAPERS[g.paper] && PAPERS[g.paper].r && sc < PAPERS[g.paper].r){ g.paper = "xuan"; off = 1; }
   return off;
 }
-/* 一个部一行：名字、两条杠、赏赐/申饬 */
+/* 一个部一格：坐着的是谁、心情如何、两条杠、能对他做什么 */
 function miHTML(m, g, load){
-  const s = g.mi[m.id], sc = Math.round((s.e + s.l) / 2);
+  const s = g.mi[m.id], sc = Math.round((s.e + s.l) / 2), p = who(m.id);
   const bar = (k, v, cls) =>
     `<div class="mirow"><span class="mk">${k}</span>
       <span class="mbar"><i class="${cls}" style="width:${v}%"></i></span>
       <span class="mv">${Math.round(v)}</span></div>`;
-  return `<div class="mini${sc < 40 ? " sick" : sc >= 85 ? " good" : ""}">
+  // 空悬：这一格没人，只等新官
+  if (s.v > 0) return `<div class="mini vac">
     <div class="mih"><b>${m.n}</b><span class="mid">${m.d}</span>
       <span class="mn">${load} 件待办</span></div>
+    <div class="mps"><span class="pn">此位空悬</span>
+      <span class="mood q">暂由属官署理</span></div>
+    <div class="msay">在这个部再批 ${s.v} 件，新官便到任</div>
+  </div>`;
+  const md = moodOf(s.l);
+  const term = s.k ? `第 ${s.k + 1} 任` : "";
+  return `<div class="mini${s.q ? " quit" : sc < 40 ? " sick" : sc >= 85 ? " good" : ""}">
+    <div class="mih"><b>${m.n}</b><span class="mid">${m.d}</span>
+      <span class="mn">${load} 件待办</span></div>
+    <div class="mps"><span class="pn">尚书 ${p}</span>
+      ${term ? `<span class="trm">${term}</span>` : ""}
+      <span class="mood${s.l >= 80 ? " hi" : s.l < 45 ? " lo" : ""}">${md[1]}</span></div>
+    <div class="msay">${s.q ? esc(SAY[m.id].q) : esc(md[2])}</div>
     ${bar("效率", s.e, "e")}${bar("忠诚", s.l, "l")}
-    <div class="mib">
-      <button class="btn" data-mi="give" data-id="${m.id}">赏赐 40 两</button>
-      <button class="btn" data-mi="scold" data-id="${m.id}">申饬</button>
+    <div class="mib">${s.q
+      ? `<button class="btn pri" data-mi="keep" data-id="${m.id}">挽留 60 两</button>
+         <button class="btn" data-mi="quit" data-id="${m.id}">准辞</button>`
+      : `<button class="btn" data-mi="give" data-id="${m.id}">赏赐 40 两</button>
+         <button class="btn" data-mi="scold" data-id="${m.id}">申饬</button>`}
     </div>
   </div>`;
 }
@@ -1852,31 +2054,60 @@ $("#purse").onclick = openShop;
 /* 赏赐：国库出银换忠诚。申饬：不花钱，效率上去但忠诚下来 */
 mask6.addEventListener("click", async e => {
   const b = e.target.closest("[data-mi]"); if (!b) return;
-  const g = G(), m = MI[b.dataset.id];
+  const g = G(), m = MI[b.dataset.id], st = g.mi[m.id], act = b.dataset.mi;
   punch(b);
-  if (b.dataset.mi === "give"){
+  if (act === "keep"){
+    /* 挽留：花银子留人。比连赏两回省一点，也省一次手 */
+    if (g.owe) return toast(`国库尚欠 ${g.owe} 两，先把亏空填上`);
+    if (g.ag < 60) return toast(`挽留要 60 两，国库只剩 ${g.ag} 两`);
+    const ok = await ask("挽留",
+      `${m.n}尚书<b>${who(m.id)}</b>递了牌子。赐银 <b>60 两</b>慰留，忠诚回到 55。` +
+      `<small>不留也行 —— 准辞之后这个部就空着，批满 ${VAC} 件才有新官到任，` +
+      `空悬这段日子朝纲照 20 分算。</small>`, "挽留");
+    if (!ok) return;
+    if (g.ag < 60) return toast("库银不够了");
+    g.ag -= 60; st.l = Math.max(st.l, 55); st.q = 0;
+    punch(b.closest(".mini"), "big");
+    toast(`赐银六十两慰留${m.n}尚书`);
+    speak(m.id, "k", 1400);
+  } else if (act === "quit"){
+    const ok = await ask("准其致仕",
+      `准<b>${who(m.id)}</b>去职。此后${m.n}<b>空悬</b>，` +
+      `在这个部批满 <b>${VAC} 件</b>才有新官到任。` +
+      `<small>空悬期间这个部按 20 分计入朝纲，比在位的最低分还低；` +
+      `新官是生手，效率忠诚都从 40 起 —— 换个人并不能解决问题。</small>`, "准辞");
+    if (!ok) return;
+    const gone = who(m.id);
+    st.v = VAC; st.q = 0; st.sd = "";
+    herald("准其致仕", `${m.n} ${gone}`, `此位空悬 · 批满 ${VAC} 件方有新官`);
+    toast(`${gone}去矣。${m.n}暂由属官署理`);
+  } else if (st.v > 0){
+    return toast(`${m.n}眼下空悬，还差 ${st.v} 件才有人到任`);
+  } else if (act === "give"){
     if (g.owe) return toast(`国库尚欠 ${g.owe} 两，先把亏空填上`);
     if (g.ag < 40) return toast(`国库只剩 ${g.ag} 两，赏不动`);
     const ok = await ask("赏赐",
-      `赏<b>${m.n}</b>银 <b>40 两</b>，忠诚 +12、效率 +2。` +
+      `赏<b>${m.n}尚书 ${who(m.id)}</b>银 <b>40 两</b>，忠诚 +12、效率 +2。` +
       `<small>国库现有 ${g.ag} 两，赏完还剩 ${g.ag - 40} 两。</small>`, "赏");
     if (!ok) return;
     if (g.ag < 40) return toast(`国库只剩 ${g.ag} 两，赏不动`);
     g.ag -= 40; bump(m.id, 2, 12);
     punch(b.closest(".mini"), "big");
     toast(`赏${m.n}银四十两，上下感戴`);
+    speak(m.id, "g", 1400);
   } else {
     const room = g.mi[m.id].l - 25;                // 申饬压不到底限以下，压穿了要出事
     if (room <= 0) return toast(`${m.n}忠诚已在底限，再申饬要出事`);
     const ok = await ask("申饬",
-      `申饬<b>${m.n}</b>，效率 +9、忠诚 −${Math.min(7, room)}。` +
-      `<small>不花银子，但人心掉下去要慢慢养回来。</small>`, "申饬");
+      `申饬<b>${m.n}尚书 ${who(m.id)}</b>，效率 +9、忠诚 −${Math.min(7, room)}。` +
+      `<small>不花银子，但人心掉下去要慢慢养回来。压到三十以下，他就要递牌子了。</small>`, "申饬");
     if (!ok) return;
     const r2 = g.mi[m.id].l - 25;
     if (r2 <= 0) return toast(`${m.n}忠诚已在底限，再申饬要出事`);
     bump(m.id, 9, -Math.min(7, r2));
     punch(b.closest(".mini"), "big");
     toast(`申饬${m.n}，办事是快了，人心凉了几分`);
+    speak(m.id, "s", 1400);
   }
   paintPurse(); paintShop(); save(true);
 });
