@@ -186,34 +186,32 @@
   /* 三样都嫌太素，一律加粗：金线换成实打实的一圈，回纹补上齿、云纹角描双弧、乌木框加厚。
      背景那几条齿要躲开下面的 inset 阴影 —— 阴影是盖在背景上头画的，
      贴边放就被吃掉了，所以齿band从 8px 处起。 */
-  /* 还嫌不够显眼，再加一档：回纹的齿放大到看得清一格一格，
-     云纹角的弧加粗并四边通金线，乌木框加厚到二十像素、外沿另起一圈亮边。
+  /* 加粗过一版（v32）又退回来了：那一版回纹齿 10px、乌木框 20px，正页被框吃掉太多。
+     现在这套是 v31 的分寸，别再往粗里调。
      背景那几条齿要躲开下面的 inset 阴影 —— 阴影是盖在背景上头画的，
-     贴边放就被吃掉了，所以齿band要从阴影管到的宽度之外起。 */
+     贴边放就被吃掉了，所以齿band从 8px 处起。 */
   body.mt-hui::after{content:"";position:fixed;inset:5px;z-index:2;pointer-events:none;
-    border:4px solid var(--gold);
+    border:3px solid var(--gold);
     background:
-      repeating-linear-gradient(90deg,var(--gold) 0 10px,transparent 10px 20px) left 0 top 10px/100% 6px no-repeat,
-      repeating-linear-gradient(90deg,var(--gold) 0 10px,transparent 10px 20px) left 0 bottom 10px/100% 6px no-repeat,
-      repeating-linear-gradient(0deg, var(--gold) 0 10px,transparent 10px 20px) left 10px top 0/6px 100% no-repeat,
-      repeating-linear-gradient(0deg, var(--gold) 0 10px,transparent 10px 20px) right 10px top 0/6px 100% no-repeat;
-    box-shadow:inset 0 0 0 5px var(--bg), inset 0 0 0 8px var(--gold),
-               0 0 0 2px color-mix(in srgb,var(--gold) 60%,transparent)}
+      repeating-linear-gradient(90deg,var(--gold) 0 7px,transparent 7px 16px) left 0 top 8px/100% 4px no-repeat,
+      repeating-linear-gradient(90deg,var(--gold) 0 7px,transparent 7px 16px) left 0 bottom 8px/100% 4px no-repeat,
+      repeating-linear-gradient(0deg, var(--gold) 0 7px,transparent 7px 16px) left 8px top 0/4px 100% no-repeat,
+      repeating-linear-gradient(0deg, var(--gold) 0 7px,transparent 7px 16px) right 8px top 0/4px 100% no-repeat;
+    box-shadow:inset 0 0 0 4px var(--bg), inset 0 0 0 6px var(--gold),
+               0 0 0 1px color-mix(in srgb,var(--gold) 50%,transparent)}
   body.mt-yun::after{content:"";position:fixed;inset:6px;z-index:2;pointer-events:none;
     background:
-      radial-gradient(circle at 0 0,       transparent 30px,var(--gold) 30px 34.5px,transparent 35.5px,transparent 45px,var(--gold) 45px 48px,transparent 49px) left  top/78px 78px no-repeat,
-      radial-gradient(circle at 100% 0,    transparent 30px,var(--gold) 30px 34.5px,transparent 35.5px,transparent 45px,var(--gold) 45px 48px,transparent 49px) right top/78px 78px no-repeat,
-      radial-gradient(circle at 0 100%,    transparent 30px,var(--gold) 30px 34.5px,transparent 35.5px,transparent 45px,var(--gold) 45px 48px,transparent 49px) left  bottom/78px 78px no-repeat,
-      radial-gradient(circle at 100% 100%, transparent 30px,var(--gold) 30px 34.5px,transparent 35.5px,transparent 45px,var(--gold) 45px 48px,transparent 49px) right bottom/78px 78px no-repeat;
-    box-shadow:inset 0 0 0 3px var(--gold),
-               0 0 0 1.5px color-mix(in srgb,var(--gold) 45%,transparent)}
+      radial-gradient(circle at 0 0,       transparent 26px,var(--gold) 26px 29px,transparent 30px,transparent 38px,var(--gold) 38px 40px,transparent 41px) left  top/66px 66px no-repeat,
+      radial-gradient(circle at 100% 0,    transparent 26px,var(--gold) 26px 29px,transparent 30px,transparent 38px,var(--gold) 38px 40px,transparent 41px) right top/66px 66px no-repeat,
+      radial-gradient(circle at 0 100%,    transparent 26px,var(--gold) 26px 29px,transparent 30px,transparent 38px,var(--gold) 38px 40px,transparent 41px) left  bottom/66px 66px no-repeat,
+      radial-gradient(circle at 100% 100%, transparent 26px,var(--gold) 26px 29px,transparent 30px,transparent 38px,var(--gold) 38px 40px,transparent 41px) right bottom/66px 66px no-repeat;
+    box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--gold) 55%,transparent)}
   body.mt-wu::after{content:"";position:fixed;inset:0;z-index:2;pointer-events:none;
-    border:20px solid #2c231a;
-    border-image:repeating-linear-gradient(45deg,#211a12 0 7px,#3f3225 7px 15px) 20;
-    box-shadow:inset 0 0 0 2.5px var(--gold), inset 0 0 0 4px rgba(0,0,0,.55),
-               inset 0 0 34px rgba(0,0,0,.45)}
-  /* 框子实打实占掉二十像素，正文得往里让，不然贴着木头 */
-  body.mt-wu{padding-left:32px;padding-right:32px;padding-top:30px}
+    border:14px solid #2c231a;
+    border-image:repeating-linear-gradient(45deg,#241c14 0 6px,#3a2e21 6px 13px) 14;
+    box-shadow:inset 0 0 0 2px var(--gold), inset 0 0 0 3px rgba(0,0,0,.5),
+               inset 0 0 26px rgba(0,0,0,.4)}
+  body.mt-wu{padding-left:26px;padding-right:26px}
 
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   body{
@@ -398,21 +396,13 @@
                                  radial-gradient(circle at 68% 30%,var(--mo) 0 1.5px,transparent 2px),
                                  radial-gradient(circle at 52% 70%,var(--mo) 0 1.8px,transparent 2.3px)}
   /* 样张跟着正页一起加粗，挑的时候看见什么样买回来就是什么样 */
-  .pv.gp.m-hui {border-width:2.5px;border-color:var(--gold);
-    background-image:
-      repeating-linear-gradient(90deg,var(--gold) 0 3px,transparent 3px 6px) ,
-      repeating-linear-gradient(0deg, var(--gold) 0 3px,transparent 3px 6px);
-    background-size:100% 2px, 2px 100%;
-    background-position:left top 5px, left 5px top;
-    background-repeat:no-repeat;
-    box-shadow:inset 0 0 0 2px var(--bg),inset 0 0 0 4px var(--gold)}
+  .pv.gp.m-hui {border-color:var(--gold);
+    box-shadow:inset 0 0 0 2px var(--bg),inset 0 0 0 3.5px var(--gold)}
   .pv.gp.m-yun {background-image:
-      radial-gradient(circle at 0 0,      transparent 7px,var(--gold) 7px 10px,transparent 11px,transparent 13px,var(--gold) 13px 15px,transparent 16px),
-      radial-gradient(circle at 100% 100%,transparent 7px,var(--gold) 7px 10px,transparent 11px,transparent 13px,var(--gold) 13px 15px,transparent 16px);
-    box-shadow:inset 0 0 0 1.5px var(--gold)}
-  .pv.gp.m-wu  {border-width:8px;border-color:#2c231a;
-    border-image:repeating-linear-gradient(45deg,#211a12 0 4px,#3f3225 4px 8px) 8;
-    box-shadow:inset 0 0 0 1.5px var(--gold),inset 0 0 6px rgba(0,0,0,.5)}
+      radial-gradient(circle at 0 0,      transparent 8px,var(--gold) 8px 10px,transparent 11px,transparent 13px,var(--gold) 13px 14.5px,transparent 15.5px),
+      radial-gradient(circle at 100% 100%,transparent 8px,var(--gold) 8px 10px,transparent 11px,transparent 13px,var(--gold) 13px 14.5px,transparent 15.5px)}
+  .pv.gp.m-wu  {border-width:6px;border-color:#2c231a;
+    box-shadow:inset 0 0 0 1.5px var(--gold),inset 0 0 6px rgba(0,0,0,.45)}
 
   /* 金粉：点下去迸开的那几粒。位置由 --dx/--dy 定，各飞各的 */
   .spark{position:fixed;z-index:96;pointer-events:none;width:4px;height:4px;margin:-2px 0 0 -2px;
@@ -635,7 +625,11 @@
     55%{transform:scale(.9) rotate(-7deg);opacity:1}
     100%{transform:scale(1) rotate(-7deg)}
   }
-  .tx{flex:1;min-width:0;word-break:break-word;padding-top:1px;cursor:pointer}
+  /* 这一格只包住字本身，不能写 flex:1。
+     写 flex:1 它会一直撑到行尾，于是点一行右边那片空白也算点在字上——
+     就打了勾、就迸了金粉，看着像「随便点屏幕哪儿都迸」。
+     行末的空白留给 .pen 的 margin-left:auto 顶开，那片是死的，点不响。 */
+  .tx{flex:0 1 auto;min-width:0;word-break:break-word;padding-top:1px;cursor:pointer}
   li.ok .tx{color:var(--dim);text-decoration:line-through;text-decoration-color:var(--accent);
     text-decoration-thickness:2px}
   li.ok .tx::after{content:"已批";display:inline-block;margin-left:8px;padding:0 4px;font-size:11px;
@@ -647,7 +641,7 @@
   /* 朱笔：每条右边单独一个，点了直接写朱批，不用先进 ⋮
      一律朱红描边，随时看得见（手机上没有 hover，藏着等于没有）。
      已经批过的填个淡底，还是一眼分得出哪几条留过话。 */
-  .pen{width:34px;height:34px;border-radius:5px;flex:none;font-size:13.5px;
+  .pen{width:34px;height:34px;border-radius:5px;flex:none;margin-left:auto;font-size:13.5px;
     display:inline-flex;align-items:center;justify-content:center;
     color:var(--accent);border:1px solid var(--accent);background:transparent}
   .pen:hover{background:var(--accent);color:var(--onacc)}
@@ -1082,7 +1076,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v33" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v34" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -1813,7 +1807,7 @@ const FXS = {
   /* 带 e 的这几样迸的是字符本身：共用一个 fx-em 的壳，迸什么由 e 定 */
   fxmei: {n:"落梅",     p:90,  c:"fx-em",  pv:"x-em", e:"🌸"},
   fxmao: {n:"猫爪",     p:110, c:"fx-em",  pv:"x-em", e:"🐱"},
-  fxji:  {n:"雏鸡",     p:110, c:"fx-em",  pv:"x-em", e:"🐥"},
+  fxji:  {n:"雏鸡",     p:110, c:"fx-em",  pv:"x-em", e:"🐤"},
 };
 /* 内库六档。cur 是「眼下用的是哪一样」存在 g 的哪个字段上，d 是那一档白送的那样。
    加一档只要往这儿添一行，面板、买卖、存档、朝纲收放一概不用另写。 */
