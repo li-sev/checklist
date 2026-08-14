@@ -1,11 +1,11 @@
 /* 奏事处的离线缓存。
  *
  * 出新版本时把 VERSION 加一，旧缓存会在 activate 里清掉。
- * 策略：先给缓存（秒开、断网也开），同时后台悄悄取新的存起来；
- *      真有新版本时通知页面弹一条「新版已到」，由用户点了才换，
- *      不在你批折子批到一半的时候把页面刷掉。
+ * 页面本身走网络优先（3 秒不回就退回缓存），其余资源走缓存优先、后台刷新。
+ * 新 worker 装好即 skipWaiting 顶上，页面那边收到 controllerchange 自己重载；
+ * 手上正开着对话框或正在打字就先记着，等你手一停再换。
  */
-const VERSION = "v11";
+const VERSION = "v12";
 const CACHE = "zoushichu-" + VERSION;
 
 const CORE = [
@@ -19,8 +19,15 @@ const CORE = [
 ];
 
 self.addEventListener("install", e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE)));
-  // 不自动 skipWaiting——等页面那边确认，见下面的 message
+  /* 装好就顶上，不在 waiting 里干等。
+     原先是等页面弹「新版已到」、用户点了才换，结果多次出现「怎么没更新」——
+     提示没弹到、或者点了「待会儿」，旧 worker 就一直霸着，页面永远是旧的。
+     现在页面本身走网络优先、内容每改一下就落盘，换 worker 不会丢东西。 */
+  e.waitUntil((async () => {
+    const c = await caches.open(CACHE);
+    await c.addAll(CORE);
+    await self.skipWaiting();
+  })());
 });
 
 self.addEventListener("activate", e => {

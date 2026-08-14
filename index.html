@@ -461,6 +461,9 @@
         <hr>
         <button data-m="sync"><span class="ml">☁ 驿传（两处同步） <b id="mSync"></b>
           <small>手机和电脑批的，合成同一份</small></span></button>
+        <hr>
+        <button data-m="upd"><span class="ml">⟳ 查新版 <b id="mVer"></b>
+          <small>没自动换新就点这里，清掉缓存重取</small></span></button>
       </div>
     </div>
   </div>
@@ -685,6 +688,7 @@ const SEED_MD = `
 
 /* 存储 key 与前两版一致，老数据直接接管 */
 const KEY = "checklist_v1";
+const BUILD = "v12";                              // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -1209,6 +1213,10 @@ menu.addEventListener("click", e => {
     toast(back ? `已焚，退库 ${back} 两` : "已焚");
   }
   else if (m === "sync"){ openSync(); }
+  else if (m === "upd"){
+    if (window.forceUpdate) forceUpdate();
+    else toast("这是本地打开的文件，没有缓存这回事");
+  }
   else if (m === "exp"){ doExport(); }
   else if (m === "imp"){ pickFile(".json,.txt,.md,.markdown,text/*,application/json", (txt, name) => {
       if (/^\s*\{/.test(txt)){                     // 导出的文件：合并进来，勾不会丢
@@ -1798,6 +1806,7 @@ function syUI(msg, kind){
   const dot = $("#syncDot");
   dot.className = syOn() ? "on" + (kind === "bad" ? " bad" : kind === "go" ? " go" : "") : "";
   $("#mSync").textContent = syOn() ? "开" : "";
+  const mv = $("#mVer"); if (mv) mv.textContent = BUILD;
   const box = $("#syState"); if (!box) return;
   if (msg) { box.textContent = msg; return; }
   if (!syOn()){ box.textContent = "未接。填好下面三样再点「接上」。"; return; }
@@ -1934,7 +1943,10 @@ if ("serviceWorker" in navigator && location.protocol === "https:"){
   let waiting = null;
   const offer = w => { waiting = w; bar.classList.add("on"); };
 
+  let REG = null;
   navigator.serviceWorker.register("sw.js").then(reg => {
+    REG = reg;
+    reg.update().catch(() => {});                // 进门先问一声有没有新版
     if (reg.waiting && navigator.serviceWorker.controller) offer(reg.waiting);
     reg.addEventListener("updatefound", () => {
       const nw = reg.installing; if (!nw) return;
@@ -1945,17 +1957,46 @@ if ("serviceWorker" in navigator && location.protocol === "https:"){
     });
   }).catch(() => {});
 
-  let reloading = false;
+  /* 新 worker 现在自己 skipWaiting，换人的时候这里会响。
+     手上正开着对话框、正在打字，就先记下，等你手一停再换。 */
+  const busy = () => !!document.querySelector(".mask.on") ||
+    /^(INPUT|TEXTAREA)$/.test((document.activeElement || {}).tagName || "");
+  let reloading = false, pending = false;
+  const swap = () => {
+    if (reloading) return; reloading = true;
+    try { save(true); } catch(e){}              // 换版前先把手上的写盘
+    location.reload();
+  };
   navigator.serviceWorker.addEventListener("controllerchange", () => {
-    if (reloading) return; reloading = true; location.reload();
+    if (busy()){ pending = true; bar.classList.add("on"); } else swap();
+  });
+  setInterval(() => { if (pending && !busy()) swap(); }, 3000);
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState !== "visible") return;
+    if (REG) REG.update().catch(() => {});      // 每次切回来问一声
+    if (pending && !busy()) swap();
   });
 
   $("#nvGo").onclick = () => {
     bar.classList.remove("on");
-    save(true);                                  // 换版前先把手上的写盘
+    if (pending) return swap();
+    save(true);
     if (waiting) waiting.postMessage({type:"skipWaiting"}); else location.reload();
   };
   $("#nvNo").onclick = () => bar.classList.remove("on");
+
+  /* 万一还是不动：菜单里有一条「查新版」，把缓存全清了重来 */
+  window.forceUpdate = async () => {
+    toast("正在取新版…");
+    try { save(true); } catch(e){}
+    try {
+      const rs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(rs.map(r => r.unregister()));
+      for (const k of await caches.keys()) await caches.delete(k);
+    } catch(e){}
+    location.replace(location.pathname + "?v=" + Date.now());
+  };
 }
 </script>
 </body>
