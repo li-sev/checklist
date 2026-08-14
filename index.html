@@ -184,7 +184,6 @@
   /* 坐在这个部里的人 */
   .mps{display:flex;align-items:baseline;gap:7px;margin:0 0 3px;flex-wrap:wrap}
   .mps .pn{font-size:14px;letter-spacing:1.5px;color:var(--ink)}
-  .mps .trm{font-size:11px;color:var(--dim);letter-spacing:1px}
   .mps .mood{margin-left:auto;font-size:11.5px;letter-spacing:1px;flex:none;
     padding:1px 7px;border:1px solid var(--line);border-radius:9px;color:var(--dim);background:var(--soft)}
   .mps .mood.hi{color:var(--gold);border-color:var(--gold)}
@@ -657,6 +656,7 @@
   <div class="pane on" data-pane="court">
     <div class="mis" id="ihMi"></div>
     <div class="hint">每一卷折子归一个部办，那个部的尚书就是替你办这件事的人。<br>
+      姓是部名的谐音，名就是第几任 —— 李一走了，接任的叫李二。<br>
       久不派差人心就散；忠诚跌到三十，他会递牌子请辞 —— 留人要花银子，准辞则这个部空着</div>
     <label>恩典 <small>朝纲到了自然有，跌下去自然收回</small></label>
     <div class="boons" id="ihBoon"></div>
@@ -758,7 +758,7 @@ const SEED_MD = `
 
 /* 存储 key 与前两版一致，老数据直接接管 */
 const KEY = "checklist_v1";
-const BUILD = "v15";                              // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v16";                              // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -1437,15 +1437,14 @@ const MINISTRY = [
   {id:"gong", n:"工部", d:"营造屯田水利"},
 ];
 const MI = Object.fromEntries(MINISTRY.map(m => [m.id, m]));
-/* 部里坐着的是人。名字按顺序用：头一任走了，第二任接上，六位备着够用一辈子 */
-const PEOPLE = {
-  li:   ["周慎行", "苏文瀚", "崔敬之", "闻人恪", "陆秉钧", "邵持中"],
-  hu:   ["沈砚",   "计敏中", "钱如晦", "曹廪",   "严缄",   "贾守拙"],
-  rite: ["柳明徽", "温如璋", "薛仪",   "郑允中", "谢兰台", "傅雅言"],
-  bing: ["韩烈",   "岳重",   "石破",   "凌霄",   "任奔",   "闵铁衣"],
-  xing: ["裴无咎", "冷秋",   "白执法", "商鞅之", "游断",   "章明刑"],
-  gong: ["陶九章", "梁栋",   "鲁墨",   "范匠",   "宋斧",   "毕营"],
-};
+/* 部里坐着的是人。姓取部名的谐音，名就是第几任 ——
+   吏部李一走了，接任的叫李二。不用记名字：看见姓就知道是哪个部，看见名就知道换过几回。 */
+const SURNAME = { li:"李", hu:"胡", rite:"黎", bing:"邴", xing:"邢", gong:"龚" };
+const NUM = "一二三四五六七八九十";
+const numCN = n => n <= 10 ? NUM[n - 1]
+  : n < 20 ? "十" + NUM[n - 11]
+  : n % 10 === 0 ? NUM[n / 10 - 1] + "十"
+  : NUM[Math.floor(n / 10) - 1] + "十" + NUM[n % 10 - 1];
 /* 台词按部走，不按人走 —— 换了个人，说的还是那一套，这本身也是句笑话。
    w 领差 / v 整卷 / g 谢赏 / s 挨训 / i 荒疏 / q 请辞 / k 挽留 / a 到任 */
 const SAY = {
@@ -1519,12 +1518,11 @@ const MOOD = [
   [80, "尽心",   "肯替你熬夜的那种"],
 ];
 const moodOf = l => { let r = MOOD[0]; for (const x of MOOD) if (l >= x[0]) r = x; return r; };
-/* 这个部现在是谁。空悬时返回 null */
+/* 这个部现在是谁。空悬时返回 null。名字自己会说明是第几任 */
 const who = mid => {
   const s = G().mi[mid];
   if (!s || s.v > 0) return null;
-  const list = PEOPLE[mid] || ["某"];
-  return list[(s.k || 0) % list.length];
+  return (SURNAME[mid] || "某") + numCN(Math.min((s.k || 0) + 1, 99));
 };
 /* 挑一句台词。同一情形有好几句就轮着说，不至于翻来覆去一句话 */
 let sayN = 0;
@@ -1746,7 +1744,7 @@ function appoint(mid){
   s.k = (s.k || 0) + 1; s.v = 0; s.q = 0;
   s.e = 40; s.l = 40; s.sd = "";
   const p = who(mid);
-  herald("新任到部", `${MI[mid].n} ${p}`, `第 ${s.k + 1} 任 · 生手，得带一带`);
+  herald("新任到部", `${MI[mid].n} ${p}`, "生手，效率忠诚都从 40 起");
   setTimeout(() => toast(voice(mid, "a")), 900);
 }
 /* 某个部办了差：效率和忠诚都涨；退回时照数扣 */
@@ -1979,12 +1977,10 @@ function miHTML(m, g, load){
     <div class="msay">在这个部再批 ${s.v} 件，新官便到任</div>
   </div>`;
   const md = moodOf(s.l);
-  const term = s.k ? `第 ${s.k + 1} 任` : "";
   return `<div class="mini${s.q ? " quit" : sc < 40 ? " sick" : sc >= 85 ? " good" : ""}">
     <div class="mih"><b>${m.n}</b><span class="mid">${m.d}</span>
       <span class="mn">${load} 件待办</span></div>
     <div class="mps"><span class="pn">尚书 ${p}</span>
-      ${term ? `<span class="trm">${term}</span>` : ""}
       <span class="mood${s.l >= 80 ? " hi" : s.l < 45 ? " lo" : ""}">${md[1]}</span></div>
     <div class="msay">${s.q ? esc(SAY[m.id].q) : esc(md[2])}</div>
     ${bar("效率", s.e, "e")}${bar("忠诚", s.l, "l")}
