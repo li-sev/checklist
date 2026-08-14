@@ -73,11 +73,13 @@
                 --accent:#8a3a18; --done:#8a3a18; --gold:#8a7530; --link:#3d5b46; --soft:#e3daaf;
                 --rule:rgba(70,58,20,.09); --fiber:rgba(70,58,20,.06);
                 --shadow:0 8px 26px rgba(80,66,24,.28) }
-  /* 松木板：浅色木案，横着的木纹加两道板缝 */
-  body.pp-mu{ --bg:#e3cba2; --card:#f9f0de; --ink:#3a2d1e; --dim:#8a7458; --line:#cdb388;
+  /* 松木板：一条条竖着钉起来的深色木板，两头各一颗钉。
+     只有 --bg 是木头，格子（--card）还是浅纸 —— 浅纸摊在深木案上，正是要这个样子。
+     代价是有几处字直接落在木头上，见下头 body.pp-mu 那一组挑亮的规则。 */
+  body.pp-mu{ --bg:#6d4526; --card:#f9f0de; --ink:#3a2d1e; --dim:#8a7458; --line:#cdb388;
               --accent:#8f3a1c; --done:#8f3a1c; --gold:#9a7a3c; --link:#4a6072; --soft:#f2e5cc;
               --rule:rgba(96,66,32,.07); --fiber:rgba(96,66,32,.05);
-              --shadow:0 8px 26px rgba(90,62,26,.26) }
+              --shadow:0 10px 30px rgba(24,12,2,.5) }
   /* 万年红：大红洒金蜡笺，年节贴门的那种纸。字用金，底用朱 */
   body.pp-hong{ --bg:#7e1c14; --card:#8f2318; --ink:#f7e3c0; --dim:#d9b48c; --line:#a84231;
                 --accent:#f0cf86; --done:#f0cf86; --gold:#f0cf86; --link:#f2d9a8; --soft:#96291c;
@@ -137,18 +139,15 @@
         rgba(255,250,216,.16) 5px 13px,
         rgba(80,62,20,.07) 13px 23px,
         rgba(80,62,20,.26) 23px 29px)}
-  /* 松木板：横着的木纹。三层疏密不同的横纹错开，免得看着像五线谱；
-     隔一块板一道深槽加高光当拼缝；再点两个木疖，一眼就知道是木头 */
-  body.pp-mu #fleck{background-image:
-      radial-gradient(ellipse 90px 26px at 23% 19%,
-        rgba(104,66,22,.42) 0 34%, rgba(104,66,22,.20) 54%, transparent 74%),
-      radial-gradient(ellipse 66px 20px at 72% 64%,
-        rgba(104,66,22,.36) 0 34%, rgba(104,66,22,.17) 54%, transparent 74%),
-      repeating-linear-gradient(0deg, rgba(122,82,34,.20) 0 11px, transparent 11px 52px),
-      repeating-linear-gradient(0deg, rgba(122,82,34,.14) 0 22px, transparent 22px 140px),
-      repeating-linear-gradient(0deg, rgba(96,60,20,.11) 0 44px, transparent 44px 310px),
-      repeating-linear-gradient(0deg,
-        rgba(74,46,14,.5) 0 6px, rgba(255,244,218,.5) 6px 11px, transparent 11px 420px)}
+  /* 松木板：六块竖板钉成的一张砖，板缝、木纹、节疤、两头的钉帽都在里头。
+     早先那版是横木纹叠 CSS 渐变，纹路是直的、缝是通到底的一条，像五线谱不像木头；
+     木头的样子全在「一板一色、纹路歪着走、钉帽有高光」上，渐变堆不出来，只能改内联 SVG。
+     一砖 240×220（六块 40 宽），板头那两道深缝顺便盖住木纹在砖边接不上的破绽。
+     路径不是手写的，是 /tmp/mu/gen2.py 拿固定种子生成的（想改样子回去改那个脚本再套进来）。
+     三个坑同祥云那条：① url() 用双引号，SVG 里就只能用单引号；② < > 一律 %3C %3E；
+     ③ 颜色不能写 #xxx（# 在 data: URI 里是片段分隔符），连 url(#bev) 都得写成 url(%23bev)。 */
+  body.pp-mu #fleck{background:
+      url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='220' viewBox='0 0 240 220'%3E%3Cdefs%3E%3ClinearGradient id='bev' x1='0' y1='0' x2='1' y2='0'%3E%3Cstop offset='0' stop-color='rgba(238,208,168,.16)'/%3E%3Cstop offset='0.26' stop-color='rgba(255,255,255,0)'/%3E%3Cstop offset='0.82' stop-color='rgba(30,17,6,.16)'/%3E%3Cstop offset='1' stop-color='rgba(24,13,4,.42)'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='240' height='220' fill='rgb(49,32,15)'/%3E%3Crect x='1' y='0' width='38' height='220' fill='rgb(109,69,38)'/%3E%3Crect x='1' y='0' width='38' height='220' fill='url(%23bev)'/%3E%3Cpath d='M5.3,-6.0 Q5.3,17.2 3.2,40.4 Q3.2,63.6 5.5,86.8 Q5.5,110.0 4.7,133.2 Q4.7,156.4 3.2,179.6 Q3.2,202.8 5.3,226.0' fill='none' stroke='rgba(46,28,12,0.25)' stroke-width='0.9' stroke-linecap='round'/%3E%3Cpath d='M13.7,-6.0 Q13.7,17.2 13.4,40.4 Q13.4,63.6 15.3,86.8 Q15.3,110.0 11.9,133.2 Q11.9,156.4 12.4,179.6 Q12.4,202.8 14.3,226.0' fill='none' stroke='rgba(46,28,12,0.17)' stroke-width='1.9' stroke-linecap='round'/%3E%3Cpath d='M22.3,-6.0 Q22.3,17.2 20.1,40.4 Q20.1,63.6 24.0,86.8 Q24.0,110.0 21.3,133.2 Q21.3,156.4 20.6,179.6 Q20.6,202.8 20.5,226.0' fill='none' stroke='rgba(46,28,12,0.30)' stroke-width='1.2' stroke-linecap='round'/%3E%3Cpath d='M31.3,-6.0 Q31.3,17.2 31.9,40.4 Q31.9,63.6 30.7,86.8 Q30.7,110.0 31.5,133.2 Q31.5,156.4 29.2,179.6 Q29.2,202.8 29.2,226.0' fill='none' stroke='rgba(46,28,12,0.24)' stroke-width='1.1' stroke-linecap='round'/%3E%3Ccircle cx='20.0' cy='13.0' r='2.6' fill='rgba(40,26,12,.72)'/%3E%3Ccircle cx='19.3' cy='12.2' r='1.1' fill='rgba(214,186,150,.42)'/%3E%3Ccircle cx='20.0' cy='207.0' r='2.6' fill='rgba(40,26,12,.72)'/%3E%3Ccircle cx='19.3' cy='206.2' r='1.1' fill='rgba(214,186,150,.42)'/%3E%3Crect x='41' y='0' width='38' height='220' fill='rgb(122,80,48)'/%3E%3Crect x='41' y='0' width='38' height='220' fill='url(%23bev)'/%3E%3Cpath d='M46.7,-6.0 Q46.7,17.2 47.1,40.4 Q47.1,63.6 46.5,86.8 Q46.5,110.0 45.8,133.2 Q45.8,156.4 48.1,179.6 Q48.1,202.8 47.7,226.0' fill='none' stroke='rgba(46,28,12,0.20)' stroke-width='1.2' stroke-linecap='round'/%3E%3Cpath d='M54.3,-6.0 Q54.3,17.2 55.4,40.4 Q55.4,63.6 53.3,86.8 Q53.3,110.0 56.6,133.2 Q56.6,156.4 52.5,179.6 Q52.5,202.8 53.9,226.0' fill='none' stroke='rgba(46,28,12,0.28)' stroke-width='1.7' stroke-linecap='round'/%3E%3Cpath d='M60.6,-6.0 Q60.6,17.2 61.4,40.4 Q61.4,63.6 61.9,86.8 Q61.9,110.0 61.0,133.2 Q61.0,156.4 62.4,179.6 Q62.4,202.8 59.7,226.0' fill='none' stroke='rgba(46,28,12,0.17)' stroke-width='1.7' stroke-linecap='round'/%3E%3Cpath d='M70.4,-6.0 Q70.4,17.2 72.0,40.4 Q72.0,63.6 72.5,86.8 Q72.5,110.0 70.3,133.2 Q70.3,156.4 71.2,179.6 Q71.2,202.8 68.3,226.0' fill='none' stroke='rgba(226,196,156,0.10)' stroke-width='1.7' stroke-linecap='round'/%3E%3Cellipse cx='61.5' cy='60' rx='7.0' ry='11.0' fill='none' stroke='rgba(44,26,10,0.30)' stroke-width='1.6'/%3E%3Cellipse cx='61.5' cy='60' rx='5.5' ry='8.6' fill='none' stroke='rgba(44,26,10,0.38)' stroke-width='1.6'/%3E%3Cellipse cx='61.5' cy='60' rx='3.9' ry='6.2' fill='none' stroke='rgba(44,26,10,0.46)' stroke-width='1.6'/%3E%3Cellipse cx='61.5' cy='60' rx='2.4' ry='3.7' fill='none' stroke='rgba(44,26,10,0.54)' stroke-width='1.6'/%3E%3Cellipse cx='61.5' cy='60' rx='1.0' ry='1.5' fill='rgba(38,22,8,.65)'/%3E%3Ccircle cx='60.0' cy='13.0' r='2.6' fill='rgba(40,26,12,.72)'/%3E%3Ccircle cx='59.3' cy='12.2' r='1.1' fill='rgba(214,186,150,.42)'/%3E%3Ccircle cx='60.0' cy='207.0' r='2.6' fill='rgba(40,26,12,.72)'/%3E%3Ccircle cx='59.3' cy='206.2' r='1.1' fill='rgba(214,186,150,.42)'/%3E%3Crect x='81' y='0' width='38' height='220' fill='rgb(102,65,32)'/%3E%3Crect x='81' y='0' width='38' height='220' fill='url(%23bev)'/%3E%3Cpath d='M88.0,-6.0 Q88.0,17.2 87.4,40.4 Q87.4,63.6 88.8,86.8 Q88.8,110.0 85.7,133.2 Q85.7,156.4 87.8,179.6 Q87.8,202.8 86.4,226.0' fill='none' stroke='rgba(226,196,156,0.09)' stroke-width='1.0' stroke-linecap='round'/%3E%3Cpath d='M92.2,-6.0 Q92.2,17.2 91.0,40.4 Q91.0,63.6 91.7,86.8 Q91.7,110.0 94.0,133.2 Q94.0,156.4 90.2,179.6 Q90.2,202.8 92.0,226.0' fill='none' stroke='rgba(226,196,156,0.08)' stroke-width='1.5' stroke-linecap='round'/%3E%3Cpath d='M103.5,-6.0 Q103.5,17.2 102.5,40.4 Q102.5,63.6 103.1,86.8 Q103.1,110.0 102.9,133.2 Q102.9,156.4 105.4,179.6 Q105.4,202.8 105.7,226.0' fill='none' stroke='rgba(226,196,156,0.13)' stroke-width='1.1' stroke-linecap='round'/%3E%3Cpath d='M108.7,-6.0 Q108.7,17.2 108.6,40.4 Q108.6,63.6 109.1,86.8 Q109.1,110.0 107.6,133.2 Q107.6,156.4 106.3,179.6 Q106.3,202.8 108.3,226.0' fill='none' stroke='rgba(46,28,12,0.19)' stroke-width='1.3' stroke-linecap='round'/%3E%3Ccircle cx='100.0' cy='13.0' r='2.6' fill='rgba(40,26,12,.72)'/%3E%3Ccircle cx='99.3' cy='12.2' r='1.1' fill='rgba(214,186,150,.42)'/%3E%3Ccircle cx='100.0' cy='207.0' r='2.6' fill='rgba(40,26,12,.72)'/%3E%3Ccircle cx='99.3' cy='206.2' r='1.1' fill='rgba(214,186,150,.42)'/%3E%3Crect x='121' y='0' width='38' height='220' fill='rgb(125,85,51)'/%3E%3Crect x='121' y='0' width='38' height='220' fill='url(%23bev)'/%3E%3Cpath d='M126.3,-6.0 Q126.3,17.2 126.3,40.4 Q126.3,63.6 126.8,86.8 Q126.8,110.0 127.1,133.2 Q127.1,156.4 124.1,179.6 Q124.1,202.8 128.2,226.0' fill='none' stroke='rgba(226,196,156,0.12)' stroke-width='1.8' stroke-linecap='round'/%3E%3Cpath d='M135.5,-6.0 Q135.5,17.2 135.0,40.4 Q135.0,63.6 133.6,86.8 Q133.6,110.0 136.1,133.2 Q136.1,156.4 133.4,179.6 Q133.4,202.8 133.4,226.0' fill='none' stroke='rgba(226,196,156,0.10)' stroke-width='1.1' stroke-linecap='round'/%3E%3Cpath d='M140.6,-6.0 Q140.6,17.2 138.3,40.4 Q138.3,63.6 139.0,86.8 Q139.0,110.0 138.7,133.2 Q138.7,156.4 140.0,179.6 Q140.0,202.8 138.4,226.0' fill='none' stroke='rgba(46,28,12,0.17)' stroke-width='1.9' stroke-linecap='round'/%3E%3Cpath d='M150.5,-6.0 Q150.5,17.2 149.7,40.4 Q149.7,63.6 149.8,86.8 Q149.8,110.0 148.6,133.2 Q148.6,156.4 152.1,179.6 Q152.1,202.8 152.8,226.0' fill='none' stroke='rgba(46,28,12,0.20)' stroke-width='1.4' stroke-linecap='round'/%3E%3Ccircle cx='140.0' cy='13.0' r='2.6' fill='rgba(40,26,12,.72)'/%3E%3Ccircle cx='139.3' cy='12.2' r='1.1' fill='rgba(214,186,150,.42)'/%3E%3Ccircle cx='140.0' cy='207.0' r='2.6' fill='rgba(40,26,12,.72)'/%3E%3Ccircle cx='139.3' cy='206.2' r='1.1' fill='rgba(214,186,150,.42)'/%3E%3Crect x='161' y='0' width='38' height='220' fill='rgb(113,74,41)'/%3E%3Crect x='161' y='0' width='38' height='220' fill='url(%23bev)'/%3E%3Cpath d='M165.9,-6.0 Q165.9,17.2 165.2,40.4 Q165.2,63.6 164.8,86.8 Q164.8,110.0 167.5,133.2 Q167.5,156.4 164.3,179.6 Q164.3,202.8 163.6,226.0' fill='none' stroke='rgba(46,28,12,0.17)' stroke-width='1.9' stroke-linecap='round'/%3E%3Cpath d='M174.1,-6.0 Q174.1,17.2 171.8,40.4 Q171.8,63.6 174.2,86.8 Q174.2,110.0 176.4,133.2 Q176.4,156.4 175.9,179.6 Q175.9,202.8 175.1,226.0' fill='none' stroke='rgba(46,28,12,0.24)' stroke-width='1.2' stroke-linecap='round'/%3E%3Cpath d='M181.5,-6.0 Q181.5,17.2 181.6,40.4 Q181.6,63.6 182.8,86.8 Q182.8,110.0 180.6,133.2 Q180.6,156.4 180.1,179.6 Q180.1,202.8 183.0,226.0' fill='none' stroke='rgba(46,28,12,0.27)' stroke-width='2.0' stroke-linecap='round'/%3E%3Cpath d='M191.4,-6.0 Q191.4,17.2 192.6,40.4 Q192.6,63.6 190.1,86.8 Q190.1,110.0 191.5,133.2 Q191.5,156.4 190.7,179.6 Q190.7,202.8 189.1,226.0' fill='none' stroke='rgba(226,196,156,0.13)' stroke-width='0.9' stroke-linecap='round'/%3E%3Cellipse cx='177.8' cy='150' rx='7.0' ry='11.0' fill='none' stroke='rgba(44,26,10,0.30)' stroke-width='1.6'/%3E%3Cellipse cx='177.8' cy='150' rx='5.5' ry='8.6' fill='none' stroke='rgba(44,26,10,0.38)' stroke-width='1.6'/%3E%3Cellipse cx='177.8' cy='150' rx='3.9' ry='6.2' fill='none' stroke='rgba(44,26,10,0.46)' stroke-width='1.6'/%3E%3Cellipse cx='177.8' cy='150' rx='2.4' ry='3.7' fill='none' stroke='rgba(44,26,10,0.54)' stroke-width='1.6'/%3E%3Cellipse cx='177.8' cy='150' rx='1.0' ry='1.5' fill='rgba(38,22,8,.65)'/%3E%3Ccircle cx='180.0' cy='13.0' r='2.6' fill='rgba(40,26,12,.72)'/%3E%3Ccircle cx='179.3' cy='12.2' r='1.1' fill='rgba(214,186,150,.42)'/%3E%3Ccircle cx='180.0' cy='207.0' r='2.6' fill='rgba(40,26,12,.72)'/%3E%3Ccircle cx='179.3' cy='206.2' r='1.1' fill='rgba(214,186,150,.42)'/%3E%3Crect x='201' y='0' width='38' height='220' fill='rgb(120,80,48)'/%3E%3Crect x='201' y='0' width='38' height='220' fill='url(%23bev)'/%3E%3Cpath d='M205.0,-6.0 Q205.0,17.2 204.8,40.4 Q204.8,63.6 207.1,86.8 Q207.1,110.0 207.4,133.2 Q207.4,156.4 207.2,179.6 Q207.2,202.8 204.4,226.0' fill='none' stroke='rgba(226,196,156,0.14)' stroke-width='1.1' stroke-linecap='round'/%3E%3Cpath d='M212.9,-6.0 Q212.9,17.2 213.5,40.4 Q213.5,63.6 214.8,86.8 Q214.8,110.0 214.5,133.2 Q214.5,156.4 212.8,179.6 Q212.8,202.8 213.6,226.0' fill='none' stroke='rgba(46,28,12,0.19)' stroke-width='1.8' stroke-linecap='round'/%3E%3Cpath d='M220.3,-6.0 Q220.3,17.2 221.7,40.4 Q221.7,63.6 221.5,86.8 Q221.5,110.0 220.2,133.2 Q220.2,156.4 218.8,179.6 Q218.8,202.8 221.7,226.0' fill='none' stroke='rgba(226,196,156,0.13)' stroke-width='1.3' stroke-linecap='round'/%3E%3Cpath d='M231.2,-6.0 Q231.2,17.2 230.7,40.4 Q230.7,63.6 233.3,86.8 Q233.3,110.0 232.3,133.2 Q232.3,156.4 229.6,179.6 Q229.6,202.8 229.4,226.0' fill='none' stroke='rgba(226,196,156,0.10)' stroke-width='1.1' stroke-linecap='round'/%3E%3Ccircle cx='220.0' cy='13.0' r='2.6' fill='rgba(40,26,12,.72)'/%3E%3Ccircle cx='219.3' cy='12.2' r='1.1' fill='rgba(214,186,150,.42)'/%3E%3Ccircle cx='220.0' cy='207.0' r='2.6' fill='rgba(40,26,12,.72)'/%3E%3Ccircle cx='219.3' cy='206.2' r='1.1' fill='rgba(214,186,150,.42)'/%3E%3Crect x='0' y='0' width='240' height='2.5' fill='rgba(34,20,8,.55)'/%3E%3Crect x='0' y='217.5' width='240' height='2.5' fill='rgba(34,20,8,.55)'/%3E%3C/svg%3E") 0 0/240px 220px repeat}
 
   /* ── 书体：整页的字形。一律用系统自带的字体，没装就自己退回宋体，不引任何外部资源 ── */
   body.ft-kai,  .pv.ft-kai { font-family:"Kaiti SC","STKaiti","KaiTi","DFKai-SB",serif }
@@ -167,6 +166,21 @@
   .good[data-buy="xi"] .pv.sl{border-color:var(--au2);color:#33260a;
     background:var(--au);
     box-shadow:inset 0 0 0 1.5px rgba(51,38,10,.55)}
+
+  /* ── 松木板是深色的，可格子还是浅纸，于是有几处字直接落在木头上：
+       大题、副题、页首那方印、进度那行数、底下「新立一卷」的虚框。
+       别的深色纸（藏蓝夜奏、万年红）是连格子一起深，一套变量走到底，不用管这些；
+       这张不是，只好把这几处逐一挑亮。别往变量上动手 —— --ink/--dim 格子里也在用。 ── */
+  body.pp-mu .pagehead .ttl{color:#f7e7ca;text-shadow:0 1px 3px rgba(28,14,3,.6)}
+  body.pp-mu .pagehead .sub{color:#ddc49c;text-shadow:0 1px 3px rgba(28,14,3,.55)}
+  /* 印还是朱的（「印一律朱」这条不破，玉玺照样是金），底下垫一片浅纸 ——
+     朱压在深木上跟没盖一样，垫一片就跳出来了 */
+  body.pp-mu .pagehead .seal{background:rgba(250,241,222,.93);
+    box-shadow:0 2px 9px rgba(28,14,3,.45)}
+  body.pp-mu .lab{color:#ddc49c}
+  body.pp-mu .newgrp{color:#e2cba4;border-color:rgba(240,220,186,.45)}
+  /* 上面那条压过了 .newgrp:hover（多一个类），悬停这一档得跟着重写一遍 */
+  body.pp-mu .newgrp:hover{color:var(--accent);border-color:var(--accent)}
 
   /* ── 纸纹：底下这张纸怎么打格。改的是 body 的背景，跟纸色各管各的 ── */
   body.gr-wu  { --grain:radial-gradient(var(--fiber) 1px,transparent 1px);
@@ -358,12 +372,13 @@
         rgba(80,62,20,.08) 7px 11px,
         rgba(80,62,20,.26) 11px 14px) !important;
     background-color:#cfc088 !important}
+  /* 松木板样张：34px 见方，照 1:1 另画三块窄板，不是把正页那张缩小 ——
+     240 缩到 34 是 0.14 倍，木纹钉帽全没了。位置尺寸得单开，塞进 background-image 是整条作废。 */
   .good .pv.paper.p-mu{background-image:
-      repeating-linear-gradient(0deg, rgba(122,82,34,.22) 0 4px, transparent 4px 17px),
-      repeating-linear-gradient(0deg, rgba(96,60,20,.13) 0 7px, transparent 7px 46px),
-      repeating-linear-gradient(0deg,
-        rgba(74,46,14,.5) 0 2px, rgba(255,244,218,.5) 2px 4px, transparent 4px 138px) !important;
-    background-color:#e3cba2 !important}
+      url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='34' height='34' viewBox='0 0 34 34'%3E%3Cdefs%3E%3ClinearGradient id='bev' x1='0' y1='0' x2='1' y2='0'%3E%3Cstop offset='0' stop-color='rgba(238,208,168,.16)'/%3E%3Cstop offset='0.26' stop-color='rgba(255,255,255,0)'/%3E%3Cstop offset='0.82' stop-color='rgba(30,17,6,.16)'/%3E%3Cstop offset='1' stop-color='rgba(24,13,4,.42)'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='34' height='34' fill='rgb(49,32,15)'/%3E%3Crect x='0.7' y='0' width='10' height='34' fill='rgb(109,69,38)'/%3E%3Crect x='0.7' y='0' width='10' height='34' fill='url(%23bev)'/%3E%3Cpath d='M3.4,-2.0 Q3.4,2.8 3.5,7.5 Q3.5,12.2 4.0,17.0 Q4.0,21.8 3.4,26.5 Q3.4,31.2 3.4,36.0' fill='none' stroke='rgba(46,28,12,.26)' stroke-width='.8'/%3E%3Cpath d='M7.6,-2.0 Q7.6,2.8 7.2,7.5 Q7.2,12.2 7.7,17.0 Q7.7,21.8 7.8,26.5 Q7.8,31.2 8.0,36.0' fill='none' stroke='rgba(46,28,12,.26)' stroke-width='.8'/%3E%3Ccircle cx='5.7' cy='4.6' r='1.5' fill='rgba(40,26,12,.72)'/%3E%3Ccircle cx='5.3' cy='4.1' r='0.6' fill='rgba(214,186,150,.42)'/%3E%3Ccircle cx='5.7' cy='29.4' r='1.5' fill='rgba(40,26,12,.72)'/%3E%3Ccircle cx='5.3' cy='28.9' r='0.6' fill='rgba(214,186,150,.42)'/%3E%3Crect x='12.1' y='0' width='10' height='34' fill='rgb(102,65,32)'/%3E%3Crect x='12.1' y='0' width='10' height='34' fill='url(%23bev)'/%3E%3Cpath d='M14.3,-2.0 Q14.3,2.8 14.0,7.5 Q14.0,12.2 13.7,17.0 Q13.7,21.8 14.7,26.5 Q14.7,31.2 14.5,36.0' fill='none' stroke='rgba(46,28,12,.26)' stroke-width='.8'/%3E%3Cpath d='M18.2,-2.0 Q18.2,2.8 18.8,7.5 Q18.8,12.2 18.8,17.0 Q18.8,21.8 18.4,26.5 Q18.4,31.2 18.3,36.0' fill='none' stroke='rgba(46,28,12,.26)' stroke-width='.8'/%3E%3Ccircle cx='17.1' cy='4.6' r='1.5' fill='rgba(40,26,12,.72)'/%3E%3Ccircle cx='16.7' cy='4.1' r='0.6' fill='rgba(214,186,150,.42)'/%3E%3Ccircle cx='17.1' cy='29.4' r='1.5' fill='rgba(40,26,12,.72)'/%3E%3Ccircle cx='16.7' cy='28.9' r='0.6' fill='rgba(214,186,150,.42)'/%3E%3Crect x='23.5' y='0' width='10' height='34' fill='rgb(113,74,41)'/%3E%3Crect x='23.5' y='0' width='10' height='34' fill='url(%23bev)'/%3E%3Cpath d='M25.8,-2.0 Q25.8,2.8 25.1,7.5 Q25.1,12.2 25.8,17.0 Q25.8,21.8 25.1,26.5 Q25.1,31.2 25.3,36.0' fill='none' stroke='rgba(46,28,12,.26)' stroke-width='.8'/%3E%3Cpath d='M29.9,-2.0 Q29.9,2.8 29.2,7.5 Q29.2,12.2 29.8,17.0 Q29.8,21.8 29.8,26.5 Q29.8,31.2 30.4,36.0' fill='none' stroke='rgba(46,28,12,.26)' stroke-width='.8'/%3E%3Ccircle cx='28.5' cy='4.6' r='1.5' fill='rgba(40,26,12,.72)'/%3E%3Ccircle cx='28.1' cy='4.1' r='0.6' fill='rgba(214,186,150,.42)'/%3E%3Ccircle cx='28.5' cy='29.4' r='1.5' fill='rgba(40,26,12,.72)'/%3E%3Ccircle cx='28.1' cy='28.9' r='0.6' fill='rgba(214,186,150,.42)'/%3E%3Crect x='0' y='0' width='34' height='1' fill='rgba(34,20,8,.55)'/%3E%3Crect x='0' y='33' width='34' height='1' fill='rgba(34,20,8,.55)'/%3E%3C/svg%3E") !important;
+    background-position:center !important; background-size:cover !important;
+    background-repeat:no-repeat !important;
+    background-color:#6d4526 !important}
   /* 金云笺样张：34px 见方搁不下整朵，viewBox 裁到左边那个大云头。
      裁小了要同步加粗描边 —— 100 个用户单位缩到 34px 是 0.34 倍，
      线宽得写 5.2 才落到屏幕上的一像素半，照正页那个 2.4 写等于没有。
@@ -1077,7 +1092,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v35" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v36" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -1755,7 +1770,7 @@ const PAPERS = {
   mo:  {n:"水墨",     p:160, c:"pp-mo",   sw:"#dedcd6"},
   hong:{n:"万年红",   p:200, c:"pp-hong", sw:"#7e1c14"},
   jian:{n:"竹笺",     p:170, c:"pp-jian", sw:"#cfc088", tx:"p-jian"},
-  mu:  {n:"松木板",   p:210, c:"pp-mu",   sw:"#e3cba2", tx:"p-mu"},
+  mu:  {n:"松木板",   p:210, c:"pp-mu",   sw:"#6d4526", tx:"p-mu"},
   yun: {n:"金云笺",   p:260, c:"pp-yun",  sw:"#d8a92f", r:70, tx:"p-yun"},
 };
 /* 书体：整页的字形。用的都是系统自带的字体 —— 你这台装了才有，没装就退回宋体，
@@ -1809,6 +1824,10 @@ const FXS = {
   fxmei: {n:"落梅",     p:90,  c:"fx-em",  pv:"x-em", e:"🌸"},
   fxmao: {n:"猫爪",     p:110, c:"fx-em",  pv:"x-em", e:"🐱"},
   fxji:  {n:"雏鸡",     p:110, c:"fx-em",  pv:"x-em", e:"🐤"},
+  /* 「金元宝」没有对应的 emoji（Unicode 里压根没这个字符），
+     🪙 金锞子是最接近的一个，💰 那一袋权当赏银 */
+  fxke:  {n:"金锞子",   p:120, c:"fx-em",  pv:"x-em", e:"🪙"},
+  fxdai: {n:"钱袋",     p:150, c:"fx-em",  pv:"x-em", e:"💰"},
 };
 /* 内库六档。cur 是「眼下用的是哪一样」存在 g 的哪个字段上，d 是那一档白送的那样。
    加一档只要往这儿添一行，面板、买卖、存档、朝纲收放一概不用另写。 */
