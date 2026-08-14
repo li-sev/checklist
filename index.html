@@ -22,6 +22,13 @@
     --onacc:#fdf3e0;
     /* 纸纹的两笔：界行的线、纸里的纤维斑。抽成变量，纸色才好各染各的 */
     --rule:rgba(90,60,20,.05); --fiber:rgba(120,90,40,.05);
+    /* 货色自己的颜色：一概不随纸色走。金是金、朱是朱、墨是墨 ——
+       铺子里看见什么样，买回来就是什么样，不然换张纸就成了另一件东西 */
+    --au:#c9a227; --au1:#f2dc96; --au2:#8a6b1e; --zhu:#c0362a; --mo:#2a241c;
+    /* 纸纹抽成一对变量：正页和弹窗共用一张纹，换了纸纹，朝廷内库一并跟着换 */
+    --grain:repeating-linear-gradient(90deg, var(--rule) 0 1px, transparent 1px 38px),
+            radial-gradient(var(--fiber) 1px, transparent 1px);
+    --grainsz:auto, 7px 7px;
   }
   @media (prefers-color-scheme: dark){
     :root{ --bg:#17120d; --card:#221b14; --ink:#e9dcc2; --dim:#9c8b70; --line:#3d3125;
@@ -87,26 +94,28 @@
   body.ft-xing, .pv.ft-xing{ font-family:"Xingkai SC","STXingkai","Weibei SC","Hannotate SC",cursive,serif }
 
   /* ── 玉玺盖出来是金的，不是朱的。别的印一律随朱笔 ── */
-  body.sl-xi li.ok .bx{background:var(--gold);border-color:var(--gold);color:var(--onacc)}
-  body.sl-xi li:hover .bx{border-color:var(--gold)}
-  body.sl-xi .pagehead .seal{border-color:var(--gold);color:var(--gold)}
-  .good[data-buy="xi"] .pv{border-color:var(--gold);color:var(--gold)}
+  body.sl-xi li.ok .bx{background:linear-gradient(145deg,var(--au1),var(--au) 48%,var(--au2));
+    border-color:var(--au2);color:#33260a}
+  body.sl-xi li:hover .bx{border-color:var(--au)}
+  body.sl-xi .pagehead .seal{border-color:var(--au);color:var(--au)}
+  .good[data-buy="xi"] .pv{border-color:var(--au);color:var(--au);
+    background:linear-gradient(145deg,rgba(242,220,150,.28),rgba(201,162,39,.16))}
 
   /* ── 纸纹：底下这张纸怎么打格。改的是 body 的背景，跟纸色各管各的 ── */
-  body.gr-wu  { background-image:radial-gradient(var(--fiber) 1px,transparent 1px);
-                background-size:7px 7px }
-  body.gr-fang{ background-image:
+  body.gr-wu  { --grain:radial-gradient(var(--fiber) 1px,transparent 1px);
+                --grainsz:7px 7px }
+  body.gr-fang{ --grain:
       repeating-linear-gradient(90deg,var(--rule) 0 1px,transparent 1px 38px),
       repeating-linear-gradient(0deg, var(--rule) 0 1px,transparent 1px 38px),
       radial-gradient(var(--fiber) 1px,transparent 1px);
-    background-size:auto,auto,7px 7px }
-  body.gr-mi  { background-image:
+    --grainsz:auto,auto,7px 7px }
+  body.gr-mi  { --grain:
       repeating-linear-gradient(90deg,var(--rule) 0 1px,transparent 1px 38px),
       repeating-linear-gradient(0deg, var(--rule) 0 1px,transparent 1px 38px),
       repeating-linear-gradient(45deg, var(--rule) 0 1px,transparent 1px 53.74px),
       repeating-linear-gradient(-45deg,var(--rule) 0 1px,transparent 1px 53.74px),
       radial-gradient(var(--fiber) 1px,transparent 1px);
-    background-size:auto,auto,auto,auto,7px 7px }
+    --grainsz:auto,auto,auto,auto,7px 7px }
 
   /* ── 装裱：贴着屏幕四边的一圈边饰。用 ::after，跟海晏河清的四角描金(::before)各占一层 ── */
   body.mt-hui::after{content:"";position:fixed;inset:4px;z-index:2;pointer-events:none;
@@ -129,10 +138,8 @@
     color:var(--ink);
     /* 纸纹：极淡的竖界行 + 纤维斑点，纯 CSS，不引外部图 */
     background-color:var(--bg);
-    background-image:
-      repeating-linear-gradient(90deg, var(--rule) 0 1px, transparent 1px 38px),
-      radial-gradient(var(--fiber) 1px, transparent 1px);
-    background-size:auto, 7px 7px;
+    background-image:var(--grain);
+    background-size:var(--grainsz);
     font:17px/1.6 "Songti SC","STSong","SimSun","Noto Serif CJK SC","Source Han Serif SC",serif;
   }
 
@@ -243,7 +250,8 @@
   .good{border:1px solid var(--line);border-radius:5px;padding:9px 7px;background:var(--card);
     display:flex;flex-direction:column;align-items:center;gap:6px;font-size:13px;line-height:1.3}
   .good:hover{border-color:var(--accent)}
-  .good .pv{width:34px;height:34px;border:1.5px solid var(--accent);border-radius:3px;color:var(--accent);
+  /* 样张不随纸色走：印章永远是朱的，不然换张竹青纸，铺子里满架子绿印 */
+  .good .pv{width:34px;height:34px;border:1.5px solid var(--zhu);border-radius:3px;color:var(--zhu);
     display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;
     transform:rotate(-7deg);flex:none;overflow:hidden;text-align:center}
   .good .pv.tiny{font-size:9px;letter-spacing:0;line-height:1.05;white-space:normal;word-break:break-all;padding:1px}
@@ -268,12 +276,12 @@
   .pv.gp.x-jin {background-image:radial-gradient(circle at 30% 34%,#c8a24a 0 2px,transparent 2.5px),
                                  radial-gradient(circle at 68% 30%,#c8a24a 0 1.5px,transparent 2px),
                                  radial-gradient(circle at 52% 70%,#c8a24a 0 1.8px,transparent 2.3px)}
-  .pv.gp.x-zhu {background-image:radial-gradient(circle at 30% 34%,var(--accent) 0 2px,transparent 2.5px),
-                                 radial-gradient(circle at 68% 30%,var(--accent) 0 1.5px,transparent 2px),
-                                 radial-gradient(circle at 52% 70%,var(--accent) 0 1.8px,transparent 2.3px)}
-  .pv.gp.x-mo  {background-image:radial-gradient(circle at 30% 34%,var(--ink) 0 2px,transparent 2.5px),
-                                 radial-gradient(circle at 68% 30%,var(--ink) 0 1.5px,transparent 2px),
-                                 radial-gradient(circle at 52% 70%,var(--ink) 0 1.8px,transparent 2.3px)}
+  .pv.gp.x-zhu {background-image:radial-gradient(circle at 30% 34%,var(--zhu) 0 2px,transparent 2.5px),
+                                 radial-gradient(circle at 68% 30%,var(--zhu) 0 1.5px,transparent 2px),
+                                 radial-gradient(circle at 52% 70%,var(--zhu) 0 1.8px,transparent 2.3px)}
+  .pv.gp.x-mo  {background-image:radial-gradient(circle at 30% 34%,var(--mo) 0 2px,transparent 2.5px),
+                                 radial-gradient(circle at 68% 30%,var(--mo) 0 1.5px,transparent 2px),
+                                 radial-gradient(circle at 52% 70%,var(--mo) 0 1.8px,transparent 2.3px)}
   .pv.gp.m-hui {box-shadow:inset 0 0 0 1px var(--bg),inset 0 0 0 2px var(--gold)}
   .pv.gp.m-yun {background-image:
       radial-gradient(circle at 0 0,      transparent 9px,var(--gold) 9px 10px,transparent 11px),
@@ -282,11 +290,13 @@
 
   /* 金粉：点下去迸开的那几粒。位置由 --dx/--dy 定，各飞各的 */
   .spark{position:fixed;z-index:96;pointer-events:none;width:4px;height:4px;margin:-2px 0 0 -2px;
-    border-radius:50%;background:var(--gold);
+    border-radius:50%;background:var(--au);
     animation:spark .62s cubic-bezier(.2,.7,.3,1) forwards}
+  /* 迸的是什么就是什么颜色 —— 朱砂溅在竹青纸上也得是红的。
+     墨星描一圈极淡的白晕，不然藏蓝、万年红那种深纸上，一粒墨等于没迸 */
   body.fx-jin .spark{background:#c8a24a;box-shadow:0 0 5px rgba(200,162,74,.9)}
-  body.fx-zhu .spark{background:var(--accent);box-shadow:0 0 5px var(--accent);width:5px;height:5px}
-  body.fx-mo  .spark{background:var(--ink);box-shadow:0 0 4px rgba(0,0,0,.4);opacity:.85}
+  body.fx-zhu .spark{background:var(--zhu);box-shadow:0 0 5px rgba(192,54,42,.85);width:5px;height:5px}
+  body.fx-mo  .spark{background:var(--mo);box-shadow:0 0 4px rgba(0,0,0,.4),0 0 6px rgba(255,255,255,.3);opacity:.9}
   @keyframes spark{
     0%{opacity:0;transform:translate(0,0) scale(.4)}
     14%{opacity:1;transform:translate(calc(var(--dx) * .35),calc(var(--dy) * .35)) scale(1)}
@@ -333,8 +343,14 @@
   .mih .mn{margin-left:auto;font:12px/1 ui-monospace,Consolas,monospace;color:var(--gold);flex:none}
   .mirow{display:flex;align-items:center;gap:8px;margin:2px 0}
   .mirow .mk{font-size:12px;color:var(--dim);letter-spacing:2px;flex:none;width:32px}
-  .mbar{flex:1;height:8px;border-radius:4px;background:var(--soft);overflow:hidden}
-  .mbar i{display:block;height:100%;border-radius:4px;transition:width .45s}
+  .mbar{flex:1;height:8px;border-radius:4px;background:var(--soft);overflow:hidden;position:relative;
+    border:1px solid var(--line)}
+  .mbar i{display:block;height:100%;border-radius:3px;transition:width .45s}
+  /* 四道刻度压在上头：满格的时候也还看得出是一条杠，不是一块实心方块 */
+  .mbar::after{content:"";position:absolute;inset:0;pointer-events:none;
+    background:repeating-linear-gradient(90deg,transparent 0 calc(25% - 1px),var(--card) calc(25% - 1px) 25%)}
+  .mini.vac .mbar{opacity:.55}
+  .mib .btn[disabled]{opacity:.45}
   .mbar i.e{background:var(--link)}
   .mbar i.l{background:var(--accent)}
   .mirow .mv{font:12px/1 ui-monospace,Consolas,monospace;color:var(--dim);flex:none;width:24px;text-align:right}
@@ -547,7 +563,10 @@
   .mask{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;z-index:40;
     align-items:center;justify-content:center;padding:16px}
   .mask.on{display:flex}
-  .dlg{background:var(--card);border-radius:6px;border-top:5px double var(--accent);padding:18px;
+  /* 弹窗（朝廷、内库、查档……）跟正页同一张纸：底色用 --bg、纹路用 --grain，
+     里头一格一格的（.mini/.good/输入框）才是 --card，层次跟正页对得上 */
+  .dlg{background-color:var(--bg);background-image:var(--grain);background-size:var(--grainsz);
+    border-radius:6px;border-top:5px double var(--accent);padding:18px;
     width:100%;max-width:560px;max-height:88vh;overflow:auto;box-shadow:var(--shadow)}
   .dlg h2{margin:0 0 12px;font-size:19px;letter-spacing:3px;color:var(--accent)}
   .dlg textarea{height:180px;resize:vertical;line-height:1.6}
@@ -930,7 +949,7 @@ const DEMO = /[?&]demo\b/.test(location.search);
 /* 演武场里六部、荒疏、请辞一概照真的来 —— 要试的就是这一套。只两处不同：
    库银管够、内库的东西全在手上，且恩典之物不看朝纲脸色（不然玉玺压根试不着） */
 const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
-const BUILD = "v23" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v24" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -2330,13 +2349,18 @@ function miHTML(m, g, load){
     `<div class="mirow"><span class="mk">${k}</span>
       <span class="mbar"><i class="${cls}" style="width:${v}%"></i></span>
       <span class="mv">${Math.round(v)}</span></div>`;
-  // 空悬：这一格没人，只等新官
+  // 空悬：这一格没人。两条杠照画，只是空着 ——
+  // 六格长一个样，扫一眼就知道哪个部塌了，不必先分辨这格是不是缺人
+  const nobar = k => `<div class="mirow"><span class="mk">${k}</span>
+      <span class="mbar"></span><span class="mv">—</span></div>`;
   if (s.v > 0) return `<div class="mini vac">
     <div class="mih"><b>${m.n}</b><span class="mid">${m.d}</span>
       <span class="mn">${load} 件待办</span></div>
     <div class="mps"><span class="pn">此位空悬</span>
       <span class="mood q">暂由属官署理</span></div>
     <div class="msay">在这个部再批 ${s.v} 件，新官便到任</div>
+    ${nobar("效率")}${nobar("忠诚")}
+    <div class="mib"><button class="btn" disabled>候补中 · 按 ${VACS} 分计</button></div>
   </div>`;
   const md = moodOf(s.l);
   return `<div class="mini${s.q ? " quit" : sc < 40 ? " sick" : sc >= 85 ? " good" : ""}">
