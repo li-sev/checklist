@@ -29,6 +29,8 @@
        --onzhu 是压在印面上的那个字。铺子里的样张和真盖下去的印用同一对色，
        所以挑的时候看见什么，盖出来就是什么 */
     --zhu:#c0362a; --onzhu:#fdf3e0; --sha:#c0362a;
+    /* 出事的那一格用的警戒色。红纸、深纸上得另配，不然红边压在红底上等于没有 */
+    --warn:#b3402c;
     /* 纸纹抽成一对变量：正页和弹窗共用一张纹，换了纸纹，朝廷内库一并跟着换 */
     --grain:repeating-linear-gradient(90deg, var(--rule) 0 1px, transparent 1px 38px),
             radial-gradient(var(--fiber) 1px, transparent 1px);
@@ -38,7 +40,7 @@
     :root{ --bg:#17120d; --card:#221b14; --ink:#e9dcc2; --dim:#9c8b70; --line:#3d3125;
            --accent:#cf5a49; --done:#cf5a49; --gold:#c9a75a; --link:#8fb7ca;
            --soft:#2b2219; --shadow:0 8px 26px rgba(0,0,0,.6);
-           --rule:rgba(220,190,140,.055); --fiber:rgba(220,190,140,.045); }
+           --rule:rgba(220,190,140,.055); --fiber:rgba(220,190,140,.045); --warn:#e0685a; }
   }
   /* 内务府买来的纸色。写在 body 上，压过上面 :root 那一套（含深色模式） */
   /* 洒金笺：底子本就是白的，金是洒上去的碎屑 —— 碎屑另铺一层，见 #fleck */
@@ -50,7 +52,7 @@
   body.pp-yun{ --bg:#e7d7ab; --card:#fffaea; --line:#cdb173; --gold:#8a6b1e; --soft:#f6ecca;
                --accent:#8a2f14; --done:#8a2f14; --link:#3f6480;
                --shadow:0 8px 26px rgba(120,92,26,.24) }
-  body.pp-lan{ --zhu:#cf4232;  --bg:#141a26; --card:#1e2637; --ink:#dfe6f2; --dim:#8593ab; --line:#33405a;
+  body.pp-lan{ --zhu:#cf4232; --warn:#e2695a;  --bg:#141a26; --card:#1e2637; --ink:#dfe6f2; --dim:#8593ab; --line:#33405a;
                --accent:#d4a24a; --done:#d4a24a; --gold:#d4a24a; --link:#7fa8cf; --onacc:#141a26;
                --soft:#263044; --shadow:0 8px 26px rgba(0,0,0,.65);
                --rule:rgba(190,210,255,.05); --fiber:rgba(190,210,255,.04) }
@@ -70,7 +72,7 @@
   /* 万年红：大红洒金蜡笺，年节贴门的那种纸。字用金，底用朱 */
   body.pp-hong{ --bg:#7e1c14; --card:#8f2318; --ink:#f7e3c0; --dim:#d9b48c; --line:#a84231;
                 --accent:#f0cf86; --done:#f0cf86; --gold:#f0cf86; --link:#f2d9a8; --soft:#96291c;
-                --onacc:#6d1710; --zhu:#fbf0d8; --onzhu:#8f2318;
+                --onacc:#6d1710; --zhu:#fbf0d8; --onzhu:#8f2318; --warn:#ffcdbf;
                 --rule:rgba(255,225,170,.07); --fiber:rgba(255,225,170,.08);
                 --shadow:0 8px 26px rgba(60,10,6,.5) }
 
@@ -304,6 +306,10 @@
   body.fx-jin .spark{background:#c8a24a;box-shadow:0 0 5px rgba(200,162,74,.9)}
   body.fx-zhu .spark{background:var(--sha);box-shadow:0 0 5px rgba(192,54,42,.85);width:5px;height:5px}
   body.fx-mo  .spark{background:var(--mo);box-shadow:0 0 4px rgba(0,0,0,.4),0 0 6px rgba(255,255,255,.3);opacity:.9}
+  /* 迸字符的那几样：把点的样式全撤了，只剩一个字。<i> 天生是斜的，掰正 */
+  .spark.em{width:auto;height:auto;margin:-11px 0 0 -11px;background:none;box-shadow:none;
+    border-radius:0;font-size:19px;line-height:1;font-style:normal}
+  .pv.gp.x-em{font-size:19px;line-height:1;font-style:normal}
   @keyframes spark{
     0%{opacity:0;transform:translate(0,0) scale(.4)}
     14%{opacity:1;transform:translate(calc(var(--dx) * .35),calc(var(--dy) * .35)) scale(1)}
@@ -327,10 +333,10 @@
   .mis{display:grid;gap:6px}
   @media (min-width:520px){ .mis{grid-template-columns:1fr 1fr} }
   .mini{border:1px solid var(--line);border-radius:5px;padding:8px 10px;background:var(--card)}
-  .mini.sick{border-color:#b3402c;background:rgba(179,64,44,.07)}
-  .mini.fine{border-color:var(--gold);background:rgba(169,134,63,.08)}
+  .mini.sick{border-color:var(--warn);background:color-mix(in srgb,var(--warn) 8%,var(--card))}
+  .mini.fine{border-color:var(--gold);background:color-mix(in srgb,var(--gold) 9%,var(--card))}
   /* 递了牌子的那一格：红边，一眼看得见有人要走 */
-  .mini.quit{border-color:#b3402c;background:rgba(179,64,44,.09)}
+  .mini.quit{border-color:var(--warn);background:color-mix(in srgb,var(--warn) 10%,var(--card))}
   .mini.vac{border-style:dashed;opacity:.8}
   /* 坐在这个部里的人 */
   .mps{display:flex;align-items:baseline;gap:7px;margin:0 0 3px;flex-wrap:wrap}
@@ -338,12 +344,12 @@
   .mps .mood{margin-left:auto;font-size:11.5px;letter-spacing:1px;flex:none;
     padding:1px 7px;border:1px solid var(--line);border-radius:9px;color:var(--dim);background:var(--soft)}
   .mps .mood.hi{color:var(--gold);border-color:var(--gold)}
-  .mps .mood.lo{color:#b3402c;border-color:#b3402c}
-  .mps .mood.q{color:#b3402c;border-color:#b3402c;margin-left:auto}
+  .mps .mood.lo{color:var(--warn);border-color:var(--warn)}
+  .mps .mood.q{color:var(--warn);border-color:var(--warn);margin-left:auto}
   /* 他自己那一句 */
   .msay{font-size:12.5px;line-height:1.65;color:var(--dim);margin:0 0 6px;
     padding-left:8px;border-left:2px solid var(--line)}
-  .mini.quit .msay{color:#b3402c;border-left-color:#b3402c}
+  .mini.quit .msay{color:var(--warn);border-left-color:var(--warn)}
   .mih{display:flex;align-items:baseline;gap:7px;margin-bottom:5px;flex-wrap:wrap}
   .mih b{font-size:16px;letter-spacing:2px}
   .mih .mid{font-size:12px;color:var(--dim);letter-spacing:1px}
@@ -959,7 +965,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v29" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v30" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -1685,6 +1691,10 @@ const FXS = {
   fxmo:  {n:"墨星",     p:50,  c:"fx-mo",  pv:"x-mo"},
   fxjin: {n:"金粉迸散", p:90,  c:"fx-jin", pv:"x-jin"},
   fxzhu: {n:"朱砂溅",   p:130, c:"fx-zhu", pv:"x-zhu"},
+  /* 带 e 的这几样迸的是字符本身：共用一个 fx-em 的壳，迸什么由 e 定 */
+  fxmei: {n:"落梅",     p:90,  c:"fx-em",  pv:"x-em", e:"🌸"},
+  fxmao: {n:"猫爪",     p:110, c:"fx-em",  pv:"x-em", e:"🐱"},
+  fxji:  {n:"雏鸡",     p:110, c:"fx-em",  pv:"x-em", e:"🐥"},
 };
 /* 内库六档。cur 是「眼下用的是哪一样」存在 g 的哪个字段上，d 是那一档白送的那样。
    加一档只要往这儿添一行，面板、买卖、存档、朝纲收放一概不用另写。 */
@@ -1951,17 +1961,20 @@ function punch(el, kind){
    打勾、落印、出库；全局都放就成了噪音。整卷一次批完时 silent 立着，
    由外头统一放一次。嫌花可以在内库上头那一行按「粉/素」关掉。 */
 function gold(el){
-  const g = G();
-  if (!el || silent || !(FXS[g.fx] || {}).c) return;   // 「不迸」那一档没有类，就是什么都不迸
+  const g = G(), fx = FXS[g.fx] || {};
+  if (!el || silent || !fx.c) return;             // 「不迸」那一档没有类，就是什么都不迸
   try { if (matchMedia("(prefers-reduced-motion: reduce)").matches) return; } catch(e){}
   const r = el.getBoundingClientRect();
   if (!r.width && !r.height) return;              // 没画出来的元素不放
   const x = r.left + r.width / 2, y = r.top + r.height / 2;
-  const n = 7, made = [], f = document.createDocumentFragment();
+  // 字符个头大，少迸两个、撒远一点，不然糊成一团
+  const n = fx.e ? 5 : 7, made = [], f = document.createDocumentFragment();
   for (let i = 0; i < n; i++){
-    const a = Math.PI * 2 * (i + Math.random() * .7) / n, d = 15 + Math.random() * 22;
+    const a = Math.PI * 2 * (i + Math.random() * .7) / n,
+          d = (fx.e ? 24 : 15) + Math.random() * 22;
     const s = document.createElement("i");
-    s.className = "spark";
+    s.className = fx.e ? "spark em" : "spark";
+    if (fx.e) s.textContent = fx.e;
     s.style.left = x + "px"; s.style.top = y + "px";
     s.style.setProperty("--dx", (Math.cos(a) * d).toFixed(1) + "px");
     s.style.setProperty("--dy", (Math.sin(a) * d - 8).toFixed(1) + "px");
@@ -2328,7 +2341,7 @@ function goodHTML(k, v, kind, g){
   const pv = kind === "seal"  ? `<span class="pv sl${v.sm ? " tiny" : ""}">${esc(v.t)}</span>`
            : kind === "font"  ? `<span class="pv ft ${v.c}">${esc(v.t)}</span>`
            : v.sw             ? `<span class="pv paper" style="background:${v.sw}"></span>`
-           : `<span class="pv gp ${v.pv}"></span>`;
+           : `<span class="pv gp ${v.pv}">${v.e || ""}</span>`;
   // 本机没装这种字：上架也没用，买回来跟宋体一个样
   if (kind === "font" && !hasFont(v.f)) return `<button class="good na" disabled>${pv}
     <span class="nm">${esc(v.n)}</span><span class="pz">本机没装</span></button>`;
