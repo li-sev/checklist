@@ -221,6 +221,11 @@
   .med .mp{font:11px/1 ui-monospace,Consolas,monospace;font-style:normal;color:var(--gold);
     margin-left:6px;letter-spacing:0}
   .med.got .mp{opacity:.7}
+  /* 秘录：没挣到就是个虚线框加一个问号，不透一点风声 */
+  .med.hid{border-style:dashed;opacity:.5}
+  .med.hid b{letter-spacing:0}
+  .med.egg.got{border-color:var(--accent);color:var(--accent);background:rgba(155,45,32,.08)}
+  .med.egg.got .mp{color:var(--accent)}
 
   .app{display:flex;gap:22px;max-width:1060px;margin:0 auto;align-items:flex-start}
   .wrap{flex:1;min-width:0;max-width:720px}
@@ -677,8 +682,9 @@
   <div class="pane" data-pane="med">
     <label class="first">治绩 <small>不卖，只能挣</small></label>
     <div class="meds" id="ihMed"></div>
-    <div class="hint">难的赏得多，牌子上标着各值几两。<br>
-      挣到就一次入库，不会撤销，也不会重复给</div>
+    <div class="hint">难的赏得多，牌子上标着各值几两。挣到就一次入库，不会撤销，也不会重复给。<br>
+      写着<b>？</b>的五件是秘录：条目不公开，撞上了自然入册 —— 想凑是凑不着的。<br>
+      三十件全挣到共 589 两，仍买不下整个内库（1380 两）</div>
   </div>
 
   <div class="pane" data-pane="store">
@@ -774,7 +780,7 @@ const SEED_MD = `
 
 /* 存储 key 与前两版一致，老数据直接接管 */
 const KEY = "checklist_v1";
-const BUILD = "v18";                              // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v19";                              // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -1099,6 +1105,8 @@ function stampAll(g){
   if (!all) scoreGroup(g);
   silent = 0;
   coin(G().ag - was);
+  if (!all && g.items.length >= 10) medal("one");   // 一气呵成
+  sweep();
   render(); save(true);
   if (!all){                                   // 一枚一枚落印，看着像批折子
     const sec = document.querySelector(`[data-g="${g.id}"]`);
@@ -1560,18 +1568,45 @@ const COURT = [
   [85, "海晏河清", 3,   "每件 6 两 · 解锁玉玺 · 四角描金"],
 ];
 /* 治绩：难的赏得多。p 是入库的两数，摆在牌子上，一眼看得见值多少。
-   十件全挣到共 240 两——铺子里全套要 720 两，光靠治绩买不完，还得老实批折子。 */
+   带 x 的五件是彩蛋：条目不写出来，撞上了才入册 —— 所以别去凑，凑不着。
+   三十件全挣到共 589 两，铺子里全套要 1380 两，光靠治绩仍旧买不完，还得老实批折子。 */
 const MEDALS = [
-  {id:"first", n:"初御朱笔", d:"批下头一件",         p:5},
-  {id:"vol",   n:"一卷功成", d:"整整一卷批完",       p:10},
-  {id:"night", n:"秉烛达旦", d:"子夜到卯时之间批折",  p:10},
-  {id:"note10",n:"御笔亲批", d:"写下十条朱批",       p:15},
-  {id:"six",   n:"六部齐备", d:"六个部都派到差事",    p:20},
-  {id:"d20",   n:"宵衣旰食", d:"一日之内批满二十件",  p:25},
-  {id:"rich",  n:"国库充盈", d:"库银存到五百两",      p:25},
-  {id:"run7",  n:"勤政不辍", d:"连批七日",           p:40},
-  {id:"c100",  n:"日理万机", d:"累计批过一百件",      p:40},
-  {id:"qing",  n:"海晏河清", d:"六部均分到八十五",    p:50},
+  /* 批折子 */
+  {id:"first", n:"初御朱笔", d:"批下头一件",           p:5},
+  {id:"vol",   n:"一卷功成", d:"整整一卷批完",         p:10},
+  {id:"vol10", n:"十卷俱终", d:"办结十卷",             p:22},
+  {id:"d5",    n:"日课五件", d:"一日之内批满五件",      p:8},
+  {id:"d20",   n:"宵衣旰食", d:"一日之内批满二十件",    p:25},
+  {id:"c100",  n:"日理万机", d:"累计批过一百件",        p:40},
+  {id:"c300",  n:"卷帙浩繁", d:"累计批过三百件",        p:30},
+  {id:"night", n:"秉烛达旦", d:"子夜到卯时之间批折",    p:10},
+  {id:"note10",n:"御笔亲批", d:"写下十条朱批",         p:15},
+  {id:"note50",n:"朱批盈卷", d:"写下五十条朱批",        p:25},
+  /* 连着来 */
+  {id:"run3",  n:"三日不辍", d:"连批三日",             p:12},
+  {id:"run7",  n:"勤政不辍", d:"连批七日",             p:40},
+  {id:"run30", n:"月无虚日", d:"连批三十日",            p:35},
+  /* 国库 */
+  {id:"rich",  n:"国库充盈", d:"库银存到五百两",        p:25},
+  {id:"rich2k",n:"府库殷实", d:"库银存到两千两",        p:30},
+  /* 六部 */
+  {id:"six",   n:"六部齐备", d:"六个部都派到差事",      p:20},
+  {id:"qing",  n:"海晏河清", d:"六部均分到八十五",      p:50},
+  {id:"eff",   n:"精明强干", d:"哪个部效率满一百",      p:20},
+  {id:"loyal", n:"上下同心", d:"哪个部忠诚满一百",      p:20},
+  {id:"keep1", n:"三顾之诚", d:"挽留下一位要走的尚书",  p:12},
+  {id:"k3",    n:"三易其人", d:"同一个部换到第三任",    p:12},
+  /* 内库与驿传 */
+  {id:"shop1", n:"内库开张", d:"头一回添置物件",        p:8},
+  {id:"yuxi",  n:"玉玺亲用", d:"用上玉玺那一方印",      p:20},
+  {id:"full",  n:"文房齐备", d:"印章纸色全都置齐",      p:35},
+  {id:"sync1", n:"驿传通达", d:"两处同步成一回",        p:10},
+  /* 彩蛋五件：不写条目，撞上了自然入册 */
+  {id:"owe1",  n:"寅吃卯粮", d:"国库见底还硬花，挂上了亏空",     p:5,  x:1},
+  {id:"vac3",  n:"群龙无首", d:"三个部同时空悬",                p:8,  x:1},
+  {id:"mao",   n:"五更待漏", d:"卯时（五点到七点）批折",         p:10, x:1},
+  {id:"one",   n:"一气呵成", d:"一次整卷全批，十件以上",         p:12, x:1},
+  {id:"yuan",  n:"元日开笔", d:"元旦这天批下一件",               p:15, x:1},
 ];
 /* e 效率 · l 忠诚 · d 最近办差的日子 · k 第几任（下标）· v 空悬还差几件 · q 请辞中 · sd 今日说过话没 */
 const miDef = () => Object.fromEntries(MINISTRY.map(m => [m.id, {e:50, l:60, d:"", k:0, v:0, q:0, sd:""}]));
@@ -1723,6 +1758,7 @@ function refund(groups, L){
   if (!n && !back) return 0;
   g.cnt = Math.max(0, (g.cnt || 0) - n);
   if (back) earn(-back);
+  sweep();
   return back;
 }
 /* 说话。ms 是往后挪多久 —— toast 只有一条，挤在一起会把入库几两那句盖掉 */
@@ -1791,7 +1827,7 @@ function scoreGroup(g){
   const mid = miOf(g);
   const amt = Math.round(10 * mult());
   g.pg = amt;                                     // 存实数，撤卷照数退（老存档里这儿是个 1）
-  earn(amt); bump(mid, 6, 5); medal("vol");
+  earn(amt); bump(mid, 6, 5); medal("vol"); sweep();
   const p = who(mid);
   toast(`${MI[mid].n}${p ? " " + p : ""}「${g.title || "这一卷"}」整卷办结，入库 ${amt} 两`);
   speak(mid, "v", 2000);                          // 银子那句先亮着，人再出来说一句
@@ -1801,7 +1837,43 @@ function medal(id){
   const m = MEDALS.find(x => x.id === id); if (!m) return;
   g.med.push(id);
   earn(m.p);                                      // 按这件治绩的赏格入库（有亏空先抵）
-  herald("载入实录", m.n, `${m.d} · 入库 ${m.p} 两`);
+  // 彩蛋另起一个名头报 —— 挣到之前牌子上是「？」，这一下才知道刚才做的那件事叫什么
+  herald(m.x ? "秘录一则" : "载入实录", m.n, `${m.d} · 入库 ${m.p} 两`);
+}
+/* 办结了几卷。不另存计数：整卷赏就记在 gg.pg 上，撤了卷这个数自己就下去了 */
+function volDone(){
+  let n = 0;
+  for (const l of (D.lists || [])) for (const gg of l.groups) if (gg.pg) n++;
+  return n;
+}
+/* 把「看状态就能判定」的治绩过一遍。
+   有当场触发的（批下头一件、挽留住人）就地喊 medal()，其余一律搁这儿——
+   免得同一个条件散在七八处，改一个数要满文件找。
+   注意：别在 earn / paintPurse 里调这个，medal() 自己要走 earn，会绕回来。 */
+function sweep(){
+  const g = G();
+  if (g.cnt >= 100) medal("c100");
+  if (g.cnt >= 300) medal("c300");
+  if (g.tn >= 5)   medal("d5");
+  if (g.tn >= 20)  medal("d20");
+  if (g.nc >= 10)  medal("note10");
+  if (g.nc >= 50)  medal("note50");
+  if (g.run >= 3)  medal("run3");
+  if (g.run >= 7)  medal("run7");
+  if (g.run >= 30) medal("run30");
+  if (g.ag >= 500) medal("rich");
+  if (g.ag >= 2000) medal("rich2k");
+  if (g.owe > 0)   medal("owe1");
+  if (volDone() >= 10) medal("vol10");
+  if (MINISTRY.every(m => g.mi[m.id].d)) medal("six");
+  if (courtScore() >= 85) medal("qing");
+  if (MINISTRY.some(m => g.mi[m.id].e >= 100)) medal("eff");
+  if (MINISTRY.some(m => g.mi[m.id].l >= 100)) medal("loyal");
+  if (MINISTRY.some(m => (g.mi[m.id].k || 0) >= 2)) medal("k3");     // k 是下标：2 就是第三任
+  if (MINISTRY.filter(m => g.mi[m.id].v > 0).length >= 3) medal("vac3");
+  if (g.own.length > 2) medal("shop1");                              // 开局白送两样，第三样才算添置
+  if (g.seal === "xi") medal("yuxi");                                // 玉玺那一方印
+  if (g.own.length >= Object.keys(SEALS).length + Object.keys(PAPERS).length) medal("full");
 }
 /* 今天头一回批折：结算连批天数，返回该给的加赏 */
 function touchDay(){
@@ -1829,18 +1901,19 @@ function scoreTick(it, on, el, mid){
     if (bonus) toast(`勤政第 ${g.run} 日，加征 ${bonus} 两`);
     if (mid) sayOnce(mid, bonus ? 2000 : 0);      // 今日头一回派到这个部，他出来应一声
     if (g.cnt === 1) medal("first");
-    if (g.cnt >= 100) medal("c100");
-    if (g.tn >= 20) medal("d20");
-    const h = new Date().getHours();
+    /* 只有「批下这一件的当口」才知道的，搁这儿；其余按状态判的都在 sweep 里 */
+    const now = new Date(), h = now.getHours();
     if (h >= 0 && h < 5) medal("night");
-    if (g.ag >= 500) medal("rich");
-    if (MINISTRY.every(m => g.mi[m.id].d)) medal("six");
+    if (h >= 5 && h < 7) medal("mao");                       // 卯时，五更待漏
+    if (now.getMonth() === 0 && now.getDate() === 1) medal("yuan");
+    sweep();
   } else {
     if (!it.p) return;
     const paid = typeof it.p === "number" ? it.p : 2;   // 老存档里 it.p 是个 1 的记号
     delete it.p; g.cnt = Math.max(0, (g.cnt || 0) - 1); g.tn = Math.max(0, (g.tn || 0) - 1);
     earn(-paid, el);
     if (mid) bump(mid, -2, -1);
+    sweep();                                      // 撤到欠出亏空来，那也是一则秘录
   }
 }
 
@@ -1877,7 +1950,7 @@ function decay(){
 }
 function scoreNote(it, has){
   const g = G();
-  if (has && !it.pn){ it.pn = 1; g.nc = (g.nc || 0) + 1; earn(1); if (g.nc >= 10) medal("note10"); }
+  if (has && !it.pn){ it.pn = 1; g.nc = (g.nc || 0) + 1; earn(1); sweep(); }
 }
 
 /* 开局补发：这套东西是后加的，此前批过的件不能白批 */
@@ -2041,7 +2114,9 @@ function paintShop(){
   $("#ihPaper").innerHTML = Object.entries(PAPERS).map(([k,v]) => goodHTML(k,v,"paper",g)).join("");
   $("#ihMedN").textContent = g.med.length + "/" + MEDALS.length;   // 页签上带个数，不点进去也知道挣了几件
   $("#ihMed").innerHTML = MEDALS.map(m => { const got = g.med.includes(m.id);
-    return `<span class="med${got?" got":""}"><b>${m.n}</b><i class="mp">${
+    // 彩蛋没挣到之前，名字、条目、赏格一律不写 —— 写了赏格就能倒推是难是易
+    if (m.x && !got) return `<span class="med hid"><b>？</b><i class="mp">？ 两</i><small>秘而不宣</small></span>`;
+    return `<span class="med${got?" got":""}${m.x?" egg":""}"><b>${m.n}</b><i class="mp">${
       got ? "已入 " + m.p : m.p} 两</i><small>${m.d}</small></span>`; }).join("");
 }
 /* 朝廷 / 朝纲 / 治绩 / 内库分四页，省得一长条摊到底 */
@@ -2080,6 +2155,7 @@ mask6.addEventListener("click", async e => {
     if (!ok) return;
     if (g.ag < 60) return toast("库银不够了");
     g.ag -= 60; st.l = Math.max(st.l, 55); st.q = 0;
+    medal("keep1");
     punch(b.closest(".mini"), "big");
     toast(`赐银六十两慰留${m.n}尚书`);
     speak(m.id, "k", 1400);
@@ -2122,6 +2198,7 @@ mask6.addEventListener("click", async e => {
     toast(`申饬${m.n}，办事是快了，人心凉了几分`);
     speak(m.id, "s", 1400);
   }
+  sweep();                                        // 效率忠诚满百、换到第三任、三部同空，都在这儿收
   paintPurse(); paintShop(); save(true);
 });
 
@@ -2150,6 +2227,7 @@ mask6.addEventListener("click", async e => {
     toast(`内务府已备下「${v.n}」`);
   }
   if (kind === "seal") g.seal = k; else g.paper = k;
+  sweep();                                        // 添置、置齐、用上玉玺，各算一件治绩
   paintPurse(); paintShop(); save(true);
   if (kind === "seal") render();                  // 印章换了，每一条的印都要重画
 });
@@ -2238,6 +2316,7 @@ async function syncPull(auto){
     if (!cur){ empty = true; }
     else {
       mergeData(JSON.parse(b64d(cur.content)));
+      medal("sync1");                                      // 两处通成一回，也是一件治绩
       SY.sha = cur.sha; SY.last = Date.now(); saveSY();
       try { localStorage.setItem(KEY, JSON.stringify(D)); } catch(e){}
       render();
@@ -2260,6 +2339,10 @@ async function syncPush(auto){
       mergeData(JSON.parse(b64d(cur.content)));
       try { localStorage.setItem(KEY, JSON.stringify(D)); } catch(e){}
       render();
+    }
+    if (!G().med.includes("sync1")){                      // 记在送出之前，云上那份就带着它
+      medal("sync1");
+      try { localStorage.setItem(KEY, JSON.stringify(D)); } catch(e){}
     }
     const res = await ghPut(JSON.stringify(D), cur ? cur.sha : null);
     SY.sha = res.content.sha; SY.last = Date.now(); saveSY();
@@ -2321,6 +2404,8 @@ if (!D.lists.find(l => l.id === D.cur)) D.cur = D.lists[0].id;
 G();                                             // 老存档补上国库六部那一摊
 backpay();
 decay();                                         // 结算这些天的荒疏
+// 治绩是一批批加出来的：进门补一遍，早就够格的老账不至于白挣
+setTimeout(sweep, 1400);
 paintPurse();
 render();
 
