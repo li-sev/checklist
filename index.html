@@ -243,6 +243,22 @@
   body.mt-wu {padding:28px 28px calc(34px + env(safe-area-inset-bottom))}
   body.mt-yun{padding:52px 26px calc(52px + env(safe-area-inset-bottom))}
 
+  /* 遮片：撑开内边距只管住「不滚的时候」，一滚起来正文照样从 fixed 的框底下钻过去 ——
+     抬头那两行滚到顶上、末尾那几行滚到底下，就骑在框线上糊成一团。
+     所以在框和正文中间垫一层不透明的，正文滚到框那儿就没了，框才算写死。
+     拿 border 画：只有边上一圈是实的，当中是空的（transparent 不是 var(--bg)，
+     写成背景色就把整页盖住了）。pointer-events:none，不挡点击。
+     z-index 1 —— 卡在正文（auto）和装裱（2）中间。
+     再往上的浮层（侧栏 30、弹窗 50 起、菜单 95）都在遮片上头，照常整个露出来。
+     宽度按各自那道框「实心到哪儿」算，只补外头没盖住的那一圈：
+       回纹边  外框从 5px 起，5px 以内是空的 → 补 5
+       云纹角  就一道 6px 处的细金线，外头全空 → 补 6
+       乌木框  inset 0 起 14px 实心木头，本来就不透光 → 不用补 */
+  #matte{position:fixed;inset:0;z-index:1;pointer-events:none;display:none;
+    background:transparent;border:0 solid var(--bg)}
+  body.mt-hui #matte{display:block;border-width:5px}
+  body.mt-yun #matte{display:block;border-width:6px}
+
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   body{
     /* 默认这张纹（竖界行）必须声明在 body 上，不能写在 :root ——
@@ -807,6 +823,7 @@
 </head>
 <body>
 <i id="fleck"></i>
+<i id="matte"></i>
 <div class="pagehead">
   <div class="ttl">奏事处</div>
   <div class="sub">朱笔一点，此事便算办了</div>
@@ -1118,7 +1135,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v39" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v40" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
