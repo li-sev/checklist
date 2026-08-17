@@ -313,6 +313,8 @@
   .purse.hlp .hj.h{color:var(--gold)}         /* 黄道日 */
   .purse.hlp .hj.b{color:var(--dim)}          /* 黑道日 */
   .purse.hlp .tm{background:var(--accent);color:var(--onacc);font-weight:700;letter-spacing:2px}
+  .purse.bkp{margin-left:7px}
+  .purse.bkp .bk{color:var(--accent);font-weight:700;letter-spacing:3px}
   /* 加赏用金字，不铺底色 —— 铺了得另配一个前景色，深浅两套纸都不好配 */
   .purse.hlp .jx{color:var(--gold);font-weight:700;letter-spacing:1px;
     border-left:1px solid var(--line)}
@@ -386,6 +388,58 @@
   .qb .qj{border-left:3px solid var(--accent);padding:8px 12px;margin-bottom:10px;
     font-size:13px;line-height:1.95;letter-spacing:.5px;color:var(--ink);background:var(--card)}
   .qb .qday{font-size:11.5px;line-height:1.8;color:var(--dim);letter-spacing:.5px;margin:0 0 4px}
+
+  /* ── 问卜：两条路的岔口 ── */
+  .bkb .bkc{display:block;width:100%;text-align:left;cursor:pointer;margin-bottom:10px;
+    border:1px solid var(--line);border-radius:6px;padding:12px 14px;background:var(--card);
+    font:inherit;color:var(--ink)}
+  .bkb .bkc:hover{border-color:var(--accent)}
+  .bkb .bkc b{display:block;font-size:18px;letter-spacing:5px;color:var(--accent);margin-bottom:4px}
+  .bkb .bkc span{font-size:12.5px;line-height:1.8;letter-spacing:.5px;color:var(--dim)}
+  .bkb .bkn{font-size:11.5px;line-height:1.8;color:var(--dim);letter-spacing:.5px;margin:2px 0 0}
+
+  /* ── 起卦 ── */
+  /* 三枚铜钱。方孔要透出对话框的底色，所以填 --bg，不是白 */
+  .gb .gcs{display:flex;justify-content:center;gap:16px;margin:12px 0 8px;cursor:pointer}
+  .gb .gcs .cn{display:block;width:56px;text-align:center}
+  .gb .gcs svg{display:block;width:100%;height:auto}
+  .gb .gcs .hole{fill:var(--bg)}
+  .gb .gcs .zi circle{fill:#7a5410}
+  .gb .gcs .cn.bei .zi{display:none}          /* 背面素的，无字 */
+  .gb .gcs .cn em{display:block;font-style:normal;margin-top:3px;
+    font-size:12px;letter-spacing:2px;color:var(--dim)}
+  .gb .gcs.sp .cn:nth-child(1) svg{animation:gflip .5s ease-in-out}
+  .gb .gcs.sp .cn:nth-child(2) svg{animation:gflip .5s ease-in-out .07s}
+  .gb .gcs.sp .cn:nth-child(3) svg{animation:gflip .5s ease-in-out .14s}
+  @keyframes gflip{0%{transform:rotateY(0) translateY(0)}
+    50%{transform:rotateY(540deg) translateY(-14px)}100%{transform:rotateY(1080deg) translateY(0)}}
+  .gb .ghint{text-align:center;font-size:13px;letter-spacing:2px;color:var(--dim);margin:0 0 12px}
+  /* 六爻自上而下摆：上爻在最上头，初爻垫底，跟画卦的规矩一致 */
+  .gb .gls{margin-bottom:14px}
+  .gb .ln{display:flex;align-items:center;gap:10px;height:22px}
+  .gb .ln .pos{width:38px;font-size:11.5px;letter-spacing:1px;color:var(--dim);text-align:right}
+  .gb .ln .bar{flex:1;max-width:190px;height:9px;display:flex;gap:9px}
+  .gb .ln .bar u{flex:1;background:var(--ink);border-radius:1px}
+  .gb .ln.non .bar u{background:none;border:1px dashed var(--line);border-radius:1px}
+  .gb .ln .mk{font-size:11.5px;letter-spacing:1px;color:var(--dim)}
+  .gb .ln.mv .bar u{background:var(--zhu)}    /* 动爻描朱，一眼看得出哪几爻在变 */
+  .gb .ln.mv .mk{color:var(--zhu);font-weight:700}
+  /* 卦头一行：卦象、卦名、第几卦 */
+  .gb .gt{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
+    border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:10px}
+  /* 上下两个三画卦叠起来才是六画的卦象，所以竖排、行高压到贴住 */
+  .gb .gt .gsym{display:inline-flex;flex-direction:column;font-size:20px;line-height:.78;
+    color:var(--accent);align-self:center}
+  .gb .gt .gsym i{font-style:normal}
+  .gb .gt b{font-size:21px;letter-spacing:4px;color:var(--ink)}
+  .gb .gt .gno{margin-left:auto;font-size:12px;letter-spacing:1px;color:var(--dim)}
+  .gb .gt.zhi{margin-top:16px;border-top:1px dashed var(--line);border-bottom:none;
+    padding:14px 0 0;margin-bottom:10px}
+  .gb .gci{font-size:14.5px;line-height:2;letter-spacing:2px;color:var(--ink);margin:0 0 8px}
+  .gb .gj{border-left:3px solid var(--accent);padding:8px 12px;
+    font-size:13px;line-height:1.95;letter-spacing:.5px;color:var(--ink);background:var(--card)}
+  .gb .gmv{font-size:12.5px;line-height:1.85;letter-spacing:1px;color:var(--zhu);margin:10px 0 0}
+  .gb .gnote{font-size:11.5px;line-height:1.8;color:var(--dim);letter-spacing:.5px;margin:14px 0 0}
 
   /* 打勾时从印上飘起来的赏银 */
   .coin{position:fixed;z-index:95;pointer-events:none;font-weight:700;font-size:15px;letter-spacing:1px;
@@ -929,6 +983,10 @@
     <span class="hj" id="hlChipJ"></span>
     <span class="jx" id="hlChipX" hidden></span>
   </button>
+  <!-- 问卜跟日子分家：宪书是查今天，问卜是问自己的事，本就不是一回事 -->
+  <button class="purse bkp" id="bkBtn" title="问卜：求签、起卦">
+    <span class="bk">问卜</span>
+  </button>
 </div>
 <div class="app">
 <aside id="side"></aside>
@@ -1159,7 +1217,6 @@
   <div class="chao" id="hlChao"></div>
   <p class="src" id="hlSrc"></p>
   <div class="btns">
-    <button class="btn" id="hlQian">求签</button>
     <button class="btn pri" id="hlClose">合上</button>
   </div>
 </div></div>
@@ -1195,6 +1252,45 @@
   </div>
   <div class="btns">
     <button class="btn pri" id="qClose">收签</button>
+  </div>
+</div></div>
+
+<!-- 问卜：底下两桩，各走各的门 -->
+<div class="mask" id="mask10"><div class="dlg sheet bkb">
+  <h2>问卜</h2>
+  <button class="bkc" id="bkQ"><b>求签</b><span>三十六签，一日一支。心里搁着一件事，摇一支看个由头</span></button>
+  <button class="bkc" id="bkG"><b>起卦</b><span>三枚铜钱掷六回，得本卦、动爻与之卦。要起几卦起几卦，不限</span></button>
+  <p class="bkn">两样都不沾银子 —— 一沾上，问卜就成了刷次数。</p>
+  <div class="btns">
+    <button class="btn pri" id="bkClose">退下</button>
+  </div>
+</div></div>
+
+<!-- 起卦：三枚铜钱掷六回，自下而上成卦。背作三、字作二，六老阴七少阳八少阴九老阳 -->
+<div class="mask" id="mask11"><div class="dlg sheet gb">
+  <h2>起卦</h2>
+  <div class="gcs" id="gCoins">
+    <span class="cn"><svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="#c8952a"/><circle cx="32" cy="32" r="25" fill="none" stroke="#a3761d" stroke-width="2"/><rect class="hole" x="23" y="23" width="18" height="18" rx="2"/><g class="zi"><circle cx="32" cy="13" r="2.8"/><circle cx="32" cy="51" r="2.8"/><circle cx="13" cy="32" r="2.8"/><circle cx="51" cy="32" r="2.8"/></g></svg><em></em></span>
+    <span class="cn"><svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="#c8952a"/><circle cx="32" cy="32" r="25" fill="none" stroke="#a3761d" stroke-width="2"/><rect class="hole" x="23" y="23" width="18" height="18" rx="2"/><g class="zi"><circle cx="32" cy="13" r="2.8"/><circle cx="32" cy="51" r="2.8"/><circle cx="13" cy="32" r="2.8"/><circle cx="51" cy="32" r="2.8"/></g></svg><em></em></span>
+    <span class="cn"><svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="#c8952a"/><circle cx="32" cy="32" r="25" fill="none" stroke="#a3761d" stroke-width="2"/><rect class="hole" x="23" y="23" width="18" height="18" rx="2"/><g class="zi"><circle cx="32" cy="13" r="2.8"/><circle cx="32" cy="51" r="2.8"/><circle cx="13" cy="32" r="2.8"/><circle cx="51" cy="32" r="2.8"/></g></svg><em></em></span>
+  </div>
+  <p class="ghint" id="gHint"></p>
+  <div class="gls" id="gLines"></div>
+  <div id="gRes" hidden>
+    <div class="gt"><span class="gsym" id="gSym"></span><b id="gName"></b><span class="gno" id="gNo"></span></div>
+    <p class="gci" id="gCi"></p>
+    <div class="gj" id="gJie"></div>
+    <p class="gmv" id="gMove"></p>
+    <div id="gZhi" hidden>
+      <div class="gt zhi"><span class="gsym" id="gzSym"></span><b id="gzName"></b><span class="gno" id="gzNo"></span></div>
+      <p class="gci" id="gzCi"></p>
+      <div class="gj" id="gzJie"></div>
+    </div>
+    <p class="gnote">本卦是眼下，之卦是动爻变过之后的去处；六爻皆静便没有之卦。装卦、纳甲、六亲这些不在这儿做，这只管摇钱与成卦。</p>
+  </div>
+  <div class="btns">
+    <button class="btn" id="gAgain">重起一卦</button>
+    <button class="btn pri" id="gClose">收卦</button>
   </div>
 </div></div>
 
@@ -1285,7 +1381,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v48" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v49" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -3107,7 +3203,6 @@ function openQ(){
   if (i >= 0) paintQ(i);
   mask9.classList.add("on");
 }
-$("#hlQian").onclick = () => { mask8.classList.remove("on"); openQ(); };
 $("#qTube").onclick = () => {
   const t = $("#qTube");
   if (t.classList.contains("sh")) return;      // 正摇着，别催
@@ -3117,6 +3212,172 @@ $("#qTube").onclick = () => {
 };
 $("#qClose").onclick = () => mask9.classList.remove("on");
 mask9.addEventListener("click", e => { if (e.target === mask9) mask9.classList.remove("on"); });
+
+/* ── 问卜：求签和起卦的岔口 ── */
+$("#bkBtn").onclick = () => mask10.classList.add("on");
+$("#bkClose").onclick = () => mask10.classList.remove("on");
+mask10.addEventListener("click", e => { if (e.target === mask10) mask10.classList.remove("on"); });
+$("#bkQ").onclick = () => { mask10.classList.remove("on"); openQ(); };
+$("#bkG").onclick = () => { mask10.classList.remove("on"); gReset(); mask11.classList.add("on"); };
+
+/* ── 起卦：三枚铜钱掷六回 ──
+   背作三、字作二。三枚一掷：六是老阴（要变阳）、七少阳、八少阴、九是老阳（要变阴）。
+   老的各占八分之一、少的各占八分之三 —— 这就是三钱法本来的概率，一分没动过。
+   跟求签一样不沾银子，也不记治绩：卦是随问随起的，一挂上赏格就成了摇奖。 */
+const TRI = ["坤", "震", "坎", "兑", "艮", "离", "巽", "乾"];   // 下标 = 三爻自下而上作二进制，阳一阴零
+const TRISYM = {乾:"☰", 兑:"☱", 离:"☲", 震:"☳", 巽:"☴", 坎:"☵", 艮:"☶", 坤:"☷"};
+/* 六十四卦。外层是上卦，内层是下卦；每格 [卦序, 卦名, 卦辞, 白话]。
+   卦辞照旧文录，白话是我写的一句 —— 只说这一卦的势头，不解字。 */
+const GUA = {
+  乾:{
+    乾:[1,"乾为天","元亨利贞。","一路向上的势头，走正道就通。到了顶上别还想再进一步。"],
+    兑:[10,"天泽履","履虎尾，不咥人，亨。","在危险边上走路。规矩守住就没事，一放肆就出事。"],
+    离:[13,"天火同人","同人于野，亨。利涉大川。","找同路的人。心要放宽，别只在自家小圈子里挑。"],
+    震:[25,"天雷无妄","元亨利贞。其匪正有眚。","别乱来，也别多想。守着本分，意外反倒不沾身。"],
+    巽:[44,"天风姤","女壮，勿用取女。","撞上了不该久留的人或事。开头看着好，别缠上去。"],
+    坎:[6,"天水讼","有孚窒惕，中吉，终凶。","起争执了。见好就收还行，斗到底一定两败。"],
+    艮:[33,"天山遁","亨，小利贞。","该退了。退不是输，是保全 —— 走晚了就走不掉。"],
+    坤:[12,"天地否","否之匪人，不利君子贞。","上下不通，说什么都传不到。这时候收着，别硬递。"]},
+  兑:{
+    乾:[43,"泽天夬","扬于王庭，孚号有厉。","到了要决断、要摊牌的时候。话说明白，但别蛮干。"],
+    兑:[58,"兑为泽","亨，利贞。","说话、谈笑、和悦。宜沟通，只别剩下嘴上痛快。"],
+    离:[49,"泽火革","己日乃孚，元亨利贞，悔亡。","该变了。等时机到了再动手，早了没人服。"],
+    震:[17,"泽雷随","元亨利贞，无咎。","跟着走。这会儿顺着大势，比自己较劲划算。"],
+    巽:[28,"泽风大过","栋桡。利有攸往，亨。","担子超过承受力了。梁在弯 —— 要么减载，要么换法子。"],
+    坎:[47,"泽水困","亨，贞，大人吉，无咎。有言不信。","被困住，说什么都没人信。少辩解，熬过去。"],
+    艮:[31,"泽山咸","亨，利贞。取女吉。","感应上了，两下里都有回响。宜谈交情、谈合作。"],
+    坤:[45,"泽地萃","亨。王假有庙，利见大人。","人往一处聚。正是办大事的时候，别单干。"]},
+  离:{
+    乾:[14,"火天大有","元亨。","手上东西多、势头也旺。守得住比拿得多要紧。"],
+    兑:[38,"火泽睽","小事吉。","两边看不对眼。大事谈不拢，小事还合得来。"],
+    离:[30,"离为火","利贞，亨。畜牝牛吉。","明亮，但要依附。光靠自己烧不久，得附在实的东西上。"],
+    震:[21,"火雷噬嗑","亨。利用狱。","中间卡着东西。得咬断、得动真格，和稀泥过不去。"],
+    巽:[50,"火风鼎","元吉，亨。","立新。旧的换掉，摆上新格局，是稳当的成器之象。"],
+    坎:[64,"火水未济","亨。小狐汔济，濡其尾。","还差最后一步。这时候最忌大意，尾巴一湿前功尽弃。"],
+    艮:[56,"火山旅","小亨，旅贞吉。","在外头、没根基。低调少树敌，能有小成。"],
+    坤:[35,"火地晋","康侯用锡马蕃庶，昼日三接。","明面上受赏识，正往上走。趁着亮把事定下来。"]},
+  震:{
+    乾:[34,"雷天大壮","利贞。","劲很足。正因为足，最容易撞南墙 —— 力气要使在正处。"],
+    兑:[54,"雷泽归妹","征凶，无攸利。","位置不正、名分不顺。这么进去，往后处处别扭。"],
+    离:[55,"雷火丰","亨，王假之。勿忧，宜日中。","到最盛了。日中则昃 —— 趁着亮赶紧办。"],
+    震:[51,"震为雷","亨。震来虩虩，笑言哑哑。","一惊。响得吓人，实际未必有损，稳住就过去了。"],
+    巽:[32,"雷风恒","亨，无咎，利贞。","讲长久。守住常道，别老改主意。"],
+    坎:[40,"雷水解","利西南。无所往，其来复吉。","结开了。趁松的时候赶紧了断，别再拖。"],
+    艮:[62,"雷山小过","亨，利贞。可小事，不可大事。","可以稍微过一点，但只限小事。大事别越格。"],
+    坤:[16,"雷地豫","利建侯行师。","顺势而动，气氛正好。只别乐过了头忘了正事。"]},
+  巽:{
+    乾:[9,"风天小畜","亨。密云不雨，自我西郊。","攒着还不到量。压得住一时，成不了大事，先积。"],
+    兑:[61,"风泽中孚","豚鱼吉，利涉大川。","诚。心里是实的，连最难打动的都能打动。"],
+    离:[37,"风火家人","利女贞。","先治内。里头理顺了、各归各位，外头自然稳。"],
+    震:[42,"风雷益","利有攸往，利涉大川。","做加法。这会儿投进去有回报，动比不动好。"],
+    巽:[57,"巽为风","小亨，利有攸往，利见大人。","顺着缝进去。柔着来办得成，硬顶不行。"],
+    坎:[59,"风水涣","亨。王假有庙，利涉大川。","人心或局面在散。得找个由头，把它重新收拢。"],
+    艮:[53,"风山渐","女归吉，利贞。","循序渐进。一级一级来，跳级就散架。"],
+    坤:[20,"风地观","盥而不荐，有孚颙若。","该看的时候。先观察、也先被人看，动手不急。"]},
+  坎:{
+    乾:[5,"水天需","有孚，光亨，贞吉，利涉大川。","得等。条件没齐硬上会栽，等着不算浪费。"],
+    兑:[60,"水泽节","亨。苦节不可贞。","要节制。定个限度是好的，苦到过了头就守不住。"],
+    离:[63,"水火既济","亨小，利贞，初吉终乱。","事已经成了。成了才是最容易松劲、最容易出乱子的时候。"],
+    震:[3,"水雷屯","元亨利贞，勿用有攸往，利建侯。","万事开头难，草创时乱是正常的。别急着远行，先找帮手。"],
+    巽:[48,"水风井","改邑不改井。无丧无得。","井还是那口井。根本的别动，该淘的是里头的淤。"],
+    坎:[29,"坎为水","习坎，有孚，维心亨。","一个坑接一个坑。心不能乱，稳住才出得去。"],
+    艮:[39,"水山蹇","利西南，不利东北。利见大人。","前头是难走的路。别硬闯 —— 绕道，或者找人。"],
+    坤:[8,"水地比","吉。原筮元永贞，无咎。","该结伴。挑对人靠拢，晚了位置就没了。"]},
+  艮:{
+    乾:[26,"山天大畜","利贞。不家食吉，利涉大川。","蓄了大力气。这时候该拿出去用，不是接着囤。"],
+    兑:[41,"山泽损","有孚，元吉，无咎。","做减法。舍掉一些反倒得着，肯损才有益。"],
+    离:[22,"山火贲","亨。小利有攸往。","修门面。装点是有用的，只别把装点当成内容。"],
+    震:[27,"山雷颐","贞吉。观颐，自求口实。","讲养。看你拿什么养自己，也看你养的是谁。"],
+    巽:[18,"山风蛊","元亨，利涉大川。","有旧疾、有烂摊子。得下手整治，拖只会更烂。"],
+    坎:[4,"山水蒙","亨。匪我求童蒙，童蒙求我。","还没开窍。该请教就请教，但得你自己先开口。"],
+    艮:[52,"艮为山","艮其背，不获其身。","该停。停得住是本事，停在该停的地方更是本事。"],
+    坤:[23,"山地剥","不利有攸往。","底下正在烂。这时候什么都别新做，先保住根。"]},
+  坤:{
+    乾:[11,"地天泰","小往大来，吉亨。","上下通气，正是好时候。趁着通把事办了。"],
+    兑:[19,"地泽临","元亨利贞。至于八月有凶。","势头刚上来，办事得趁早。好景不长久。"],
+    离:[36,"地火明夷","利艰贞。","光被埋住了。这时候藏拙、装糊涂是对的。"],
+    震:[24,"地雷复","亨。出入无疾，反复其道，七日来复。","一阳回来了。跌到底开始转，慢慢来。"],
+    巽:[46,"地风升","元亨，用见大人，勿恤。","一步一步往上长。慢是慢，方向是对的。"],
+    坎:[7,"地水师","贞丈人吉，无咎。","要动众人。得有个说了算的，章法要严，散兵游勇办不成。"],
+    艮:[15,"地山谦","亨，君子有终。","有本事还肯低头。六十四卦里只此一卦六爻皆吉 —— 别抢功。"],
+    坤:[2,"坤为地","元亨，利牝马之贞。","承载、跟随的位置。此时不该出头，把底下托稳就是本事。"]},
+};
+const YAOX = ["初", "二", "三", "四", "五", "上"];
+// 阳爻称九、阴爻称六；头一爻叫初，末一爻叫上，中间四爻报数
+function yaoName(i, yang){
+  const n = yang ? "九" : "六";
+  return i === 0 ? "初" + n : i === 5 ? "上" + n : n + YAOX[i];
+}
+// l 是六个 0/1，自下而上。下三爻成下卦、上三爻成上卦，卦名照「上卦在前」读
+function guaOf(l){
+  const t = s => l[s] + l[s + 1] * 2 + l[s + 2] * 4;
+  const up = TRI[t(3)], lo = TRI[t(0)];
+  return {g: GUA[up][lo], sym: [TRISYM[up], TRISYM[lo]]};
+}
+let gYao = [];                                  // 已掷出的爻，自下而上，每项 {v, c}
+function paintCoins(c){
+  $$("#gCoins .cn").forEach((s, i) => {
+    const bei = !!c && c[i] === 3;
+    s.classList.toggle("bei", bei);
+    s.querySelector("em").textContent = c ? (bei ? "背" : "字") : "—";
+  });
+}
+function paintLines(){
+  let h = "";
+  for (let i = 5; i >= 0; i--){                 // 自上而下画，上爻搁最上头，初爻垫底
+    const y = gYao[i];
+    if (!y){ h += `<div class="ln non"><span class="pos"></span><span class="bar"><u></u></span><span class="mk"></span></div>`; continue; }
+    const yang = y.v === 7 || y.v === 9, mv = y.v === 6 || y.v === 9;
+    h += `<div class="ln${mv ? " mv" : ""}"><span class="pos">${yaoName(i, yang)}</span>` +
+         `<span class="bar">${yang ? "<u></u>" : "<u></u><u></u>"}</span>` +
+         `<span class="mk">${y.v}　${mv ? (yang ? "老阳 ○ 动" : "老阴 × 动") : (yang ? "少阳" : "少阴")}</span></div>`;
+  }
+  $("#gLines").innerHTML = h;
+  $("#gHint").textContent = gYao.length < 6
+    ? `点铜钱，掷第 ${YAOX[gYao.length] === "初" ? "一" : ["一","二","三","四","五","六"][gYao.length]} 爻`
+    : "六爻已足";
+}
+function fillGua(p, x){
+  const [no, name, ci, jie] = x.g;
+  $("#" + p + "Sym").innerHTML = x.sym.map(s => `<i>${s}</i>`).join("");
+  $("#" + p + "Name").textContent = name;
+  $("#" + p + "No").textContent = `第 ${no} 卦`;
+  $("#" + p + "Ci").textContent = ci;
+  $("#" + p + "Jie").textContent = jie;
+}
+function gFinish(){
+  const l = gYao.map(y => y.v === 7 || y.v === 9 ? 1 : 0);
+  fillGua("g", guaOf(l));
+  const mv = gYao.map((y, i) => y.v === 6 || y.v === 9 ? i : -1).filter(i => i >= 0);
+  $("#gMove").textContent = mv.length
+    ? "动爻：" + mv.map(i => yaoName(i, l[i] === 1)).join("、")
+    : "六爻皆静，无动爻 —— 只看本卦。";
+  // 动爻翻个面就是之卦；一爻不动便没有之卦，那一段整块不出现
+  if (mv.length){
+    const z = l.slice();
+    mv.forEach(i => z[i] = z[i] ? 0 : 1);
+    fillGua("gz", guaOf(z));
+  }
+  $("#gZhi").hidden = !mv.length;
+  $("#gRes").hidden = false;
+}
+function gReset(){ gYao = []; $("#gRes").hidden = true; paintCoins(null); paintLines(); }
+$("#gCoins").onclick = () => {
+  const cs = $("#gCoins");
+  if (cs.classList.contains("sp") || gYao.length >= 6) return;   // 正翻着，或者六爻已满
+  const c = [0, 0, 0].map(() => Math.random() < .5 ? 3 : 2);     // 背三字二
+  cs.classList.add("sp");
+  setTimeout(() => {
+    cs.classList.remove("sp");
+    paintCoins(c);
+    gYao.push({v: c[0] + c[1] + c[2], c});
+    paintLines();
+    if (gYao.length === 6) gFinish();
+  }, 660);
+};
+$("#gAgain").onclick = gReset;
+$("#gClose").onclick = () => mask11.classList.remove("on");
+mask11.addEventListener("click", e => { if (e.target === mask11) mask11.classList.remove("on"); });
 
 $("#hlBtn").onclick = openHL;
 $("#hlClose").onclick = () => mask8.classList.remove("on");
