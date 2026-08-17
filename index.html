@@ -686,8 +686,10 @@
     padding:6px 4px;border-radius:5px}
   .gh .name:hover{background:var(--soft)}
   .gh .tw{color:var(--accent);font-size:12px;flex:none}
-  .gh .gt{font-size:17px;font-weight:700;letter-spacing:1px;overflow:hidden;
-    text-overflow:ellipsis;white-space:nowrap}
+  /* 卷名太长就折行，不再用省略号把后半句吃掉 —— 手机上尤其吃得狠。
+     overflow-wrap:anywhere 是防身的：卷名里粘条长网址，不许它把卡片撑爆 */
+  .gh .gt{font-size:17px;font-weight:700;letter-spacing:1px;line-height:1.45;
+    min-width:0;overflow-wrap:anywhere}
   .gh .gc{font:13px/1 ui-monospace,Consolas,monospace;color:var(--dim);flex:none;margin-left:auto}
   .gall{flex:none;font-size:12px;letter-spacing:2px;color:var(--accent);border:1px solid var(--accent);
     border-radius:3px;padding:4px 8px;opacity:.72;line-height:1}
@@ -858,6 +860,11 @@
     .dlg{border-radius:6px 6px 0 0;max-height:92vh;align-self:flex-end}
     .mask{padding:0;align-items:flex-end}
     li .dots{opacity:.65}
+    /* 手机上一行摆不下五样东西：卷名独占头一行，部院、全批、⋮ 落到第二行。
+       不这么分，卷名只剩几十像素，折出来是一条竖着的字条 */
+    .gh{flex-wrap:wrap;padding:4px 8px 6px}
+    .gh .name{flex:1 1 100%}
+    .gh .dots{margin-left:auto}
   }
 </style>
 </head>
@@ -1197,7 +1204,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v45" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v46" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
