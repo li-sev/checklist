@@ -355,20 +355,18 @@
   .hlb .src{font-size:11.5px;line-height:1.8;color:var(--dim);letter-spacing:.5px;margin:0 0 4px}
 
   /* ── 求签 ── */
-  /* 签筒：一只圆角筒子，上头戳出三根签。全用边框和底色画，不引外头的图 */
-  .qb .qt{position:relative;width:74px;height:92px;margin:16px auto 12px;cursor:pointer;
-    border:2px solid var(--line);border-radius:8px 8px 12px 12px;background:var(--card);
-    box-shadow:inset 0 -14px 18px -14px rgba(0,0,0,.28)}
-  .qb .qt::after{content:"";position:absolute;left:6px;right:6px;top:9px;height:1px;background:var(--line)}
-  .qb .qt i{position:absolute;bottom:62px;width:7px;border-radius:2px 2px 0 0;
-    border:1px solid var(--line);background:var(--bg)}
-  .qb .qt i:nth-child(1){left:16px;height:30px}
-  .qb .qt i:nth-child(2){left:33px;height:42px}
-  .qb .qt i:nth-child(3){left:50px;height:24px}
-  .qb .qt:hover{border-color:var(--accent)}
+  /* 签筒：红筒金箍，筒口探出五根签，签头包红。整只是内联 svg 画的，不引外头的图。
+     颜色写死不跟纸色走 —— 万年红那档会把 --zhu 顶成白的，跟着走就成了一只白筒子 */
+  .qb .qt{width:152px;margin:14px auto 10px;cursor:pointer;
+    transform-origin:50% 86%;transition:transform .18s}
+  .qb .qt:hover{transform:translateY(-3px)}
+  .qb .qt svg{display:block;width:100%;height:auto}
   .qb .qt.sh{animation:qsh .62s ease-in-out 2}
+  /* 筒里的签另抖一轮，快一倍 —— 整只一块儿转看着是块木牌，签自己晃才像在摇 */
+  .qb .qt.sh .qs{transform-box:fill-box;transform-origin:50% 100%;animation:qst .31s ease-in-out 4}
   @keyframes qsh{0%,100%{transform:rotate(0) translateY(0)}
-    25%{transform:rotate(-9deg) translateY(-4px)}75%{transform:rotate(9deg) translateY(-4px)}}
+    25%{transform:rotate(-9deg) translateY(-5px)}75%{transform:rotate(9deg) translateY(-5px)}}
+  @keyframes qst{0%,100%{transform:rotate(0)}25%{transform:rotate(4deg)}75%{transform:rotate(-4deg)}}
   .qb .qhint{text-align:center;font-size:13px;letter-spacing:3px;color:var(--dim);margin:0 0 6px}
   /* 签头一行：签号、签名、等第 */
   .qb .qh{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
@@ -1171,7 +1169,23 @@
   <h2>求签</h2>
   <div id="qPre">
     <p class="qhint">心里想着一件事，摇一摇</p>
-    <div class="qt" id="qTube"><i></i><i></i><i></i></div>
+    <!-- 签筒。签在前、筒在后盖住签脚，所以签先画；每根签是「一条竹片 + 一块暗面 + 一个红签头」 -->
+    <div class="qt" id="qTube"><svg viewBox="0 0 200 230">
+      <g class="qs">
+        <g transform="translate(100 190) rotate(-30)"><rect x="-8" y="-112" width="16" height="112" fill="#e2c49a"/><rect x="2" y="-112" width="6" height="112" fill="#cfae82"/><path d="M-8 -112h16v-12l-8-14-8 14z" fill="#c8392b"/></g>
+        <g transform="translate(100 190) rotate(31)"><rect x="-8" y="-108" width="16" height="108" fill="#e2c49a"/><rect x="2" y="-108" width="6" height="108" fill="#cfae82"/><path d="M-8 -108h16v-12l-8-14-8 14z" fill="#c8392b"/></g>
+        <g transform="translate(100 190) rotate(-16)"><rect x="-8" y="-140" width="16" height="140" fill="#e2c49a"/><rect x="2" y="-140" width="6" height="140" fill="#cfae82"/><path d="M-8 -140h16v-12l-8-14-8 14z" fill="#c8392b"/></g>
+        <g transform="translate(100 190) rotate(17)"><rect x="-8" y="-136" width="16" height="136" fill="#e2c49a"/><rect x="2" y="-136" width="6" height="136" fill="#cfae82"/><path d="M-8 -136h16v-12l-8-14-8 14z" fill="#c8392b"/></g>
+        <g transform="translate(100 190) rotate(2)"><rect x="-8" y="-156" width="16" height="156" fill="#e2c49a"/><rect x="2" y="-156" width="6" height="156" fill="#cfae82"/><path d="M-8 -156h16v-12l-8-14-8 14z" fill="#c8392b"/></g>
+      </g>
+      <ellipse cx="100" cy="126" rx="54" ry="13" fill="#d9bb90"/>
+      <path d="M46 126A54 13 0 0 0 154 126V162H46Z" fill="#e8ae2a"/>
+      <path d="M46 162H154V202A9 9 0 0 1 145 211H55A9 9 0 0 1 46 202Z" fill="#c8392b"/>
+      <path d="M126 137.4A54 13 0 0 0 154 126V162H126Z" fill="#000" opacity=".09"/>
+      <path d="M126 162H154V202A9 9 0 0 1 145 211H126Z" fill="#000" opacity=".09"/>
+      <circle cx="100" cy="186" r="20" fill="#e8ae2a"/>
+      <text x="100" y="195" text-anchor="middle" font-size="26" font-weight="700" fill="#c8392b">福</text>
+    </svg></div>
   </div>
   <div id="qRes" hidden>
     <div class="qh"><span class="qno" id="qNo"></span><b id="qName"></b><span class="qg" id="qGrade"></span></div>
