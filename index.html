@@ -331,6 +331,15 @@
   .hlb .kv>span{border:1px solid var(--line);border-radius:5px;padding:5px 9px;
     font-size:12.5px;letter-spacing:1px;color:var(--ink);background:var(--card)}
   .hlb .kv>span em{font-style:normal;color:var(--dim);margin-right:5px}
+  /* 值日 / 值神：头一行是今日的，第二行小字说清这一栏本身是什么 */
+  .hlb .ex{margin-bottom:12px;border:1px solid var(--line);border-radius:6px;padding:2px 11px}
+  .hlb .ex>div{display:flex;gap:10px;padding:9px 0}
+  .hlb .ex>div+div{border-top:1px dashed var(--line)}
+  .hlb .ex .k{flex:none;font-size:12.5px;letter-spacing:2px;color:var(--dim);padding-top:2px}
+  .hlb .ex .v{flex:1;min-width:0}
+  .hlb .ex .v b{display:block;font-size:14px;letter-spacing:1px;color:var(--ink)}
+  .hlb .ex .v em{display:block;font-style:normal;font-size:11.5px;line-height:1.75;
+    letter-spacing:.5px;color:var(--dim);margin-top:3px}
   .hlb .chao{border-left:3px solid var(--accent);padding:7px 11px;margin-bottom:12px;
     font-size:13.5px;letter-spacing:1px;color:var(--ink);background:var(--card)}
   .hlb .src{font-size:11.5px;line-height:1.8;color:var(--dim);letter-spacing:.5px;margin:0 0 4px}
@@ -1093,6 +1102,7 @@
     <div class="j"><i>忌</i><span id="hlJi"></span></div>
   </div>
   <div class="kv" id="hlKv"></div>
+  <div class="ex" id="hlEx"></div>
   <div class="chao" id="hlChao"></div>
   <p class="src" id="hlSrc"></p>
   <div class="btns">
@@ -1187,7 +1197,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v41" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v42" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -2790,11 +2800,16 @@ function openHL(){
   const tm = $("#hlTerm"); tm.textContent = r.term; tm.hidden = !r.term;
   $("#hlYi").textContent = r.yi;
   $("#hlJi").textContent = r.ji;
-  $("#hlKv").innerHTML = [
-    ["公历", `${d.getFullYear()} 年 ${d.getMonth()+1} 月 ${d.getDate()} 日　星期${WK[d.getDay()]}`],
-    ["值日", r.jian + " —— " + JC_TIP[r.jian]],
-    ["值神", `${r.shen} · ${r.huang ? "黄道" : "黑道"}`],
-  ].map(([k, v]) => `<span><em>${k}</em>${esc(v)}</span>`).join("");
+  $("#hlKv").innerHTML =
+    `<span><em>公历</em>${d.getFullYear()} 年 ${d.getMonth()+1} 月 ${d.getDate()} 日　星期${WK[d.getDay()]}</span>`;
+  // 值日、值神：光甩两个名字看不懂，头一行是这一天的，第二行说清这一栏是什么
+  $("#hlEx").innerHTML = [
+    ["值日", `${r.jian}　${JC_TIP[r.jian]}`,
+     "建除十二神按日轮值，说的是这一天办事的势头。轮到交节那天原地重一遍，所以偶尔连着两日同名。"],
+    ["值神", `${r.shen} · ${r.huang ? "黄道" : "黑道"}　${SHEN_TIP[r.shen]}`,
+     "十二值神也按日轮值，六黄六黑。黄道日诸事较顺，黑道日宜守不宜攻 —— 只是这一层的说法，不必当真。"],
+  ].map(([k, a, b]) =>
+    `<div><span class="k">${k}</span><span class="v"><b>${esc(a)}</b><em>${esc(b)}</em></span></div>`).join("");
   $("#hlChao").textContent = r.chao;
   $("#hlSrc").textContent = HL_SRC;
   mask8.classList.add("on");
@@ -2804,11 +2819,14 @@ const JC_TIP = {建:"万物生发，宜起头",除:"扫旧迎新，宜清理",�
   平:"平常无奇，宜修整",定:"安定不移，宜立约",执:"执守成规，宜收束",
   破:"刚柔相冲，诸事不宜",危:"危而思安，宜谨守",成:"事事成就，诸事皆宜",
   收:"收敛聚合，宜纳不宜出",开:"开通顺达，诸事可为",闭:"闭藏坚固，宜收尾封存"};
-const HL_SRC = "节气按太阳视黄经过 15° 整数倍求得，朔按日月视黄经差归零求得，" +
-  "都在本机用 VSOP87／ELP2000 的全序列算好、按东八区取日期压成表，管 2025–2080 这 56 年。" +
-  "农历用定朔排月、无中气置闰，干支年以立春分界。" +
-  "宜忌只取建除十二神那一层（《协纪辨方书》的传统条目）—— " +
-  "市面黄历还要在上头叠几十种神煞，各家规则彼此还打架，所以这儿的宜忌比它们粗，偶尔对不上是正常的。";
+/* 十二值神各自主什么，也是点开才看得见 */
+const SHEN_TIP = {青龙:"天贵之神，主喜庆",明堂:"明辅之神，主得贵人",天刑:"主刑罚争讼",
+  朱雀:"主口舌是非",金匮:"财帛之神，主聚财",天德:"福德之神，逢凶化吉",
+  白虎:"主凶丧争斗",玉堂:"主贵人、文书顺遂",天牢:"主拘系困顿",
+  玄武:"主盗贼暗昧",司命:"主福寿，办公事吉",勾陈:"主牵连、田土纠缠"};
+/* 出处只留一句：说清「日子是算的、宜忌是粗的」这两件事就够，长了没人看 */
+const HL_SRC = "节气与朔按 VSOP87／ELP2000 精算后压成表（2025–2080，按北京时间划日）；" +
+  "宜忌只取建除十二神一层，比市面黄历粗，偶尔对不上。";
 $("#hlBtn").onclick = openHL;
 $("#hlClose").onclick = () => mask8.classList.remove("on");
 mask8.addEventListener("click", e => { if (e.target === mask8) mask8.classList.remove("on"); });
