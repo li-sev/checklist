@@ -304,6 +304,37 @@
   .purse.owe .dot{display:none}
   .ranktip.owe{color:var(--accent)}
 
+  /* ── 宪书（黄历）：抬头上跟国库牌并排的一小块，点开是整张黄历 ── */
+  /* .purse 自己写了 display，UA 那条 [hidden]{display:none} 压不住它，得补一条 */
+  .purse[hidden],.purse>span[hidden]{display:none}
+  .purse.hlp{margin-left:7px}
+  .purse.hlp .hd{color:var(--dim);border-right:1px solid var(--line);font-size:12.5px}
+  .purse.hlp .hj{font-weight:700;letter-spacing:2px}
+  .purse.hlp .hj.h{color:var(--gold)}         /* 黄道日 */
+  .purse.hlp .hj.b{color:var(--dim)}          /* 黑道日 */
+  .purse.hlp .tm{background:var(--accent);color:var(--onacc);font-weight:700;letter-spacing:2px}
+  .hlb .hlt{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
+    border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:12px}
+  .hlb .hlt b{font-size:26px;letter-spacing:4px;color:var(--ink)}
+  .hlb .hlt .gz{font-size:13.5px;letter-spacing:2px;color:var(--dim)}
+  .hlb .hlt .tm{margin-left:auto;font-size:13px;letter-spacing:3px;color:var(--accent);font-weight:700}
+  /* 宜忌两栏：宜用朱、忌用墨，跟纸上的印色一路 */
+  .hlb .yj{display:flex;gap:10px;margin-bottom:12px}
+  .hlb .yj>div{flex:1;min-width:0;border:1px solid var(--line);border-radius:6px;padding:9px 11px}
+  .hlb .yj i{display:block;font-style:normal;font-size:15px;font-weight:700;letter-spacing:3px;
+    margin-bottom:5px}
+  .hlb .yj .y i{color:var(--zhu)}
+  .hlb .yj .j i{color:var(--dim)}
+  .hlb .yj span{font-size:13px;line-height:1.85;color:var(--ink)}
+  /* 底下几格明细 */
+  .hlb .kv{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px}
+  .hlb .kv>span{border:1px solid var(--line);border-radius:5px;padding:5px 9px;
+    font-size:12.5px;letter-spacing:1px;color:var(--ink);background:var(--card)}
+  .hlb .kv>span em{font-style:normal;color:var(--dim);margin-right:5px}
+  .hlb .chao{border-left:3px solid var(--accent);padding:7px 11px;margin-bottom:12px;
+    font-size:13.5px;letter-spacing:1px;color:var(--ink);background:var(--card)}
+  .hlb .src{font-size:11.5px;line-height:1.8;color:var(--dim);letter-spacing:.5px;margin:0 0 4px}
+
   /* 打勾时从印上飘起来的赏银 */
   .coin{position:fixed;z-index:95;pointer-events:none;font-weight:700;font-size:15px;letter-spacing:1px;
     color:var(--gold);text-shadow:0 1px 2px rgba(0,0,0,.25);animation:coin 1s ease-out forwards}
@@ -833,6 +864,11 @@
     <span class="ag"><b id="pAg">0</b> 两</span>
     <span class="rn" id="pRun"></span><i class="dot"></i>
   </button>
+  <button class="purse hlp" id="hlBtn" title="宪书：今日黄历" hidden>
+    <span class="hd" id="hlChipD"></span>
+    <span class="tm" id="hlChipT" hidden></span>
+    <span class="hj" id="hlChipJ"></span>
+  </button>
 </div>
 <div class="app">
 <aside id="side"></aside>
@@ -1048,6 +1084,22 @@
   </div>
 </div></div>
 
+<!-- 宪书：今日黄历。纯看的，不给银子也不扣银子 -->
+<div class="mask" id="mask8"><div class="dlg sheet hlb" id="hlBox">
+  <h2>宪书</h2>
+  <div class="hlt"><b id="hlNong"></b><span class="gz" id="hlGz"></span><span class="tm" id="hlTerm"></span></div>
+  <div class="yj">
+    <div class="y"><i>宜</i><span id="hlYi"></span></div>
+    <div class="j"><i>忌</i><span id="hlJi"></span></div>
+  </div>
+  <div class="kv" id="hlKv"></div>
+  <div class="chao" id="hlChao"></div>
+  <p class="src" id="hlSrc"></p>
+  <div class="btns">
+    <button class="btn pri" id="hlClose">合上</button>
+  </div>
+</div></div>
+
 <!-- 且慢：花钱、动刀子的事都从这儿过一道 -->
 <div class="mask ask" id="mask7"><div class="dlg ask">
   <h2 id="akT">且慢</h2>
@@ -1135,7 +1187,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v40" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v41" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -2534,9 +2586,232 @@ function paintPurse(){
     tc.dataset.k = sk;
     try { tc.setAttribute("content", getComputedStyle(document.body).backgroundColor); } catch(e){}
   }
+  paintHL();                                      // 过了子时那块牌也得换
 }
 // 这几档一共可能往 body 上挂哪些类，开局算一次
 const SKINCLS = Object.values(KIT).flatMap(r => Object.values(r.list).map(v => v.c)).filter(Boolean);
+
+/* ── 黄历 ───────────────────────────────────────────────────────────────
+   农历、干支、二十四节气、建除十二神、黄黑道值神。
+
+   两张表是本机拿 pymeeus（VSOP87 全序列 + ELP2000）算出来的真天文时刻 ——
+   节气按太阳视黄经过 15° 整数倍求根，朔按日月视黄经差归零求根，
+   都换算到东八区取日期后压成字符串（生成脚本 /tmp/hl/ref.py + mktable.py）。
+   管 2025–2080 这 56 年，出了范围就不显示，既不会算错也不会崩。
+   成品不联网、不依赖任何库 —— 表是死的，用不着维护。
+
+   宜忌只取建除十二神那一层（《协纪辨方书》的传统条目），
+   市面黄历还要在上头叠几十种神煞，各家规则彼此还打架，
+   所以这儿的宜忌比商业黄历粗，偶尔对不上是正常的。 */
+
+const HL_Y0 = 2024;
+/* 每年 24 个节气的「日」。第 n 个节气必落在第 (n>>1)+1 月，所以只存日不存月。
+   一字一日：'1'..'9' 是 1..9，'A'..'V' 是 10..31 */
+const HL_JQ = "6K4J5K4J5K5L6M7M7M8N7M6L5K3I5K4K5L5L7M7N7N8N7M7L5K4I5K5K5L5L7N7N7N8N7M7M5K4J6L5K6L6L7N8N8N8N7M7M6K4J5K4J5K5L6M7M7M8N7M6L5K3I5K4K5L5L7M7N7N8N7M7L5K4I5K5K5L5L7N7N7N8N7M7M5K4J6L5K6L6L7N8N8N8N7M7M6K4J5K4J5K5L6M7M7M8N7M6L5K3I5K4K5L5L7M7N7N8N7M7L5K4I5K5K5L5L7N7N7N8N7M7M5K4J6L5K5L6L7N7N8N8N7M7M6K4J5K4J5K5L6M7M7M8N7M6L5K3I5K4K5L5L7M7N7N8N7M7L5K4I5K5K5L5L7N7N7N8N7M7M5K4J6L5K5L6L7N7N8N8N7M7M6K4J5K4J5K5L6M7M7M8N7M6L5K3I5K4K5K5L7M7N7M8N7M7L5K4I5K4K5L5L7N7N7N8N7M7M5K4J6L5K5L6L7N7N8N8N7M7M6K4J5K4J5K5L6M7M7M7N7M6L5K3I5K4J5K5L7M7N7M8N7M7L5K4I5K4K5L5L7M7N7N8N7M7M5K4J6L5K5L6L7N7N8N8N7M7M6K4J5K4J5K5K6M7M7M7N7L6L5J3I5K4J5K5L6M7M7M8N7M7L5K3I5K4K5L5L7M7N7N8N7M7M5K4J5K5K5L6L7N7N7N8N7M7M5K4J5K4J5K5K6M7M7M7N7L6L5J3I5K4J5K5L6M7M7M8N7M7L5K3I5K4K5L5L7M7N7N8N7M7M5K4J5K5K5L5L7N7N7N8N7M7M5K4J5K4J5K5K6M7M7M7N7L6L5J3I5K4J5K5L6M7M7M8N7M6L5K3I5K4K5L5L7M7N7N8N7M7L5K4J5K5K5L5L7N7N7N8N7M7M5K4J5K4J5K5K6M7M7M7M6L6L5J3I5K4J5K5L6M7M7M8N7M6L5K3I5K4K5L5L7M7N7N8N7M7L5K4I5K5K5L5L7N7N7N8N7M7M5K4J5K4J5K5K6M7M7M7M6L6L5J3I5K4J5K5L6M7M7M8N7M6L5K3I5K4K5L5L7M7N7N8N7M7L5K4I5K5K5L5L7N7N7N8N7M7M5K4J5K4J4K5K6M6M7M7M6L6L5J3I5K4J5K5L6M7M7M8N7M6L5K3I5K4K5K5L7M7N7M8N7M7L5K4I5K5K5L5L7N7N7N8N7M7M5K4J5K4J4K5K6M6M7M7M6L6L5J3I5K4J5K5L6M7M7M7N7M6L5K3I5K4K5K5L7M7N7M8N7M7L5K4I5K4K5L5L7M7N7N8N7M7M5K4J5K4J4K5K6M6M7M7M6L6L5J3I5K4J5K5L6M7M7M7N7M6L5K3I5K4J5K5L6M7N7M8N7M7L5K4I5K4K5L5L7M7N7N8N7M7M5K4J5K4J4K5K6M6M7M7M6L6L5J3I5K4J5K5K6M7M7M7N7L6L";
+/* 朔日（也就是农历初一）。头一个的儒略日号是 HL_NM0，
+   往后每个字符表示跟上一个差 29 天（'0'）还是 30 天（'1'） */
+const HL_NM0 = 2460616;
+const HL_NM  = "110101001010111010100100111011010010011011101001001101101010100110101101010100110101101010100101101101010010101110101001010110110100100110111010010010111101001001011101010100101101101010100101101011010010101101101010010101101101001001101110100100101111010010010111010101001011011010100101011011010010101011011010010101011011010010011011101001001011110100100101110110010010110110101001010111010100101011010101010101010110110010101010111010010010111011001001011101100100101101101010010101110101001010110110100101010110101010101010110101010100110110101010010111010101001011011010100101011101010010101101101001010101101010101010101101010101010101101010100101110101010010110110101001010111010100100111";
+
+const HL_GAN = "甲乙丙丁戊己庚辛壬癸";
+const HL_ZHI = "子丑寅卯辰巳午未申酉戌亥";
+const HL_SX  = "鼠牛虎兔龙蛇马羊猴鸡狗猪";
+const HL_TERM = ["小寒","大寒","立春","雨水","惊蛰","春分","清明","谷雨",
+                 "立夏","小满","芒种","夏至","小暑","大暑","立秋","处暑",
+                 "白露","秋分","寒露","霜降","立冬","小雪","大雪","冬至"];
+const HL_LM = ["正","二","三","四","五","六","七","八","九","十","冬","腊"];
+const HL_LD = ["初一","初二","初三","初四","初五","初六","初七","初八","初九","初十",
+               "十一","十二","十三","十四","十五","十六","十七","十八","十九","二十",
+               "廿一","廿二","廿三","廿四","廿五","廿六","廿七","廿八","廿九","三十"];
+
+/* 建除十二神。口诀：建满平收黑，除危定执黄，成开皆可用，闭破不吉当 */
+const HL_JC = [
+  {n:"建", y:"出行、赴任、见贵、竖柱",       j:"动土、开仓、掘井、栽种"},
+  {n:"除", y:"出行、求医、扫舍、解除",       j:"求官、赴任、嫁娶"},
+  {n:"满", y:"祭祀、祈福、开市、交易",       j:"服药、栽种、赴任"},
+  {n:"平", y:"嫁娶、修造、涂泥、平治道涂",   j:"栽种、开渠、掘井、词讼"},
+  {n:"定", y:"祭祀、祈福、修造、嫁娶、纳畜", j:"出行、词讼、移徙"},
+  {n:"执", y:"捕捉、造屋、嫁娶、收敛",       j:"出行、移徙、开市"},
+  {n:"破", y:"破屋、坏垣、求医、疗病",       j:"嫁娶、开市、动土、出行"},
+  {n:"危", y:"祭祀、安床、习艺",             j:"登高、行船、出行"},
+  {n:"成", y:"开市、交易、入学、修造、上梁", j:"词讼、争斗"},
+  {n:"收", y:"纳财、捕捉、收敛、进人口",     j:"开市、出行、安葬"},
+  {n:"开", y:"祭祀、祈福、入学、开市、出行", j:"安葬、破土"},
+  {n:"闭", y:"筑堤、埋穴、安葬、修补",       j:"开市、出行、求医"},
+];
+/* 把值日折成这个工具自己的话。跟上头那套宜忌是同一个来源，只是换个说法 */
+const HL_CHAO = [
+  "宜赴任 —— 该开的头今日开",   // 建
+  "宜删汰 —— 该清的旧折清一清", // 除
+  "宜盘点 —— 看看库银和治绩",   // 满
+  "宜修补 —— 把写歪的条目改齐", // 平
+  "宜立规 —— 定下的就别再改",   // 定
+  "宜收束 —— 手上那几件办完",   // 执
+  "忌另开一本 —— 破日不宜起头", // 破
+  "宜稳守 —— 别做大改动",       // 危
+  "宜开卷 —— 起头的好日子",     // 成
+  "宜收尾 —— 快满的卷批完它",   // 收
+  "宜开卷、宜批折 —— 诸事可为", // 开
+  "宜封存 —— 归档旧折，不起新头", // 闭
+];
+/* 黄黑道十二值神，从青龙起数。起例口诀：
+   子午临申位，丑未戌上寻，寅申居子位，卯酉却在寅，辰戌龙位上，巳亥午中行 */
+const HL_SHEN = ["青龙","明堂","天刑","朱雀","金匮","天德",
+                 "白虎","玉堂","天牢","玄武","司命","勾陈"];
+const HL_HUANG = [1,1,0,0,1,1,0,1,0,0,1,0];   // 1 = 黄道，0 = 黑道
+
+const hlV = c => c.charCodeAt(0) - (c <= "9" ? 48 : 55);
+const hlGZ = n => HL_GAN[((n % 10) + 10) % 10] + HL_ZHI[((n % 12) + 12) % 12];
+
+/* 公历 → 儒略日号 */
+function hlJdn(y, m, d){
+  const a = Math.floor((14 - m) / 12), yy = y + 4800 - a, mm = m + 12 * a - 3;
+  return d + Math.floor((153 * mm + 2) / 5) + 365 * yy + Math.floor(yy / 4)
+           - Math.floor(yy / 100) + Math.floor(yy / 400) - 32045;
+}
+/* 儒略日号 → 公历 */
+function hlCivil(jd){
+  const a = jd + 32044, b = Math.floor((4 * a + 3) / 146097),
+        c = a - Math.floor(146097 * b / 4), d = Math.floor((4 * c + 3) / 1461),
+        e = c - Math.floor(1461 * d / 4), m = Math.floor((5 * e + 2) / 153);
+  return {y: 100 * b + d - 4800 + Math.floor(m / 10),
+          m: m + 3 - 12 * Math.floor(m / 10),
+          d: e - Math.floor((153 * m + 2) / 5) + 1};
+}
+/* 第 y 年第 n 个节气（0 = 小寒 … 23 = 冬至）落在哪一天，超出表就给 null */
+function hlJq(y, n){
+  const off = (y - HL_Y0) * 24 + n;
+  if (off < 0 || off >= HL_JQ.length) return null;
+  return hlJdn(y, (n >> 1) + 1, hlV(HL_JQ[off]));
+}
+let HL_NMA = null;
+function hlNm(){
+  if (HL_NMA) return HL_NMA;
+  const a = [HL_NM0];
+  for (let i = 0; i < HL_NM.length; i++) a.push(a[i] + (HL_NM[i] === "1" ? 30 : 29));
+  return (HL_NMA = a);
+}
+const hlMi = (nm, j) => { let k = 0; while (k + 1 < nm.length && nm[k + 1] <= j) k++; return k; };
+/* 这个朔望月里有没有中气（中气 = 节气里的奇数序号） */
+function hlHasZq(a, b){
+  const y = hlCivil(a).y;
+  for (let yy = y - 1; yy <= y + 1; yy++)
+    for (let n = 1; n < 24; n += 2){
+      const t = hlJq(yy, n);
+      if (t !== null && t >= a && t < b) return true;
+    }
+  return false;
+}
+
+/* 主函数：给一个 Date，回一整套黄历。表外的日子回 null */
+function huangli(dt){
+  const jd = hlJdn(dt.getFullYear(), dt.getMonth() + 1, dt.getDate());
+  const nm = hlNm();
+  if (jd < nm[0] || jd >= nm[nm.length - 1]) return null;
+  const gy = hlCivil(jd).y;
+
+  /* ── 农历：定朔排月，冬至所在月定为十一月，无中气之月为闰 ── */
+  const i = hlMi(nm, jd);
+  let dzy = gy, dz = hlJq(gy, 23);
+  if (dz === null) return null;
+  if (dz > jd){ dzy = gy - 1; dz = hlJq(dzy, 23); }
+  const dz2 = hlJq(dzy + 1, 23);
+  if (dz === null || dz2 === null) return null;
+  const m0 = hlMi(nm, dz), m1 = hlMi(nm, dz2);
+  let leap = -1;
+  if (m1 - m0 === 13)                              // 十三个月，必有一闰
+    for (let k = m0 + 1; k < m1; k++)
+      if (!hlHasZq(nm[k], nm[k + 1])){ leap = k; break; }
+  let num = 11, isLeap = false;                    // m0 那个月就是十一月
+  for (let k = m0 + 1; k <= i; k++){
+    if (k === leap){ isLeap = true; }              // 闰月沿用上个月的号
+    else { num = num % 12 + 1; isLeap = false; }
+  }
+  const lmName = (isLeap ? "闰" : "") + HL_LM[(num - 1) % 12] + "月";
+  const ldName = HL_LD[jd - nm[i]];
+
+  /* ── 干支：年按立春分界，月按节（节气里的偶数序号）分界 ── */
+  const lichun = hlJq(gy, 2);
+  const gzy = (lichun !== null && jd >= lichun) ? gy : gy - 1;
+  let bn = -1, bj = -1e9;
+  for (let yy = gy - 1; yy <= gy + 1; yy++)
+    for (let n = 0; n < 24; n += 2){
+      const t = hlJq(yy, n);
+      if (t !== null && t <= jd && t > bj){ bj = t; bn = n; }
+    }
+  if (bn < 0) return null;
+  const yIdx = gzy - 4;                            // 公元 4 年是甲子
+  const yGan = ((yIdx % 10) + 10) % 10;
+  const mZhi = (bn / 2 + 1) % 12;                  // 小寒→丑，立春→寅 … 大雪→子
+  const mGan = ((yGan % 5) * 2 + ((mZhi - 2 + 12) % 12) + 2) % 10;   // 五虎遁
+  const dIdx = jd + 49;                            // 儒略日号 +49 就是六十甲子的序
+  const dZhi = ((dIdx % 12) + 12) % 12;
+
+  /* ── 值日、值神 ── */
+  const jc = (dZhi - mZhi + 12) % 12;
+  const shen = (dZhi - (mZhi * 2 + 8) % 12 + 12) % 12;
+
+  /* 今天是不是某个节气当天 */
+  let term = "";
+  for (let yy = gy - 1; yy <= gy + 1 && !term; yy++)
+    for (let n = 0; n < 24; n++)
+      if (hlJq(yy, n) === jd){ term = HL_TERM[n]; break; }
+
+  return {
+    jd, term,
+    nong: lmName + ldName, yue: lmName, ri: ldName, riN: jd - nm[i] + 1, run: isLeap,
+    ganzhiY: hlGZ(yIdx), ganzhiM: HL_GAN[mGan] + HL_ZHI[mZhi], ganzhiD: hlGZ(dIdx),
+    shengxiao: HL_SX[((yIdx % 12) + 12) % 12],
+    jian: HL_JC[jc].n, yi: HL_JC[jc].y, ji: HL_JC[jc].j, chao: HL_CHAO[jc],
+    shen: HL_SHEN[shen], huang: !!HL_HUANG[shen],
+  };
+}
+
+/* ── 宪书：抬头那块小牌 + 整张黄历 ── */
+const mask8 = $("#mask8");
+const WK = ["日","一","二","三","四","五","六"];
+function paintHL(){
+  const btn = $("#hlBtn");
+  const r = huangli(new Date());
+  btn.hidden = !r;                       // 过了表的年份，这块牌整个不出现，别摆个空壳
+  if (!r) return;
+  $("#hlChipD").textContent = r.nong;
+  const t = $("#hlChipT");
+  t.textContent = r.term; t.hidden = !r.term;
+  const j = $("#hlChipJ");
+  j.textContent = r.jian + "日";
+  j.className = "hj " + (r.huang ? "h" : "b");
+}
+function openHL(){
+  const r = huangli(new Date()), d = new Date();
+  if (!r) return;
+  $("#hlNong").textContent = r.nong;
+  $("#hlGz").textContent = `${r.ganzhiY}年 ${r.ganzhiM}月 ${r.ganzhiD}日 · 属${r.shengxiao}`;
+  const tm = $("#hlTerm"); tm.textContent = r.term; tm.hidden = !r.term;
+  $("#hlYi").textContent = r.yi;
+  $("#hlJi").textContent = r.ji;
+  $("#hlKv").innerHTML = [
+    ["公历", `${d.getFullYear()} 年 ${d.getMonth()+1} 月 ${d.getDate()} 日　星期${WK[d.getDay()]}`],
+    ["值日", r.jian + " —— " + JC_TIP[r.jian]],
+    ["值神", `${r.shen} · ${r.huang ? "黄道" : "黑道"}`],
+  ].map(([k, v]) => `<span><em>${k}</em>${esc(v)}</span>`).join("");
+  $("#hlChao").textContent = r.chao;
+  $("#hlSrc").textContent = HL_SRC;
+  mask8.classList.add("on");
+}
+/* 建除十二神各自那一句白话，点开才看得见 */
+const JC_TIP = {建:"万物生发，宜起头",除:"扫旧迎新，宜清理",满:"丰足圆满，宜收纳",
+  平:"平常无奇，宜修整",定:"安定不移，宜立约",执:"执守成规，宜收束",
+  破:"刚柔相冲，诸事不宜",危:"危而思安，宜谨守",成:"事事成就，诸事皆宜",
+  收:"收敛聚合，宜纳不宜出",开:"开通顺达，诸事可为",闭:"闭藏坚固，宜收尾封存"};
+const HL_SRC = "节气按太阳视黄经过 15° 整数倍求得，朔按日月视黄经差归零求得，" +
+  "都在本机用 VSOP87／ELP2000 的全序列算好、按东八区取日期压成表，管 2025–2080 这 56 年。" +
+  "农历用定朔排月、无中气置闰，干支年以立春分界。" +
+  "宜忌只取建除十二神那一层（《协纪辨方书》的传统条目）—— " +
+  "市面黄历还要在上头叠几十种神煞，各家规则彼此还打架，所以这儿的宜忌比它们粗，偶尔对不上是正常的。";
+$("#hlBtn").onclick = openHL;
+$("#hlClose").onclick = () => mask8.classList.remove("on");
+mask8.addEventListener("click", e => { if (e.target === mask8) mask8.classList.remove("on"); });
 
 /* ── 内务府面板 ── */
 const mask6 = $("#mask6");
