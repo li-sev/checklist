@@ -1277,9 +1277,9 @@
   <p class="ghint" id="gHint"></p>
   <div class="gls" id="gLines"></div>
   <div id="gRes" hidden>
-    <div class="gt"><span class="gsym" id="gSym"></span><b id="gName"></b><span class="gno" id="gNo"></span></div>
-    <p class="gci" id="gCi"></p>
-    <div class="gj" id="gJie"></div>
+    <div class="gt"><span class="gsym" id="guSym"></span><b id="guName"></b><span class="gno" id="guNo"></span></div>
+    <p class="gci" id="guCi"></p>
+    <div class="gj" id="guJie"></div>
     <p class="gmv" id="gMove"></p>
     <div id="gZhi" hidden>
       <div class="gt zhi"><span class="gsym" id="gzSym"></span><b id="gzName"></b><span class="gno" id="gzNo"></span></div>
@@ -3347,7 +3347,7 @@ function fillGua(p, x){
 }
 function gFinish(){
   const l = gYao.map(y => y.v === 7 || y.v === 9 ? 1 : 0);
-  fillGua("g", guaOf(l));
+  fillGua("gu", guaOf(l));
   const mv = gYao.map((y, i) => y.v === 6 || y.v === 9 ? i : -1).filter(i => i >= 0);
   $("#gMove").textContent = mv.length
     ? "动爻：" + mv.map(i => yaoName(i, l[i] === 1)).join("、")
