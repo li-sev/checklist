@@ -331,15 +331,13 @@
   .hlb .kv>span{border:1px solid var(--line);border-radius:5px;padding:5px 9px;
     font-size:12.5px;letter-spacing:1px;color:var(--ink);background:var(--card)}
   .hlb .kv>span em{font-style:normal;color:var(--dim);margin-right:5px}
-  /* 值日 / 值神：头一行是今日的，第二行小字说清这一栏本身是什么 */
-  .hlb .ex{margin-bottom:12px;border:1px solid var(--line);border-radius:6px;padding:2px 11px}
-  .hlb .ex>div{display:flex;gap:10px;padding:9px 0}
-  .hlb .ex>div+div{border-top:1px dashed var(--line)}
-  .hlb .ex .k{flex:none;font-size:12.5px;letter-spacing:2px;color:var(--dim);padding-top:2px}
-  .hlb .ex .v{flex:1;min-width:0}
-  .hlb .ex .v b{display:block;font-size:14px;letter-spacing:1px;color:var(--ink)}
-  .hlb .ex .v em{display:block;font-style:normal;font-size:11.5px;line-height:1.75;
-    letter-spacing:.5px;color:var(--dim);margin-top:3px}
+  /* 值日、值神这两格点得开，底下才现一小段解释；不点就不占地方 */
+  .hlb .kv>span.q{cursor:pointer;border-style:dashed}
+  .hlb .kv>span.q:hover,.hlb .kv>span.q.on{border-color:var(--accent);border-style:solid}
+  .hlb .kv>span.q::after{content:"？";color:var(--dim);font-size:11px;margin-left:4px}
+  .hlb .kv>span.q.on::after{content:"×"}
+  .hlb .ex{border-left:3px solid var(--line);padding-left:11px;margin:-3px 0 12px;
+    font-size:12px;line-height:1.85;letter-spacing:.5px;color:var(--dim)}
   .hlb .chao{border-left:3px solid var(--accent);padding:7px 11px;margin-bottom:12px;
     font-size:13.5px;letter-spacing:1px;color:var(--ink);background:var(--card)}
   .hlb .src{font-size:11.5px;line-height:1.8;color:var(--dim);letter-spacing:.5px;margin:0 0 4px}
@@ -1102,7 +1100,7 @@
     <div class="j"><i>忌</i><span id="hlJi"></span></div>
   </div>
   <div class="kv" id="hlKv"></div>
-  <div class="ex" id="hlEx"></div>
+  <div class="ex" id="hlEx" hidden></div>
   <div class="chao" id="hlChao"></div>
   <p class="src" id="hlSrc"></p>
   <div class="btns">
@@ -1197,7 +1195,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v42" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v43" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -2800,16 +2798,25 @@ function openHL(){
   const tm = $("#hlTerm"); tm.textContent = r.term; tm.hidden = !r.term;
   $("#hlYi").textContent = r.yi;
   $("#hlJi").textContent = r.ji;
-  $("#hlKv").innerHTML =
-    `<span><em>公历</em>${d.getFullYear()} 年 ${d.getMonth()+1} 月 ${d.getDate()} 日　星期${WK[d.getDay()]}</span>`;
-  // 值日、值神：光甩两个名字看不懂，头一行是这一天的，第二行说清这一栏是什么
-  $("#hlEx").innerHTML = [
-    ["值日", `${r.jian}　${JC_TIP[r.jian]}`,
+  // 值日、值神那两格光甩个名字看不懂，可点开；解释不点不出现，免得把面板撑长
+  const kv = [
+    ["公历", `${d.getFullYear()} 年 ${d.getMonth()+1} 月 ${d.getDate()} 日　星期${WK[d.getDay()]}`, ""],
+    ["值日", `${r.jian} —— ${JC_TIP[r.jian]}`,
      "建除十二神按日轮值，说的是这一天办事的势头。轮到交节那天原地重一遍，所以偶尔连着两日同名。"],
-    ["值神", `${r.shen} · ${r.huang ? "黄道" : "黑道"}　${SHEN_TIP[r.shen]}`,
-     "十二值神也按日轮值，六黄六黑。黄道日诸事较顺，黑道日宜守不宜攻 —— 只是这一层的说法，不必当真。"],
-  ].map(([k, a, b]) =>
-    `<div><span class="k">${k}</span><span class="v"><b>${esc(a)}</b><em>${esc(b)}</em></span></div>`).join("");
+    ["值神", `${r.shen} · ${r.huang ? "黄道" : "黑道"}`,
+     `${SHEN_TIP[r.shen]}。十二值神也按日轮值，六黄六黑；黄道日诸事较顺，黑道日宜守不宜攻 —— 只是这一层的说法，不必当真。`],
+  ];
+  $("#hlKv").innerHTML = kv.map(([k, v, tip], i) =>
+    `<span${tip ? ` class="q" data-i="${i}"` : ""}><em>${k}</em>${esc(v)}</span>`).join("");
+  const ex = $("#hlEx"); ex.hidden = true;              // 每回开面板都收回去
+  $("#hlKv").onclick = e => {
+    const s = e.target.closest("span.q"); if (!s) return;
+    const open = !s.classList.contains("on");           // 再点一下收起来
+    $$("#hlKv span.q").forEach(x => x.classList.remove("on"));   // 一次只开一格
+    s.classList.toggle("on", open);
+    ex.hidden = !open;
+    if (open) ex.textContent = kv[+s.dataset.i][2];
+  };
   $("#hlChao").textContent = r.chao;
   $("#hlSrc").textContent = HL_SRC;
   mask8.classList.add("on");
