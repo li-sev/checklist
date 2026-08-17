@@ -336,8 +336,10 @@
      边框由 1px 加到 2px，内边距对着减 1px，免得这两格比旁边那格胖一圈 */
   .hlb .kv>span.q{cursor:pointer;border-width:2px;padding:4px 8px;border-color:var(--dim)}
   .hlb .kv>span.q:hover,.hlb .kv>span.q.on{border-color:var(--accent)}
-  .hlb .ex{border-left:3px solid var(--line);padding-left:11px;margin:-3px 0 12px;
-    font-size:12px;line-height:1.85;letter-spacing:.5px;color:var(--dim)}
+  /* 解释是 kv 的一员，flex-basis 撑满整行 —— 它自己独占一行，
+     也就把它后头的格子挤到再下一行去，于是它总贴在被点那格的正下方 */
+  .hlb .ex{flex:0 0 100%;border-left:3px solid var(--accent);padding-left:11px;margin:1px 0 2px;
+    font-size:12.5px;line-height:1.9;letter-spacing:.5px;color:var(--ink)}
   .hlb .chao{border-left:3px solid var(--accent);padding:7px 11px;margin-bottom:12px;
     font-size:13.5px;letter-spacing:1px;color:var(--ink);background:var(--card)}
   .hlb .src{font-size:11.5px;line-height:1.8;color:var(--dim);letter-spacing:.5px;margin:0 0 4px}
@@ -1195,7 +1197,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v44" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v45" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -2798,39 +2800,62 @@ function openHL(){
   const tm = $("#hlTerm"); tm.textContent = r.term; tm.hidden = !r.term;
   $("#hlYi").textContent = r.yi;
   $("#hlJi").textContent = r.ji;
-  // 值日、值神那两格光甩个名字看不懂，可点开；解释不点不出现，免得把面板撑长
+  // 值日、值神那两格点得开，底下现的是这一天的运势，不是名词解释
   const kv = [
     ["公历", `${d.getFullYear()} 年 ${d.getMonth()+1} 月 ${d.getDate()} 日　星期${WK[d.getDay()]}`, ""],
-    ["值日", `${r.jian} —— ${JC_TIP[r.jian]}`,
-     "建除十二神按日轮值，说的是这一天办事的势头。轮到交节那天原地重一遍，所以偶尔连着两日同名。"],
-    ["值神", `${r.shen} · ${r.huang ? "黄道" : "黑道"}`,
-     `${SHEN_TIP[r.shen]}。十二值神也按日轮值，六黄六黑；黄道日诸事较顺，黑道日宜守不宜攻 —— 只是这一层的说法，不必当真。`],
+    ["值日", `${r.jian} —— ${JC_TIP[r.jian]}`, JC_YS[r.jian]],
+    ["值神", `${r.shen} · ${r.huang ? "黄道" : "黑道"}`, SHEN_YS[r.shen]],
   ];
   $("#hlKv").innerHTML = kv.map(([k, v, tip], i) =>
     `<span${tip ? ` class="q" data-i="${i}"` : ""}><em>${k}</em>${esc(v)}</span>`).join("");
-  const ex = $("#hlEx"); ex.hidden = true;              // 每回开面板都收回去
+  // 解释这块搬进 kv 里当一个占满整行的成员，插在被点那格后头 ——
+  // flex 排到它就断行，所以它总落在被点的格子正下方，而不是甩到最末尾
+  const ex = $("#hlEx"); ex.hidden = true; $("#hlKv").appendChild(ex);
   $("#hlKv").onclick = e => {
     const s = e.target.closest("span.q"); if (!s) return;
     const open = !s.classList.contains("on");           // 再点一下收起来
     $$("#hlKv span.q").forEach(x => x.classList.remove("on"));   // 一次只开一格
     s.classList.toggle("on", open);
     ex.hidden = !open;
-    if (open) ex.textContent = kv[+s.dataset.i][2];
+    if (open){ ex.textContent = kv[+s.dataset.i][2]; s.after(ex); }
   };
   $("#hlChao").textContent = r.chao;
   $("#hlSrc").textContent = HL_SRC;
   mask8.classList.add("on");
 }
-/* 建除十二神各自那一句白话，点开才看得见 */
+/* 建除十二神各自那一句白话，就印在格子上 */
 const JC_TIP = {建:"万物生发，宜起头",除:"扫旧迎新，宜清理",满:"丰足圆满，宜收纳",
   平:"平常无奇，宜修整",定:"安定不移，宜立约",执:"执守成规，宜收束",
   破:"刚柔相冲，诸事不宜",危:"危而思安，宜谨守",成:"事事成就，诸事皆宜",
   收:"收敛聚合，宜纳不宜出",开:"开通顺达，诸事可为",闭:"闭藏坚固，宜收尾封存"};
-/* 十二值神各自主什么，也是点开才看得见 */
-const SHEN_TIP = {青龙:"天贵之神，主喜庆",明堂:"明辅之神，主得贵人",天刑:"主刑罚争讼",
-  朱雀:"主口舌是非",金匮:"财帛之神，主聚财",天德:"福德之神，逢凶化吉",
-  白虎:"主凶丧争斗",玉堂:"主贵人、文书顺遂",天牢:"主拘系困顿",
-  玄武:"主盗贼暗昧",司命:"主福寿，办公事吉",勾陈:"主牵连、田土纠缠"};
+/* 点开值日那格现的是这一天的势头，说人话、能照着办，不讲建除是什么 */
+const JC_YS = {
+  建:"开头的日子。憋着的念头今天动手最好，起个新卷、递个新章都顺；只是万事起头粗，别指望今天就见着成果。",
+  除:"扫除的日子。今天适合断舍：删掉不办的、了掉欠着的、跟旧账做个了结。扔东西不心疼，清空了才好装新的。",
+  满:"满盈的日子。该收的收得进来，手上是丰足的；但满则溢，今天别再往上加码，见好就收才是本事。",
+  平:"平淡的日子。没有大起大落，办大事提不起劲，正好做修补 —— 把拖着的零碎理一理、把写歪的扶正，比硬开新局划算。",
+  定:"定下来的日子。宜拍板、宜签字、宜把说好的话落成白纸黑字。反过来，今天改主意的代价格外大。",
+  执:"执守的日子。按老规矩走最稳，别出心裁的想法今天多半碰壁；把手上这摊守住、别松口，就算赢了。",
+  破:"相冲的日子。凡是要「成」的事今天都容易崩，别谈判、别开张；倒是拆旧的、了断的，今天做起来格外痛快。",
+  危:"悬着的日子。心里发虚是有道理的，高处、快事、大钱今天都离远点；小心过这一天，明天自然就过去了。",
+  成:"成事的日子。压着的事今天推得动，谈成、办成、写完，都挑今天；这么顺的日子不多，别浪费在琐碎上。",
+  收:"收拢的日子。进来的留得住，出去的收不回 —— 宜收账、宜归档、宜把东西收进来；不宜借出、不宜远行。",
+  开:"开通的日子。门路是敞着的，见人、求人、启事都行得通；心气也高，趁着这股劲把想做的做了。",
+  闭:"闭藏的日子。宜关门、宜结账、宜把事情封个口；不宜开新的、不宜张扬，今天沉住气比往外冲值钱。"};
+/* 点开值神那格也一样，说这一天的运，不说十二值神怎么轮 */
+const SHEN_YS = {
+  青龙:"十二值神里头一等的好日子。喜事、正事都占得住，想办的事今天张口，多半有回响。",
+  明堂:"明白通达的一天。最宜见上头的人、递要紧的话 —— 今天说出去的话容易被听进去。",
+  天刑:"主刑罚争讼。今天别较真、别对簿公堂，一句气话能惹出三天麻烦；忍一忍，这天就过去了。",
+  朱雀:"主口舌是非。今天最容易被话拌住 —— 少发消息、少接茬，写下来的比脱口而出的稳。",
+  金匮:"主财帛聚敛。谈钱、收账、置办都合宜，今天进来的东西留得住。",
+  天德:"福德之神，逢凶化吉。今天就算撞上麻烦，多半也能化开；心里可以松一格。",
+  白虎:"主凶丧争斗。今天火气旺、意外多，动刀动手动怒都要避；把身子和脾气一并收着点。",
+  玉堂:"主贵人、文书顺遂。写东西、递文书、求人办事都顺，今天落下的字比平时值钱。",
+  天牢:"主拘系困顿。今天容易被绊住 —— 事推不动、人找不着，别硬撞，绕开或者干脆歇一天。",
+  玄武:"主盗贼暗昧。今天暗处的事多，钱财、口令、要紧东西都看紧些，别轻信生面孔。",
+  司命:"主福寿，办公事最吉。今天走正经差事、按规矩流程办，比什么时候都顺。",
+  勾陈:"主牵连、田土纠缠。今天容易被别人的事拖下水 —— 签房地、作担保、替人出头都缓一缓，管好自己那摊就够。"};
 /* 出处只留一句：说清「日子是算的、宜忌是粗的」这两件事就够，长了没人看 */
 const HL_SRC = "节气与朔按 VSOP87／ELP2000 精算后压成表（2025–2080，按北京时间划日）；" +
   "宜忌只取建除十二神一层，比市面黄历粗，偶尔对不上。";
