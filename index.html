@@ -313,6 +313,9 @@
   .purse.hlp .hj.h{color:var(--gold)}         /* 黄道日 */
   .purse.hlp .hj.b{color:var(--dim)}          /* 黑道日 */
   .purse.hlp .tm{background:var(--accent);color:var(--onacc);font-weight:700;letter-spacing:2px}
+  /* 加赏用金字，不铺底色 —— 铺了得另配一个前景色，深浅两套纸都不好配 */
+  .purse.hlp .jx{color:var(--gold);font-weight:700;letter-spacing:1px;
+    border-left:1px solid var(--line)}
   .hlb .hlt{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
     border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:12px}
   .hlb .hlt b{font-size:26px;letter-spacing:4px;color:var(--ink)}
@@ -340,6 +343,13 @@
      也就把它后头的格子挤到再下一行去，于是它总贴在被点那格的正下方 */
   .hlb .ex{flex:0 0 100%;border-left:3px solid var(--accent);padding-left:11px;margin:1px 0 2px;
     font-size:12.5px;line-height:1.9;letter-spacing:.5px;color:var(--ink)}
+  /* 择吉那条：有加赏就描金，没有就退成灰的一句说明 */
+  .hlb .jx{border-left:3px solid var(--line);padding:7px 11px;margin-bottom:6px;
+    font-size:12.5px;line-height:1.75;letter-spacing:.5px;color:var(--dim);background:var(--card)}
+  .hlb .jx.on{border-left-color:var(--gold);font-size:13.5px;letter-spacing:1px;
+    color:var(--ink);font-weight:600}
+  .hlb .jqc{font-size:11.5px;color:var(--dim);letter-spacing:1px;margin:0 0 12px 14px}
+  .hlb .jqc:empty{display:none}
   .hlb .chao{border-left:3px solid var(--accent);padding:7px 11px;margin-bottom:12px;
     font-size:13.5px;letter-spacing:1px;color:var(--ink);background:var(--card)}
   .hlb .src{font-size:11.5px;line-height:1.8;color:var(--dim);letter-spacing:.5px;margin:0 0 4px}
@@ -884,6 +894,7 @@
     <span class="hd" id="hlChipD"></span>
     <span class="tm" id="hlChipT" hidden></span>
     <span class="hj" id="hlChipJ"></span>
+    <span class="jx" id="hlChipX" hidden></span>
   </button>
 </div>
 <div class="app">
@@ -1073,8 +1084,8 @@
     <label class="first">治绩 <small>不卖，只能挣</small></label>
     <div class="meds" id="ihMed"></div>
     <div class="hint">难的赏得多，牌子上标着各值几两。挣到就一次入库，不会撤销，也不会重复给。<br>
-      写着<b>？</b>的五件是秘录：条目不公开，撞上了自然入册 —— 想凑是凑不着的。<br>
-      三十件全挣到共 589 两，仍买不下整个内库（3050 两）</div>
+      写着<b>？</b>的六件是秘录：条目不公开，撞上了自然入册 —— 想凑是凑不着的。<br>
+      三十二件全挣到共 657 两，仍买不下整个内库（4010 两）</div>
   </div>
 
   <div class="pane" data-pane="store">
@@ -1110,6 +1121,8 @@
   </div>
   <div class="kv" id="hlKv"></div>
   <div class="ex" id="hlEx" hidden></div>
+  <div class="jx" id="hlJx"></div>
+  <p class="jqc" id="hlJqc"></p>
   <div class="chao" id="hlChao"></div>
   <p class="src" id="hlSrc"></p>
   <div class="btns">
@@ -1204,7 +1217,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v46" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v47" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -2080,8 +2093,8 @@ const COURT = [
   [85, "海晏河清", 3,   "每件 6 两 · 解锁玉玺 · 四角描金"],
 ];
 /* 治绩：难的赏得多。p 是入库的两数，摆在牌子上，一眼看得见值多少。
-   带 x 的五件是彩蛋：条目不写出来，撞上了才入册 —— 所以别去凑，凑不着。
-   三十件全挣到共 589 两，铺子里全套要 3050 两，光靠治绩仍旧买不完，还得老实批折子。 */
+   带 x 的六件是彩蛋：条目不写出来，撞上了才入册 —— 所以别去凑，凑不着。
+   三十二件全挣到共 657 两，铺子里全套要 4010 两，光靠治绩仍旧买不完，还得老实批折子。 */
 const MEDALS = [
   /* 批折子 */
   {id:"first", n:"初御朱笔", d:"批下头一件",           p:5},
@@ -2119,6 +2132,9 @@ const MEDALS = [
   {id:"mao",   n:"五更待漏", d:"卯时（五点到七点）批折",         p:10, x:1},
   {id:"one",   n:"一气呵成", d:"一次整卷全批，十件以上",         p:12, x:1},
   {id:"yuan",  n:"元日开笔", d:"元旦这天批下一件",               p:15, x:1},
+  {id:"jq1",   n:"应节而作", d:"赶在节气当天批下一件",            p:8,  x:1},
+  /* 这件不是彩蛋，明写着 —— 它要凑满一年二十四个节气，得知道自己在攒什么 */
+  {id:"jq24",  n:"廿四番花信", d:"二十四个节气各批过一件",         p:60},
 ];
 /* e 效率 · l 忠诚 · d 最近办差的日子 · k 第几任（下标）· v 空悬还差几件 · q 请辞中 · sd 今日说过话没 */
 const miDef = () => Object.fromEntries(MINISTRY.map(m => [m.id, {e:50, l:60, d:"", k:0, v:0, q:0, sd:""}]));
@@ -2129,7 +2145,7 @@ const VACS = 20;
 const GDEF = () => ({ag: DEMO ? 99999 : 0, owe:0, tot:0, cnt:0, nc:0, day:"", tn:0, run:0, best:0, sfx:1,
                      own: DEMO ? Object.keys(WARES) : Object.values(KIT).map(r => r.d), med:[],
                      seal:"zhun", paper:"xuan", font:"song", mount:"sumian", grain:"jiehang", fx:"fxno",
-                     mi:miDef(), mday:""});
+                     mi:miDef(), mday:"", jq:[], jxd:""});
 function G(){
   if (!D.g || typeof D.g !== "object") D.g = GDEF();
   const d = GDEF();
@@ -2462,17 +2478,29 @@ function scoreTick(it, on, el, mid){
     g.tn = (g.tn || 0) + 1;
     /* 记下这一件到底入了几两，撤回时照数退。
        倍率是当下这一刻的：朝纲后来涨了跌了，都不动已经入过库的账 */
-    it.p = Math.round(2 * mult()) + bonus;
+    const jx = jiQing();                          // 挑着好日子办，每件多给几两
+    it.p = Math.round(2 * mult()) + bonus + jx.n;
     earn(it.p, el);
     if (mid) bump(mid, 2, 1);
-    if (bonus) toast(`勤政第 ${g.run} 日，加征 ${bonus} 两`);
-    if (mid) sayOnce(mid, bonus ? 2000 : 0);      // 今日头一回派到这个部，他出来应一声
+    /* toast 是同一块牌，后来的把先前的顶掉，所以两条话并成一条报 */
+    const say = [];
+    if (bonus) say.push(`勤政第 ${g.run} 日，加征 ${bonus} 两`);
+    const td = ymd(Date.now());
+    if (jx.n && g.jxd !== td){ g.jxd = td; say.push(`${jx.why.join("・")}，每件加赏 ${jx.n} 两`); }
+    if (say.length) toast(say.join("；"));
+    if (mid) sayOnce(mid, say.length ? 2000 : 0);  // 今日头一回派到这个部，他出来应一声
     if (g.cnt === 1) medal("first");
     /* 只有「批下这一件的当口」才知道的，搁这儿；其余按状态判的都在 sweep 里 */
     const now = new Date(), h = now.getHours();
     if (h >= 0 && h < 5) medal("night");
     if (h >= 5 && h < 7) medal("mao");                       // 卯时，五更待漏
     if (now.getMonth() === 0 && now.getDate() === 1) medal("yuan");
+    // 节气当天办了差，这个节气就算攒上了；二十四个凑齐要整一年
+    if (jx.term && !g.jq.includes(jx.term)){
+      g.jq.push(jx.term);
+      medal("jq1");
+      if (g.jq.length >= 24) medal("jq24");
+    }
     sweep();
   } else {
     if (!it.p) return;
@@ -2798,6 +2826,9 @@ function paintHL(){
   const j = $("#hlChipJ");
   j.textContent = r.jian + "日";
   j.className = "hj " + (r.huang ? "h" : "b");
+  // 今天有加赏就在牌尾挂个数，不用点开也知道该不该赶今天办
+  const x = $("#hlChipX"), jx = jiQing();
+  x.textContent = "加赏 " + jx.n + " 两"; x.hidden = !jx.n;
 }
 function openHL(){
   const r = huangli(new Date()), d = new Date();
@@ -2826,6 +2857,15 @@ function openHL(){
     ex.hidden = !open;
     if (open){ ex.textContent = kv[+s.dataset.i][2]; s.after(ex); }
   };
+  // 择吉：占了几样就加几两，一样没占也照直说，免得让人以为是坏了
+  const jx = jiQing(), jxEl = $("#hlJx");
+  jxEl.textContent = jx.n
+    ? `${jx.why.join("・")} —— 今日每批一件，加赏 ${jx.n} 两`
+    : "今日无加赏。成日、开日、青龙值日、交节当日，各加一两，可以叠。";
+  jxEl.className = jx.n ? "jx on" : "jx";
+  // 攒了几个节气也在这儿报，凑满二十四有大赏
+  const q = G().jq.length;
+  $("#hlJqc").textContent = q ? `已应节 ${q}/24 个节气` : "";
   $("#hlChao").textContent = r.chao;
   $("#hlSrc").textContent = HL_SRC;
   mask8.classList.add("on");
@@ -2866,6 +2906,18 @@ const SHEN_YS = {
 /* 出处只留一句：说清「日子是算的、宜忌是粗的」这两件事就够，长了没人看 */
 const HL_SRC = "节气与朔按 VSOP87／ELP2000 精算后压成表（2025–2080，按北京时间划日）；" +
   "宜忌只取建除十二神一层，比市面黄历粗，偶尔对不上。";
+/* ── 择吉：赶上好日子批折，每件多给几两 ──
+   只加不减。黑道日要是反过来扣钱，那等于劝人「今天别开清单」，
+   工具就做坏了 —— 破日那句劝告搁在朝堂语里说说就够。 */
+function jiQing(){
+  const r = huangli(new Date());
+  if (!r) return {n:0, why:[], term:""};
+  const why = [];
+  if (r.jian === "成" || r.jian === "开") why.push(r.jian + "日");   // 建除里最开阔的两天
+  if (r.shen === "青龙") why.push("青龙值日");                        // 十二值神头一等
+  if (r.term) why.push(r.term);                                      // 交节当日
+  return {n: why.length, why, term: r.term};                         // 至多三样，每件加三两
+}
 $("#hlBtn").onclick = openHL;
 $("#hlClose").onclick = () => mask8.classList.remove("on");
 mask8.addEventListener("click", e => { if (e.target === mask8) mask8.classList.remove("on"); });
