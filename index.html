@@ -354,6 +354,41 @@
     font-size:13.5px;letter-spacing:1px;color:var(--ink);background:var(--card)}
   .hlb .src{font-size:11.5px;line-height:1.8;color:var(--dim);letter-spacing:.5px;margin:0 0 4px}
 
+  /* ── 求签 ── */
+  /* 签筒：一只圆角筒子，上头戳出三根签。全用边框和底色画，不引外头的图 */
+  .qb .qt{position:relative;width:74px;height:92px;margin:16px auto 12px;cursor:pointer;
+    border:2px solid var(--line);border-radius:8px 8px 12px 12px;background:var(--card);
+    box-shadow:inset 0 -14px 18px -14px rgba(0,0,0,.28)}
+  .qb .qt::after{content:"";position:absolute;left:6px;right:6px;top:9px;height:1px;background:var(--line)}
+  .qb .qt i{position:absolute;bottom:62px;width:7px;border-radius:2px 2px 0 0;
+    border:1px solid var(--line);background:var(--bg)}
+  .qb .qt i:nth-child(1){left:16px;height:30px}
+  .qb .qt i:nth-child(2){left:33px;height:42px}
+  .qb .qt i:nth-child(3){left:50px;height:24px}
+  .qb .qt:hover{border-color:var(--accent)}
+  .qb .qt.sh{animation:qsh .62s ease-in-out 2}
+  @keyframes qsh{0%,100%{transform:rotate(0) translateY(0)}
+    25%{transform:rotate(-9deg) translateY(-4px)}75%{transform:rotate(9deg) translateY(-4px)}}
+  .qb .qhint{text-align:center;font-size:13px;letter-spacing:3px;color:var(--dim);margin:0 0 6px}
+  /* 签头一行：签号、签名、等第 */
+  .qb .qh{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
+    border-bottom:1px solid var(--line);padding-bottom:9px;margin-bottom:12px}
+  .qb .qh .qno{font-size:12.5px;letter-spacing:2px;color:var(--dim)}
+  .qb .qh b{font-size:24px;letter-spacing:5px;color:var(--ink)}
+  .qb .qg{margin-left:auto;font-size:14px;font-weight:700;letter-spacing:4px;
+    border:1px solid currentColor;border-radius:5px;padding:2px 9px}
+  .qb .qg.g0{color:var(--zhu)}
+  .qb .qg.g1{color:var(--gold)}
+  .qb .qg.g2{color:var(--ink)}
+  .qb .qg.g3{color:var(--dim)}
+  .qb .qg.g4{color:var(--dim);border-style:dashed}
+  /* 签诗竖着排四句，居中；行距放宽，看着像张签纸 */
+  .qb .qp{text-align:center;margin-bottom:14px}
+  .qb .qp p{margin:0;font-size:16.5px;line-height:2.1;letter-spacing:4px;color:var(--ink)}
+  .qb .qj{border-left:3px solid var(--accent);padding:8px 12px;margin-bottom:10px;
+    font-size:13px;line-height:1.95;letter-spacing:.5px;color:var(--ink);background:var(--card)}
+  .qb .qday{font-size:11.5px;line-height:1.8;color:var(--dim);letter-spacing:.5px;margin:0 0 4px}
+
   /* 打勾时从印上飘起来的赏银 */
   .coin{position:fixed;z-index:95;pointer-events:none;font-weight:700;font-size:15px;letter-spacing:1px;
     color:var(--gold);text-shadow:0 1px 2px rgba(0,0,0,.25);animation:coin 1s ease-out forwards}
@@ -1084,8 +1119,8 @@
     <label class="first">治绩 <small>不卖，只能挣</small></label>
     <div class="meds" id="ihMed"></div>
     <div class="hint">难的赏得多，牌子上标着各值几两。挣到就一次入库，不会撤销，也不会重复给。<br>
-      写着<b>？</b>的六件是秘录：条目不公开，撞上了自然入册 —— 想凑是凑不着的。<br>
-      三十二件全挣到共 657 两，仍买不下整个内库（4010 两）</div>
+      写着<b>？</b>的七件是秘录：条目不公开，撞上了自然入册 —— 想凑是凑不着的。<br>
+      三十三件全挣到共 669 两，仍买不下整个内库（4010 两）</div>
   </div>
 
   <div class="pane" data-pane="store">
@@ -1126,7 +1161,26 @@
   <div class="chao" id="hlChao"></div>
   <p class="src" id="hlSrc"></p>
   <div class="btns">
+    <button class="btn" id="hlQian">求签</button>
     <button class="btn pri" id="hlClose">合上</button>
+  </div>
+</div></div>
+
+<!-- 求签：一日一支，三十六签。不花钱也不给钱，只有头回摇着上上签记一件治绩 -->
+<div class="mask" id="mask9"><div class="dlg sheet qb" id="qBox">
+  <h2>求签</h2>
+  <div id="qPre">
+    <p class="qhint">心里想着一件事，摇一摇</p>
+    <div class="qt" id="qTube"><i></i><i></i><i></i></div>
+  </div>
+  <div id="qRes" hidden>
+    <div class="qh"><span class="qno" id="qNo"></span><b id="qName"></b><span class="qg" id="qGrade"></span></div>
+    <div class="qp" id="qPoem"></div>
+    <div class="qj" id="qJie"></div>
+    <p class="qday" id="qDay"></p>
+  </div>
+  <div class="btns">
+    <button class="btn pri" id="qClose">收签</button>
   </div>
 </div></div>
 
@@ -1217,7 +1271,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v47" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v48" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -2093,8 +2147,8 @@ const COURT = [
   [85, "海晏河清", 3,   "每件 6 两 · 解锁玉玺 · 四角描金"],
 ];
 /* 治绩：难的赏得多。p 是入库的两数，摆在牌子上，一眼看得见值多少。
-   带 x 的六件是彩蛋：条目不写出来，撞上了才入册 —— 所以别去凑，凑不着。
-   三十二件全挣到共 657 两，铺子里全套要 4010 两，光靠治绩仍旧买不完，还得老实批折子。 */
+   带 x 的七件是彩蛋：条目不写出来，撞上了才入册 —— 所以别去凑，凑不着。
+   三十三件全挣到共 669 两，铺子里全套要 4010 两，光靠治绩仍旧买不完，还得老实批折子。 */
 const MEDALS = [
   /* 批折子 */
   {id:"first", n:"初御朱笔", d:"批下头一件",           p:5},
@@ -2133,6 +2187,7 @@ const MEDALS = [
   {id:"one",   n:"一气呵成", d:"一次整卷全批，十件以上",         p:12, x:1},
   {id:"yuan",  n:"元日开笔", d:"元旦这天批下一件",               p:15, x:1},
   {id:"jq1",   n:"应节而作", d:"赶在节气当天批下一件",            p:8,  x:1},
+  {id:"q1",    n:"上上之签", d:"摇着一支上上签",                  p:12, x:1},
   /* 这件不是彩蛋，明写着 —— 它要凑满一年二十四个节气，得知道自己在攒什么 */
   {id:"jq24",  n:"廿四番花信", d:"二十四个节气各批过一件",         p:60},
 ];
@@ -2145,7 +2200,7 @@ const VACS = 20;
 const GDEF = () => ({ag: DEMO ? 99999 : 0, owe:0, tot:0, cnt:0, nc:0, day:"", tn:0, run:0, best:0, sfx:1,
                      own: DEMO ? Object.keys(WARES) : Object.values(KIT).map(r => r.d), med:[],
                      seal:"zhun", paper:"xuan", font:"song", mount:"sumian", grain:"jiehang", fx:"fxno",
-                     mi:miDef(), mday:"", jq:[], jxd:""});
+                     mi:miDef(), mday:"", jq:[], jxd:"", qd:"", qn:-1});
 function G(){
   if (!D.g || typeof D.g !== "object") D.g = GDEF();
   const d = GDEF();
@@ -2844,11 +2899,14 @@ function openHL(){
     ["值日", `${r.jian} —— ${JC_TIP[r.jian]}`, JC_YS[r.jian]],
     ["值神", `${r.shen} · ${r.huang ? "黄道" : "黑道"}`, SHEN_YS[r.shen]],
   ];
+  // 解释这块搬进 kv 里当一个占满整行的成员，插在被点那格后头 ——
+  // flex 排到它就断行，所以它总落在被点的格子正下方，而不是甩到最末尾。
+  // 得先攥住它再刷 innerHTML：上一回开宪书就把它塞进 kv 了，一刷连它一并冲掉，
+  // 好在节点还在手上，重新挂回去便是。不这么办，第二回开宪书就报错
+  const ex = $("#hlEx");
   $("#hlKv").innerHTML = kv.map(([k, v, tip], i) =>
     `<span${tip ? ` class="q" data-i="${i}"` : ""}><em>${k}</em>${esc(v)}</span>`).join("");
-  // 解释这块搬进 kv 里当一个占满整行的成员，插在被点那格后头 ——
-  // flex 排到它就断行，所以它总落在被点的格子正下方，而不是甩到最末尾
-  const ex = $("#hlEx"); ex.hidden = true; $("#hlKv").appendChild(ex);
+  ex.hidden = true; $("#hlKv").appendChild(ex);
   $("#hlKv").onclick = e => {
     const s = e.target.closest("span.q"); if (!s) return;
     const open = !s.classList.contains("on");           // 再点一下收起来
@@ -2918,6 +2976,134 @@ function jiQing(){
   if (r.term) why.push(r.term);                                      // 交节当日
   return {n: why.length, why, term: r.term};                         // 至多三样，每件加三两
 }
+
+/* ── 求签：三十六签，一日一支 ──
+   签号即下标 +1。等第按老签筒的配法：上上三、上吉七、中吉九、中平十二、下下五，
+   三十六支等概率摇 —— 真签筒里每根签的粗细都一样，不该偷偷把坏签调稀。
+   不花钱也不给钱：一沾上银子，求签就变成刷签，签文也就不值钱了。 */
+const QGRADE = ["上上", "上吉", "中吉", "中平", "下下"];
+const QIAN = [
+  /* ── 上上 三支 ── */
+  {n:"云开月出", g:"上上", s:["云破天心月一轮","光生水面满江银","旧愁到此都消尽","何必更求向外人"],
+   j:"憋着的那件事到头了，自然会明。你要的答案不在别人嘴里，你心里其实早有了 —— 照着做就是。"},
+  {n:"春雷动蛰", g:"上上", s:["一声春雷动九垓","蛰龙随起下天来","莫言此去无凭据","满眼枯枝尽放开"],
+   j:"等很久的事要动了。别再问「有把握吗」，动起来自然见分晓，看着枯的都会活。"},
+  {n:"舟得顺风", g:"上上", s:["帆挂西风水载舟","此行千里不须愁","前程自有人相待","稳坐船头莫转头"],
+   j:"势头是顺的，路上有人接应。这时候最忌回头改主意 —— 坐稳了往前走。"},
+  /* ── 上吉 七支 ── */
+  {n:"石中藏玉", g:"上吉", s:["顽石粗顽莫等闲","中间美玉正堪看","工夫用到皮开处","方信从前不是难"],
+   j:"眼下难看的东西里头有好东西。功夫下到那一层，回头看会觉得当初根本不难。"},
+  {n:"老树著花", g:"上吉", s:["老树无心又著花","一枝斜出过邻家","人言此木应枯朽","谁信春风肯到他"],
+   j:"你以为过气的事，还有一茬。别人不看好没关系，风到了它自己会开。"},
+  {n:"拨云见日", g:"上吉", s:["行到山前云正低","登高一望路都齐","莫因眼底无多地","便道前头是断溪"],
+   j:"现在看不远，是因为站得低。走上去就看见路了 —— 别把「看不见」当成「没有」。"},
+  {n:"顺水推船", g:"上吉", s:["一篙点破碧琉璃","顺水行船不费力","若遇滩头须少缓","过滩依旧是坦夷"],
+   j:"整体是顺的，中间有一小段要慢。别在急处硬撑，过了那道坎照旧好走。"},
+  {n:"珠还合浦", g:"上吉", s:["明珠曾去复还来","旧物依然入手回","莫怪从前多失落","天教留待有心来"],
+   j:"丢的、断的会回来。之前那些失落没白费，是留给现在这个还有心的你。"},
+  {n:"井泉得水", g:"上吉", s:["凿井三年未见泉","一朝甘冽出深渊","从来功到方成事","莫向中途叹路难"],
+   j:"埋头很久没动静的事，快出水了。这时候叹苦最划不来 —— 就差最后一段。"},
+  {n:"灯照暗室", g:"上吉", s:["一灯能破十年暗","何况区区半夜昏","但把心头疑处扫","眼前分晓不须论"],
+   j:"屋子黑十年，点一盏灯就够。把心里犯嘀咕的那点扫掉，事情本身没那么复杂。"},
+  /* ── 中吉 九支 ── */
+  {n:"待时而动", g:"中吉", s:["种瓜未可急摘瓜","且待秋来自有花","心急枉施三日水","时来一夜满篱笆"],
+   j:"不是不成，是没到时候。催反而坏事；该做的做完，等它自己熟。"},
+  {n:"借力行舟", g:"中吉", s:["无风舟自不能行","好倩东君借一程","莫道求人终是拙","世间何事独成名"],
+   j:"这事自己使劲使不动，开口找人。求人不丢脸，天底下没几件事是一个人做成的。"},
+  {n:"沙中淘金", g:"中吉", s:["百斛黄沙水一淘","其中真物不曾饶","只愁淘者无长力","半路收筐总是劳"],
+   j:"好东西是有的，就是得筛。怕的是筛到一半嫌累收摊 —— 那前头全白干。"},
+  {n:"两岐麦秀", g:"中吉", s:["一茎两穗岂寻常","喜在田家笑一场","但守田畴勤灌溉","何愁秋熟不盈仓"],
+   j:"有个意外的好苗头。别光顾着高兴，接着浇水，秋天才真进仓。"},
+  {n:"缓步登山", g:"中吉", s:["山高莫恨路迢迢","一步只将一步消","到得峰头回首看","来时曲折总非遥"],
+   j:"只能一步一步来，急不得。到顶回头看，当初绕的那些路也没多远。"},
+  {n:"旧瓶新酒", g:"中吉", s:["旧瓶盛得新醅酒","不必更求玉斝来","人道旧时无足取","谁知滋味在中怀"],
+   j:"不用另起炉灶，手上现成的改改就能用。别嫌它旧，好处在里头。"},
+  {n:"半月当空", g:"中吉", s:["一轮未满半轮明","已胜黄昏黑处行","莫怪今宵无足看","来宵自有十分盈"],
+   j:"现在只成了一半，可一半也比没有强。别急着否定它，下一程自然圆。"},
+  {n:"雨后开晴", g:"中吉", s:["连朝苦雨损花枝","一日开晴又满篱","莫把眼前为定局","天心从不与人期"],
+   j:"坏的那一段有它自己的期限。别拿此刻的样子当结论，天说变就变。"},
+  {n:"客舟暂泊", g:"中吉", s:["孤舟暂泊柳阴边","未是归期未是迁","且把橹篙都放下","明朝风顺自扬船"],
+   j:"这个停顿不是终点，是歇脚。该放下就放下，风来了自然走。"},
+  /* ── 中平 十二支 ── */
+  {n:"平田种稻", g:"中平", s:["平田种稻不须夸","岁岁耕耘岁岁加","莫羡他人多巧计","老农终不负桑麻"],
+   j:"这事没什么巧宗，就是照旧种、照旧收。别羡慕别人走捷径，老实做的不吃亏。"},
+  {n:"守株待兔", g:"中平", s:["偶得一兔在株旁","便道从今可坐偿","自此不耕还不种","明年何处觅余粮"],
+   j:"上回那个好结果是碰巧。要是打算照着再来一遍，明年就没饭吃了。"},
+  {n:"隔岸观花", g:"中平", s:["隔水看花分外明","欲攀无路只含情","此时若要亲枝叶","除是先寻渡口行"],
+   j:"看着好，是因为你在对岸。真要够着，先去找过河的路 —— 光看没用。"},
+  {n:"磨刀待用", g:"中平", s:["磨刀霍霍未逢柴","且置墙头莫问猜","他日有薪来到手","方知今日不空捱"],
+   j:"眼下这段准备看着没用处。等真有活儿来的时候，你会庆幸磨过。"},
+  {n:"秤上分斤", g:"中平", s:["此事分明在秤头","多三分少三分休","不须更问旁人语","自己心中有一筹"],
+   j:"就差那么一点分寸，多了少了都不行。别再问别人，你心里其实有数。"},
+  {n:"旧路重行", g:"中平", s:["去年曾此问山程","今日重来路又生","莫怪风光都改换","人心先自不同情"],
+   j:"同一条路再走一遍，感觉不一样了 —— 变的多半不是路，是你。"},
+  {n:"三人共伞", g:"中平", s:["三人共伞雨中行","总有一肩在外淋","若要人人都不湿","除非各自买伞擎"],
+   j:"几个人合着一件事，总有人吃亏。想都不吃亏，那就各干各的。"},
+  {n:"灯下读书", g:"中平", s:["一盏青灯一卷书","夜长未觉守窗孤","明朝纵使无人问","胸次分明已不虚"],
+   j:"这件事眼下没人看见，也没人夸。可做完了你自己知道值 —— 那就够。"},
+  {n:"秋扇见捐", g:"中平", s:["纨扇秋来便束高","非关扇薄是天遭","人情冷暖寻常事","且置囊中待暑涛"],
+   j:"被搁下不一定是你不行，是时候不对。收着，等用得上的时节。"},
+  {n:"过桥抽板", g:"中平", s:["过得桥来便抽板","回头无路只朝前","此行纵有千般险","退亦无门不用言"],
+   j:"已经没退路了，别再盘算怎么回头。既然只能往前，就专心往前。"},
+  {n:"一线之路", g:"中平", s:["两山夹峙一线通","仅容单骑不容从","此时最忌人多口","独自穿云到日中"],
+   j:"路只有一条，还很窄。这时候人多嘴杂最误事，自己走。"},
+  {n:"逆水撑船", g:"中平", s:["逆水撑船不进休","一篙松手退千舟","此中辛苦无人见","且看滩前石点头"],
+   j:"这一段是顶着水走的，松一下就退回去。苦是没人看见，可石头都在替你数着。"},
+  /* ── 下下 五支 ── */
+  {n:"买椟还珠", g:"下下", s:["买得华椟弃了珠","人皆笑尔眼何愚","细思世上寻常事","多少痴人似此图"],
+   j:"小心把力气全花在好看的壳子上，把要紧的那件扔了。回头想想，你是不是正在干这个。"},
+  {n:"夜行失烛", g:"下下", s:["夜半提灯灯忽灭","前村犬吠路难分","此时且向阶前坐","莫把深宵误了身"],
+   j:"眼下方向是断的，硬走要出事。停下来坐到天亮，不算认输。"},
+  {n:"竹篮打水", g:"下下", s:["竹篮提水辘轳空","力尽回头一场空","早识此中无实底","何如收手作耕农"],
+   j:"这个法子本身是漏的，再使劲也存不住。趁早换个做法，不丢人。"},
+  {n:"风前残烛", g:"下下", s:["风前一点残灯火","明灭无凭不自持","急急觅来遮护处","犹能留得半宵迟"],
+   j:"现在是勉强撑着的状态，先找地方避风。保住要紧的，别管好看不好看。"},
+  {n:"虎尾春冰", g:"下下", s:["行如虎尾履春冰","一步差时万事崩","此际不须夸胆大","十分小心是十分"],
+   j:"这一步容错极低。逞胆子最划不来 —— 小心到什么程度都不算过。"},
+];
+// 今天摇过没有：摇过就返回签号下标，没摇过返回 -1。存档里的号数越界也当没摇过
+function qToday(){
+  const g = G();
+  return g.qd === ymd(Date.now()) && g.qn >= 0 && g.qn < QIAN.length ? g.qn : -1;
+}
+function drawQian(){
+  const g = G();
+  g.qd = ymd(Date.now());
+  g.qn = Math.floor(Math.random() * QIAN.length);
+  if (QIAN[g.qn].g === "上上") medal("q1");
+  save();
+  return g.qn;
+}
+function paintQ(i){
+  const q = QIAN[i];
+  $("#qNo").textContent = `第 ${i + 1} 签`;
+  $("#qName").textContent = q.n;
+  const gd = $("#qGrade");
+  gd.textContent = q.g;
+  gd.className = "qg g" + QGRADE.indexOf(q.g);
+  $("#qPoem").innerHTML = q.s.map(l => `<p>${esc(l)}</p>`).join("");
+  $("#qJie").textContent = q.j;
+  // 这句得写明白：签是随手摇的，别拿它当真去改主意
+  $("#qDay").textContent = "一日一签，明日再来。三十六支等概率摇出，当个由头想想事，不必当真。";
+  $("#qPre").hidden = true; $("#qRes").hidden = false;
+}
+function openQ(){
+  const i = qToday();
+  $("#qPre").hidden = i >= 0; $("#qRes").hidden = i < 0;   // 今天摇过就直接现签，不再让摇一回
+  if (i >= 0) paintQ(i);
+  mask9.classList.add("on");
+}
+$("#hlQian").onclick = () => { mask8.classList.remove("on"); openQ(); };
+$("#qTube").onclick = () => {
+  const t = $("#qTube");
+  if (t.classList.contains("sh")) return;      // 正摇着，别催
+  t.classList.add("sh");
+  // 晃两下再出签。摇完立刻现，是因为等待本身就是求签的一半
+  setTimeout(() => { t.classList.remove("sh"); paintQ(drawQian()); }, 1240);
+};
+$("#qClose").onclick = () => mask9.classList.remove("on");
+mask9.addEventListener("click", e => { if (e.target === mask9) mask9.classList.remove("on"); });
+
 $("#hlBtn").onclick = openHL;
 $("#hlClose").onclick = () => mask8.classList.remove("on");
 mask8.addEventListener("click", e => { if (e.target === mask8) mask8.classList.remove("on"); });
