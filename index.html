@@ -331,11 +331,11 @@
   .hlb .kv>span{border:1px solid var(--line);border-radius:5px;padding:5px 9px;
     font-size:12.5px;letter-spacing:1px;color:var(--ink);background:var(--card)}
   .hlb .kv>span em{font-style:normal;color:var(--dim);margin-right:5px}
-  /* 值日、值神这两格点得开，底下才现一小段解释；不点就不占地方 */
-  .hlb .kv>span.q{cursor:pointer;border-style:dashed}
-  .hlb .kv>span.q:hover,.hlb .kv>span.q.on{border-color:var(--accent);border-style:solid}
-  .hlb .kv>span.q::after{content:"？";color:var(--dim);font-size:11px;margin-left:4px}
-  .hlb .kv>span.q.on::after{content:"×"}
+  /* 值日、值神这两格点得开，底下才现一小段解释；不点就不占地方。
+     可点这件事只靠框描粗一道来说，不缀问号 —— 少一个符号，牌面干净些。
+     边框由 1px 加到 2px，内边距对着减 1px，免得这两格比旁边那格胖一圈 */
+  .hlb .kv>span.q{cursor:pointer;border-width:2px;padding:4px 8px;border-color:var(--dim)}
+  .hlb .kv>span.q:hover,.hlb .kv>span.q.on{border-color:var(--accent)}
   .hlb .ex{border-left:3px solid var(--line);padding-left:11px;margin:-3px 0 12px;
     font-size:12px;line-height:1.85;letter-spacing:.5px;color:var(--dim)}
   .hlb .chao{border-left:3px solid var(--accent);padding:7px 11px;margin-bottom:12px;
@@ -1195,7 +1195,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v43" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v44" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
