@@ -428,15 +428,24 @@
     30%{opacity:.85}100%{transform:translate(16px,-34px) scale(1.2);opacity:0}}
   /* 窝、玩具、空碗。窝压在最底下，猫趴上去要盖住它 */
   .cb .cy .cbed{font-size:.62em;z-index:0;transition:transform .3s ease}
-  .cb .cy .ctoy{font-size:.4em;z-index:1;transition:transform .25s linear}
+  /* 玩具也是两层：.ctoyw 管它摆在哪（inline 的 translateX），
+     .ctoy 管它挨打时怎么翻。搁一层上的话，拍飞那个 keyframe 会连位移一起盖掉 ——
+     玩具当场归零，飞到院子最左边去 */
+  .cb .cy .ctoyw{font-size:.4em;z-index:1;transition:transform .3s ease}
   .cb .cy .cbw{font-size:.44em;opacity:.9;z-index:0}
   .cb .cy .cwk{z-index:2}
-  /* 玩具被拍飞：翻着跟头弹一下。跟猫那一扑是同时起的 */
+  /* 挨打：翻着跟头弹一下再落回原地。这一层没有位移，只有它自己那点翻滚，
+     所以拍多少下都不会跑位。距离用 em，跟着玩具大小走 */
+  .cb .cy .ctoy{display:block}
   .cb .cy .ctoy.hit{animation:cthit .6s cubic-bezier(.25,1.4,.4,1)}
   @keyframes cthit{0%{transform:translate(0,0) rotate(0)}
-    40%{transform:translate(9px,-22px) rotate(140deg)}
+    40%{transform:translate(.62em,-1.55em) rotate(140deg)}
     100%{transform:translate(0,0) rotate(360deg)}}
-  .cb .cy .ctoy.held{transition:transform .18s ease}    /* 叼在嘴里，跟着猫走 */
+  /* 叼在嘴里：整个塞进猫那个元素里去，位置就再也不用对了 ——
+     猫走它跟着走，猫掉头它跟着翻，一格都不会错。嘴在脑袋那头，猫脸朝左，
+     所以贴着左边、压到脸下沿 */
+  .cb .cem>.ctoy.held{position:absolute;left:-2%;top:40%;z-index:3;
+    font-size:.4em;animation:none;transform:none;transition:none}
   /* 激光红点 */
   .cb .cy .clz{position:absolute;bottom:auto;width:11px;height:11px;border-radius:50%;
     background:radial-gradient(circle at 38% 34%,#ff8b7a,#e02b12 62%,#8d1206);
@@ -1589,7 +1598,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v56" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v57" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -3042,7 +3051,7 @@ function catScene(){
   const bed = BEDS[g.catbed] || BEDS.bed_cao, pet = PETS[g.catpet] || PETS.pet_no;
   const P = [];
   if (bed.e) P.push(`<span class="cbed">${bed.e}</span>`);
-  if (pet.e && !pet.laser) P.push(`<span class="ctoy">${pet.e}</span>`);
+  if (pet.e && !pet.laser) P.push(`<span class="ctoyw"><span class="ctoy">${pet.e}</span></span>`);
   if (c.f < .2) P.push(`<span class="cbw">🥣</span>`);
   P.push(`<span class="cwk"><span class="cem">🐈<span class="cz" hidden>💤</span></span></span>`);
   if (pet.laser) P.push(`<span class="clz"></span>`);
@@ -3176,22 +3185,27 @@ function catPlay(){
     catAfter(340, hit);
   });
 }
-// 叼着走两步，换个地方撂下。玩具跟猫嘴同步位移，用的是同一个时长
+/* 叼着走两步，换个地方撂下。
+   办法是把玩具整个搬进猫那个元素（.cem）里去 —— 从此它就是猫身上的一块，
+   猫走它跟着走、猫掉头它跟着翻，不用拿两条 transition 去对齐（对不齐的，
+   一层是位移一层是跟随，差半帧就飘）。撂下时再搬回院子里，给它一个新的落点。 */
 function catCarry(){
-  const A = CA; if (!A || !A.el.toy) return catStep();
+  const A = CA; if (!A || !A.el.toy || !A.el.toyw) return catStep();
   const t = A.el.toy, nm = (PETS[G().catpet] || {}).n || "玩具";
+  t.classList.remove("hit");
   t.classList.add("held");
+  A.el.em.appendChild(t);                        // 叼起来：进嘴
   toast(`${catName()}叼起${nm}，换了个地方撂下。`);
   catMove(A.pad + Math.random() * Math.max(1, A.W - A.cw - A.pad * 2), 44, () => {
-    A.toyX = clamp(A.x + A.cw * .12, A.pad, A.W - A.toyW - A.pad);
+    if (!CA || CA !== A) return;
+    // 撂在脚边：猫脸朝哪边，就撂在哪边
+    A.toyX = clamp(A.x + (A.dir < 0 ? A.cw - A.toyW : 0), A.pad, Math.max(A.pad, A.W - A.toyW - A.pad));
     t.classList.remove("held");
-    t.style.transitionDuration = ".3s";
-    t.style.transform = `translateX(${Math.round(A.toyX)}px)`;
+    A.el.toyw.appendChild(t);                    // 放下：回院子
+    A.el.toyw.style.transitionDuration = "0s";
+    A.el.toyw.style.transform = `translateX(${Math.round(A.toyX)}px)`;
     catAfter(760, catStep);
   });
-  // catMove 已经把时长写进 .cwk 了，照抄一份给玩具，它就跟在猫嘴上
-  t.style.transitionDuration = A.el.wk.style.transitionDuration;
-  t.style.transform = `translate(${Math.round(A.x + A.cw * .12)}px,${-Math.round(A.cw * .34)}px)`;
 }
 /* ── 激光笔 ──
    摆上这一样，鼠标（或手指）在院子里的横坐标就是那颗红点，猫追着它跑。
@@ -3242,7 +3256,8 @@ function catStart(){
   const A = {
     el:{y, cy, wk:cy.querySelector(".cwk"), em:cy.querySelector(".cem"),
         z:cy.querySelector(".cz"), bed:cy.querySelector(".cbed"),
-        toy:cy.querySelector(".ctoy"), bowl:cy.querySelector(".cbw"),
+        toyw:cy.querySelector(".ctoyw"), toy:cy.querySelector(".ctoy"),
+        bowl:cy.querySelector(".cbw"),
         lz:cy.querySelector(".clz")},
     x:0, dir:1, legs:0, wake:0, poked:0, laserOn:0, lzTo:null, timer:null, act:"walk", pad:6,
   };
@@ -3251,14 +3266,14 @@ function catStart(){
   const put = (el, x) => { if (el){ el.style.transitionDuration = "0s";
                                    el.style.transform = `translateX(${Math.round(x)}px)`; } };
   A.bedW = A.el.bed ? (A.el.bed.offsetWidth || A.cw * .62) : 0;
-  A.toyW = A.el.toy ? (A.el.toy.offsetWidth || A.cw * .4) : 0;
+  A.toyW = A.el.toyw ? (A.el.toyw.offsetWidth || A.cw * .4) : 0;
   A.bowlW = A.el.bowl ? (A.el.bowl.offsetWidth || A.cw * .44) : 0;
   /* 窝往里挪半个身位：贴着院子边摆的话，猫趴上去要被挤出院外，
      只能歪在窝沿上。挪进来它才睡得进去 */
   A.bedX = A.pad + Math.max(0, (A.cw - A.bedW) / 2);
   A.toyX = Math.max(A.pad, A.W - A.toyW - A.pad * 3);
   A.bowlX = Math.max(A.pad, A.W * .3);
-  put(A.el.bed, A.bedX); put(A.el.toy, A.toyX); put(A.el.bowl, A.bowlX);
+  put(A.el.bed, A.bedX); put(A.el.toyw, A.toyX); put(A.el.bowl, A.bowlX);
   A.x = (A.W - A.cw) / 2;
   put(A.el.wk, A.x);
   CA = A;
