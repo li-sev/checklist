@@ -439,6 +439,37 @@
   .gb .gj{border-left:3px solid var(--accent);padding:8px 12px;
     font-size:13px;line-height:1.95;letter-spacing:.5px;color:var(--ink);background:var(--card)}
   .gb .gmv{font-size:12.5px;line-height:1.85;letter-spacing:1px;color:var(--zhu);margin:10px 0 0}
+  /* ── 邸报 ── */
+  .gzhd{display:flex;align-items:center;justify-content:center;gap:14px;margin:2px 0 12px}
+  .gzhd b{font-size:19px;letter-spacing:4px;color:var(--ink);min-width:150px;text-align:center}
+  .gzarr{width:30px;height:30px;border:1px solid var(--line);background:var(--card);
+    border-radius:4px;cursor:pointer;font-size:17px;line-height:1;color:var(--accent)}
+  .gzarr:hover:not(:disabled){border-color:var(--accent)}
+  .gzarr:disabled{opacity:.3;cursor:default}
+  .gznums{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:4px}
+  .gznums div{flex:1 1 82px;text-align:center;padding:9px 4px;border:1px solid var(--line);
+    border-radius:4px;background:var(--soft)}
+  .gznums b{display:block;font-size:23px;line-height:1.25;color:var(--accent)}
+  .gznums span{font-size:11.5px;letter-spacing:1px;color:var(--dim)}
+  /* 逐日：一天一根，最高的那天顶格，其余按比例。没批的那天留一道浅底，看得出断了 */
+  .gzday{display:flex;align-items:flex-end;gap:2px;height:58px;padding:0 1px}
+  .gzday i{flex:1;min-width:3px;background:var(--accent);border-radius:1px 1px 0 0;
+    min-height:2px;opacity:.85}
+  .gzday i.z{background:var(--line);opacity:.55}
+  .gzday i.t{outline:1px solid var(--gold);outline-offset:1px}   /* 今天 */
+  .gzmi div{display:flex;align-items:center;gap:9px;height:23px}
+  .gzmi span{width:40px;font-size:12.5px;letter-spacing:1px;color:var(--dim)}
+  .gzmi i{height:10px;background:var(--accent);border-radius:1px;min-width:2px;opacity:.85}
+  .gzmi b{font-size:12px;color:var(--dim);font-weight:400}
+  .gzold div{display:flex;align-items:baseline;gap:8px;padding:5px 0;
+    border-bottom:1px dashed var(--line);font-size:13px;line-height:1.6}
+  .gzold div:last-child{border-bottom:none}
+  .gzold .d{color:var(--zhu);font-weight:700;white-space:nowrap}
+  .gzold .t{flex:1;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .gzold .v{font-size:11.5px;color:var(--dim);white-space:nowrap}
+  .gzold .non{color:var(--dim);font-size:12.5px;border-bottom:none;display:block}
+  .gzsay{margin:14px 0 4px;padding:9px 12px;border-left:3px solid var(--accent);
+    background:var(--soft);font-size:13.5px;line-height:1.9;letter-spacing:1px;color:var(--ink)}
   .gb .glg{font-size:11.5px;line-height:1.9;color:var(--dim);letter-spacing:.5px;
     margin:0 0 14px;padding:8px 10px;background:var(--soft);border-radius:4px}
   .gb .glg b{color:var(--ink);font-weight:700}
@@ -1156,6 +1187,7 @@
     <button class="tab" data-tab="boon">朝纲</button>
     <button class="tab" data-tab="med">治绩<i id="ihMedN"></i></button>
     <button class="tab" data-tab="store">内库</button>
+    <button class="tab" data-tab="gaz">邸报</button>
   </div>
 
   <div class="pane on" data-pane="court">
@@ -1197,6 +1229,28 @@
     <div class="goods" id="ihG-fx"></div>
     <div class="hint">买过的就一直在，随时换回来，换的时候不花钱。库银在上头那一行。<br>
       六档各管各的，怎么搭都行。虚线框的两样是恩典之物：银子够也得朝纲够，跌下去就暂时不敢用了</div>
+  </div>
+
+  <!-- 邸报：一月一册，把这个月批的折子结成一张实录，能存成图 -->
+  <div class="pane" data-pane="gaz">
+    <div class="gzhd">
+      <button class="gzarr" id="gzPrev" title="上一月">‹</button>
+      <b id="gzMon">—</b>
+      <button class="gzarr" id="gzNext" title="下一月">›</button>
+    </div>
+    <div class="gznums" id="gzNums"></div>
+    <label>逐日 <small>这个月每一天批了几件</small></label>
+    <div class="gzday" id="gzDay"></div>
+    <label>六部差事 <small>这个月的活儿派给了谁</small></label>
+    <div class="gzmi" id="gzMi"></div>
+    <label>压得最久 <small>还没批、进场最早的几件</small></label>
+    <div class="gzold" id="gzOld"></div>
+    <p class="gzsay" id="gzSay"></p>
+    <div class="btns">
+      <button class="btn" id="gzImg">存成一张图</button>
+    </div>
+    <div class="hint">逐日流水是从这一版才开始记的，更早的月份翻不出来。<br>
+      撤回朱批会从当初记账那天减掉，焚卷也一样 —— 邸报跟国库对得上账</div>
   </div>
 
   <div class="btns">
@@ -1388,7 +1442,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v49" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v50" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -1440,7 +1494,7 @@ function parse(text){
     else if (m = t.match(/^\d+[.)]\s+(.*)$/))        { t = m[1]; }
     t = t.trim(); if (!t) continue;
     if (!cur) open("");
-    cur.items.push({id:uid(), t, done});
+    cur.items.push({id:uid(), t, done, ct:Date.now()});
   }
   return groups.filter(g => g.items.length);
 }
@@ -1747,7 +1801,7 @@ function startAdd(gid, row){
 
   const commit = () => {
     const v = inp.value.trim(); if (!v) return false;
-    const it = {id:uid(), t:v, done:false};
+    const it = {id:uid(), t:v, done:false, ct:Date.now()};   // 进场时间，邸报算积压靠它
     g.items.push(it);
     ul.insertAdjacentHTML("beforeend", liHTML(it));      // 手动插一行，别整页重绘丢焦点
     inp.value = ""; paint(); save(true);
@@ -2317,7 +2371,7 @@ const VACS = 20;
 const GDEF = () => ({ag: DEMO ? 99999 : 0, owe:0, tot:0, cnt:0, nc:0, day:"", tn:0, run:0, best:0, sfx:1,
                      own: DEMO ? Object.keys(WARES) : Object.values(KIT).map(r => r.d), med:[],
                      seal:"zhun", paper:"xuan", font:"song", mount:"sumian", grain:"jiehang", fx:"fxno",
-                     mi:miDef(), mday:"", jq:[], jxd:"", qd:"", qn:-1});
+                     mi:miDef(), mday:"", jq:[], jxd:"", qd:"", qn:-1, hist:{}});
 function G(){
   if (!D.g || typeof D.g !== "object") D.g = GDEF();
   const d = GDEF();
@@ -2503,11 +2557,19 @@ function refund(groups, L){
   for (const gg of groups){
     const mid = miOf(gg, L);
     let k = 0;
-    for (const it of gg.items) if (it.p){ back += (typeof it.p === "number" ? it.p : 2); k++; }
+    for (const it of gg.items) if (it.p){
+      const paid = typeof it.p === "number" ? it.p : 2;
+      back += paid; k++;
+      histLog(it.pd || ymd(Date.now()), -1, -paid, mid);   // 卷子焚了，流水也得跟着抹
+    }
     n += k;
     let de = k * 2, dl = k;
     // 整卷的赏也要吐出来。老存档里 pg 是个 1 的记号，那会儿整卷固定十两
-    if (gg.pg){ back += gg.pg === 1 ? 10 : gg.pg; de += 6; dl += 5; }
+    if (gg.pg){
+      const amt = gg.pg === 1 ? 10 : gg.pg;
+      back += amt; de += 6; dl += 5;
+      histLog(gg.pgd || ymd(Date.now()), 0, -amt, null);
+    }
     if (de) bump(mid, -de, -dl);
   }
   if (!n && !back) return 0;
@@ -2582,6 +2644,8 @@ function scoreGroup(g){
   const mid = miOf(g);
   const amt = Math.round(10 * mult());
   g.pg = amt;                                     // 存实数，撤卷照数退（老存档里这儿是个 1）
+  g.pgd = ymd(Date.now());
+  histLog(g.pgd, 0, amt, null);                   // 整卷赏只添银子，件数刚才一件件记过了
   earn(amt); bump(mid, 6, 5); medal("vol"); sweep();
   const p = who(mid);
   toast(`${MI[mid].n}${p ? " " + p : ""}「${g.title || "这一卷"}」整卷办结，入库 ${amt} 两`);
@@ -2591,6 +2655,7 @@ function medal(id){
   const g = G(); if (g.med.includes(id)) return;
   const m = MEDALS.find(x => x.id === id); if (!m) return;
   g.med.push(id);
+  histLog(ymd(Date.now()), 0, m.p, null);         // 赏格也算这天入的库，邸报要跟国库对得上
   earn(m.p);                                      // 按这件治绩的赏格入库（有亏空先抵）
   // 彩蛋另起一个名头报 —— 挣到之前牌子上是「？」，这一下才知道刚才做的那件事叫什么
   herald(m.x ? "秘录一则" : "载入实录", m.n, `${m.d} · 入库 ${m.p} 两`);
@@ -2630,6 +2695,35 @@ function sweep(){
   if (g.seal === "xi") medal("yuxi");                                // 玉玺那一方印
   if (bought(g) >= WARESN) medal("full");                            // 五档货色一样不缺
 }
+/* ── 逐日流水 ──
+   邸报要按月回看，可从前只存了个总数 cnt，翻不出「八月批了多少」。
+   这儿按天记一笔：n 件数、s 银两、m 各部分了几件。
+   撤回要从当初记账那天减，所以打勾时把日子写在 it.pd 上，撤的时候照着找回去。
+   只留最近四百天 —— 再往前翻不着了，存着白占地方。 */
+function hist(day){
+  const g = G();
+  if (!g.hist || typeof g.hist !== "object") g.hist = {};
+  if (!g.hist[day]) g.hist[day] = {n:0, s:0, m:{}};
+  const h = g.hist[day];
+  if (typeof h.n !== "number") h.n = 0;
+  if (typeof h.s !== "number") h.s = 0;
+  if (!h.m || typeof h.m !== "object") h.m = {};
+  return h;
+}
+function histLog(day, n, s, mid){
+  const h = hist(day);
+  h.n = Math.max(0, h.n + n);
+  h.s = Math.max(0, h.s + s);
+  if (mid) h.m[mid] = Math.max(0, (h.m[mid] || 0) + n);
+  if (!h.n && !h.s) delete G().hist[day];          // 撤干净了就把这天抹掉，别留一行零
+  histTrim();
+}
+function histTrim(){
+  const g = G(), ks = Object.keys(g.hist);
+  if (ks.length <= 400) return;
+  ks.sort().slice(0, ks.length - 400).forEach(k => delete g.hist[k]);
+}
+
 /* 今天头一回批折：结算连批天数，返回该给的加赏 */
 function touchDay(){
   const g = G(), t = ymd(Date.now());
@@ -2652,6 +2746,8 @@ function scoreTick(it, on, el, mid){
        倍率是当下这一刻的：朝纲后来涨了跌了，都不动已经入过库的账 */
     const jx = jiQing();                          // 挑着好日子办，每件多给几两
     it.p = Math.round(2 * mult()) + bonus + jx.n;
+    it.pd = ymd(Date.now());                      // 记账那天，撤回时照它退
+    histLog(it.pd, 1, it.p, mid);
     earn(it.p, el);
     if (mid) bump(mid, 2, 1);
     /* toast 是同一块牌，后来的把先前的顶掉，所以两条话并成一条报 */
@@ -2677,7 +2773,10 @@ function scoreTick(it, on, el, mid){
   } else {
     if (!it.p) return;
     const paid = typeof it.p === "number" ? it.p : 2;   // 老存档里 it.p 是个 1 的记号
-    delete it.p; g.cnt = Math.max(0, (g.cnt || 0) - 1); g.tn = Math.max(0, (g.tn || 0) - 1);
+    // 老存档没有 pd，只好算在今天头上 —— 减不着当初那天，总比不减强
+    histLog(it.pd || ymd(Date.now()), -1, -paid, mid);
+    delete it.p; delete it.pd;
+    g.cnt = Math.max(0, (g.cnt || 0) - 1); g.tn = Math.max(0, (g.tn || 0) - 1);
     earn(-paid, el);
     if (mid) bump(mid, -2, -1);
     sweep();                                      // 撤到欠出亏空来，那也是一则秘录
@@ -3386,6 +3485,221 @@ $("#gAgain").onclick = gReset;
 $("#gClose").onclick = () => mask11.classList.remove("on");
 mask11.addEventListener("click", e => { if (e.target === mask11) mask11.classList.remove("on"); });
 
+/* ── 邸报：一月一册的实录 ──
+   数字全是从逐日流水里现算的，不另存一份 —— 存两份迟早对不上账。
+   流水是这一版才开始记的，从前的月份翻不出来，页里写明白了。 */
+const GZNUM = "〇一二三四五六七八九";
+const cnNum = n => n < 10 ? GZNUM[n] : n < 20 ? "十" + (n % 10 ? GZNUM[n % 10] : "")
+  : GZNUM[Math.floor(n / 10)] + "十" + (n % 10 ? GZNUM[n % 10] : "");
+const gzYM = t => { const d = new Date(t); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0"); };
+const gzLabel = m => {
+  const [y, mo] = m.split("-");
+  return [...y].map(c => GZNUM[+c]).join("") + "年 " + cnNum(+mo) + "月";
+};
+let gzM = "";
+/* 这个月的账。回一个现成的册子，画页面和画图共用同一份 */
+function gazData(m){
+  const g = G(), h = g.hist || {};
+  const [y, mo] = m.split("-").map(Number);
+  const days = new Date(y, mo, 0).getDate();
+  const per = [];                                  // 逐日件数，下标 0 是初一
+  let n = 0, ag = 0, act = 0, run = 0, best = 0;
+  const mi = {};
+  for (let i = 1; i <= days; i++){
+    const k = `${m}-${String(i).padStart(2, "0")}`, e = h[k];
+    const c = e ? e.n : 0;
+    per.push(c);
+    n += c; ag += e ? e.s : 0;
+    if (c > 0){ act++; run++; best = Math.max(best, run); } else run = 0;
+    if (e) for (const id in e.m) mi[id] = (mi[id] || 0) + e.m[id];
+  }
+  // 积压：还没批、又记得进场时间的，越早越靠前。老存档没有 ct，只能不算
+  const old = [];
+  for (const l of (D.lists || [])) for (const gg of (l.groups || []))
+    for (const it of (gg.items || []))
+      if (!it.done && it.ct){
+        const dd = Math.floor((Date.now() - it.ct) / 864e5);
+        if (dd >= 2) old.push({d:dd, t:it.t, v:gg.title || l.name});   // 压过两天才算积压
+      }
+  old.sort((a, b) => b.d - a.d);
+  return {m, y, mo, days, per, n, ag, act, best, mi, old:old.slice(0, 4), max:Math.max(1, ...per)};
+}
+function gazSay(o){
+  if (!o.n) return "这个月一件没批。折子搁着不会自己少，下个月捡起来就是。";
+  const top = Object.entries(o.mi).sort((a, b) => b[1] - a[1])[0];
+  const bits = [`共批 ${o.n} 件，办差 ${o.act} 天`];
+  if (o.best >= 7) bits.push(`最长连着批了 ${o.best} 天，这是勤政`);
+  else if (o.best >= 3) bits.push(`最长连批 ${o.best} 天`);
+  if (top) bits.push(`${MI[top[0]].n}领了 ${top[1]} 件，是这个月最忙的一部`);
+  if (o.old.length && o.old[0].d >= 30) bits.push(`另有一件压了 ${o.old[0].d} 天还没动 —— 要么办了，要么删了`);
+  return bits.join("；") + "。";
+}
+function gazMonths(){
+  const ks = Object.keys(G().hist || {}).sort();
+  const cur = gzYM(Date.now());
+  const first = ks.length ? ks[0].slice(0, 7) : cur;
+  const out = [];
+  let [y, mo] = first.split("-").map(Number);
+  for (let i = 0; i < 480; i++){                   // 四百八十个月封顶，防着存档里塞进个怪日子
+    const k = `${y}-${String(mo).padStart(2, "0")}`;
+    out.push(k);
+    if (k === cur) break;
+    if (++mo > 12){ mo = 1; y++; }
+  }
+  if (!out.includes(cur)) out.push(cur);
+  return out;
+}
+function paintGaz(){
+  const all = gazMonths();
+  if (!all.includes(gzM)) gzM = all[all.length - 1];
+  const i = all.indexOf(gzM), o = gazData(gzM);
+  $("#gzMon").textContent = gzLabel(gzM);
+  $("#gzPrev").disabled = i <= 0;
+  $("#gzNext").disabled = i >= all.length - 1;
+  $("#gzNums").innerHTML =
+    `<div><b>${o.n}</b><span>批过（件）</span></div>` +
+    `<div><b>${o.ag}</b><span>入库（两）</span></div>` +
+    `<div><b>${o.act}</b><span>办差（天）</span></div>` +
+    `<div><b>${o.best}</b><span>最长连批（日）</span></div>`;
+  const td = ymd(Date.now());
+  $("#gzDay").innerHTML = o.per.map((c, k) => {
+    const day = `${o.m}-${String(k + 1).padStart(2, "0")}`;
+    return `<i class="${c ? "" : "z"}${day === td ? " t" : ""}" style="height:${
+      c ? Math.max(8, Math.round(c / o.max * 100)) : 5}%" title="${day} 批 ${c} 件"></i>`;
+  }).join("");
+  const mx = Math.max(1, ...Object.values(o.mi));
+  $("#gzMi").innerHTML = MINISTRY.map(m => {
+    const c = o.mi[m.id] || 0;
+    return `<div><span>${m.n}</span><i style="width:${c ? Math.max(3, Math.round(c / mx * 62)) : 0}%"></i>` +
+           `<b>${c ? c + " 件" : "—"}</b></div>`;
+  }).join("");
+  $("#gzOld").innerHTML = o.old.length
+    ? o.old.map(x => `<div><span class="d">${x.d} 天</span><span class="t">${esc(x.t)}</span>` +
+        `<span class="v">${esc(x.v)}</span></div>`).join("")
+    : `<div class="non">眼下没有压过两天的卷子。（这一版之前添的没记进场时间，不计在内）</div>`;
+  $("#gzSay").textContent = gazSay(o);
+}
+$("#gzPrev").onclick = () => { const a = gazMonths(), i = a.indexOf(gzM); if (i > 0){ gzM = a[i - 1]; paintGaz(); } };
+$("#gzNext").onclick = () => { const a = gazMonths(), i = a.indexOf(gzM); if (i < a.length - 1){ gzM = a[i + 1]; paintGaz(); } };
+
+/* 存成一张图。画布是现画的，不引任何外头的东西；
+   纸色和字体都照页面眼下这一套来 —— 换了纸色，邸报也跟着换 */
+function gazPng(){
+  const o = gazData(gzM), cs = getComputedStyle(document.body);
+  const V = k => (cs.getPropertyValue(k) || "").trim() || "#333";
+  const bg = V("--bg"), ink = V("--ink"), dim = V("--dim"), acc = V("--accent"),
+        line = V("--line"), soft = V("--soft"), zhu = V("--zhu"), gold = V("--gold");
+  const ff = cs.fontFamily || "serif";
+  /* 高度是算出来的，不是写死的：「压得最久」有几条，纸就多长。
+     写死 1000 的时候，只压着一两件的月份底下要空一大片，看着像没画完 */
+  const rows = Math.max(1, o.old.length);
+  const W = 720, H = 816 + rows * 26, r = 2;       // 二倍图，存下来在手机上看不糊
+  const cv = document.createElement("canvas");
+  cv.width = W * r; cv.height = H * r;
+  const x = cv.getContext("2d");
+  x.scale(r, r);
+  x.fillStyle = bg; x.fillRect(0, 0, W, H);
+  const F = (sz, w) => x.font = `${w || 400} ${sz}px ${ff}`;
+  const T = (t, px, py, col, sz, w, al) => { x.fillStyle = col; F(sz, w); x.textAlign = al || "left"; x.fillText(t, px, py); };
+  const M = 48;
+
+  x.strokeStyle = line; x.lineWidth = 1; x.strokeRect(M - 18, 30, W - (M - 18) * 2, H - 60);
+  T("邸　报", M, 96, ink, 40, 700);
+  T(gzLabel(gzM), M + 190, 94, dim, 19);
+  // 右上角一方朱印
+  x.fillStyle = zhu; x.fillRect(W - M - 62, 56, 62, 62);
+  T("实", W - M - 31, 84, bg, 22, 700, "center");
+  T("录", W - M - 31, 110, bg, 22, 700, "center");
+  x.strokeStyle = acc; x.lineWidth = 2; x.beginPath(); x.moveTo(M, 118); x.lineTo(W - M - 78, 118); x.stroke();
+
+  // 四个数
+  let y = 150;
+  [[o.n, "批过（件）"], [o.ag, "入库（两）"], [o.act, "办差（天）"], [o.best, "最长连批（日）"]]
+    .forEach(([v, lb], i) => {
+      const bx = M + i * 156, bw = 146;
+      x.fillStyle = soft; x.fillRect(bx, y, bw, 82);
+      x.strokeStyle = line; x.lineWidth = 1; x.strokeRect(bx, y, bw, 82);
+      T(String(v), bx + bw / 2, y + 46, acc, 34, 700, "center");
+      T(lb, bx + bw / 2, y + 68, dim, 12, 400, "center");
+    });
+
+  // 逐日
+  y = 274;
+  T("逐日", M, y, ink, 15, 700);
+  T("这个月每一天批了几件", M + 46, y, dim, 12);
+  y += 14;
+  const bw2 = (W - M * 2) / o.days;
+  o.per.forEach((c, k) => {
+    const h = c ? Math.max(4, Math.round(c / o.max * 74)) : 3;
+    x.fillStyle = c ? acc : line;
+    x.fillRect(M + k * bw2, y + 78 - h, Math.max(2, bw2 - 2), h);
+  });
+  y += 78;
+  x.strokeStyle = line; x.beginPath(); x.moveTo(M, y + 2); x.lineTo(W - M, y + 2); x.stroke();
+  [1, Math.ceil(o.days / 2), o.days].forEach(d =>
+    T(String(d), M + (d - .5) * bw2, y + 18, dim, 11, 400, "center"));
+
+  // 六部
+  y += 52;
+  T("六部差事", M, y, ink, 15, 700);
+  y += 12;
+  const mx = Math.max(1, ...Object.values(o.mi));
+  MINISTRY.forEach((m, i) => {
+    const ly = y + i * 26;
+    T(m.n, M, ly + 14, dim, 13);
+    const c = o.mi[m.id] || 0, bw3 = c ? Math.max(3, Math.round(c / mx * 430)) : 0;
+    x.fillStyle = acc; x.fillRect(M + 46, ly + 5, bw3, 11);
+    T(c ? c + " 件" : "—", M + 52 + bw3, ly + 15, dim, 12);
+  });
+
+  // 压得最久
+  y += 6 * 26 + 26;
+  T("压得最久", M, y, ink, 15, 700);
+  y += 10;
+  if (o.old.length) o.old.forEach((it, i) => {
+    const ly = y + i * 26;
+    T(it.d + " 天", M, ly + 14, zhu, 13, 700);
+    // 卷名先掐短 —— 它靠右排，掐不短就会顶到折子正文头上
+    let v = it.v; F(11.5, 400);
+    while (x.measureText(v).width > 170 && v.length > 3) v = v.slice(0, -1);
+    if (v !== it.v) v += "…";
+    let t = it.t; F(13, 400);
+    while (x.measureText(t).width > 360 && t.length > 4) t = t.slice(0, -2);
+    T(t + (t === it.t ? "" : "…"), M + 62, ly + 14, ink, 13);
+    T(v, W - M, ly + 14, dim, 11.5, 400, "right");
+    x.strokeStyle = line; x.beginPath(); x.moveTo(M, ly + 21); x.lineTo(W - M, ly + 21); x.stroke();
+  });
+  else T("眼下没有压过两天的卷子。", M, y + 14, dim, 13);
+
+  // 考语：一句话，长了就折行
+  y += rows * 26 + 26;
+  x.fillStyle = soft; x.fillRect(M, y, W - M * 2, 76);
+  x.fillStyle = acc; x.fillRect(M, y, 3, 76);
+  F(13.5, 400); x.fillStyle = ink; x.textAlign = "left";
+  const say = gazSay(o); let ln = "", k = 0;
+  for (const ch of say){
+    if (x.measureText(ln + ch).width > W - M * 2 - 34){ x.fillText(ln, M + 16, y + 26 + k * 24); ln = ""; k++; }
+    ln += ch;
+    if (k >= 2) break;
+  }
+  if (ln) x.fillText(ln + (k >= 2 ? "…" : ""), M + 16, y + 26 + k * 24);
+
+  T("奏事处 · " + ymd(Date.now()) + " 制", W - M, H - 52, dim, 11.5, 400, "right");
+  T("朱笔一点，此事便算办了", M, H - 52, gold, 11.5);
+  return cv;
+}
+$("#gzImg").onclick = () => {
+  const cv = gazPng(), name = `邸报_${gzM}.png`;
+  const go = url => { const a = document.createElement("a"); a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove(); };
+  if (cv.toBlob) cv.toBlob(b => {
+    if (!b) return toast("这台机器画不了图，换个浏览器试试");
+    const u = URL.createObjectURL(b); go(u); setTimeout(() => URL.revokeObjectURL(u), 4000);
+    toast("邸报已存成一张图");
+  }, "image/png");
+  else { go(cv.toDataURL("image/png")); toast("邸报已存成一张图"); }
+};
+
 $("#hlBtn").onclick = openHL;
 $("#hlClose").onclick = () => mask8.classList.remove("on");
 mask8.addEventListener("click", e => { if (e.target === mask8) mask8.classList.remove("on"); });
@@ -3503,10 +3817,11 @@ $("#ihTabs").addEventListener("click", e => {
   const b = e.target.closest(".tab"); if (!b || b.classList.contains("on")) return;
   $$("#ihTabs .tab").forEach(x => x.classList.toggle("on", x === b));
   $$("#mask6 .pane").forEach(p => p.classList.toggle("on", p.dataset.pane === b.dataset.tab));
+  if (b.dataset.tab === "gaz") paintGaz();       // 邸报现算，别拿上回开着的旧账糊弄
   punch(b);
   mask6.querySelector(".dlg").scrollTop = 0;
 });
-function openShop(){ paintShop(); mask6.classList.add("on"); }
+function openShop(){ paintShop(); paintGaz(); mask6.classList.add("on"); }
 mask6.addEventListener("click", e => { if (e.target === mask6) mask6.classList.remove("on"); });
 $("#ihClose").onclick = () => mask6.classList.remove("on");
 $("#purse").onclick = openShop;
@@ -3610,8 +3925,8 @@ $("#ihReset").onclick = async () => {
     "<small>折子本身不动，一件都不会少。</small>", "重开")) return;
   D.g = GDEF();
   for (const l of D.lists) for (const gg of l.groups){
-    delete gg.pg;
-    for (const it of gg.items){ delete it.p; delete it.pn; }
+    delete gg.pg; delete gg.pgd;
+    for (const it of gg.items){ delete it.p; delete it.pn; delete it.pd; }
   }
   paintPurse(); paintShop(); render(); save(true); toast("已重开一局");
 };
