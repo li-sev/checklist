@@ -401,30 +401,38 @@
     display:flex;align-items:center;justify-content:center}
   .cb .cst:active .cy{transform:translateY(2px)}
   .cb .cy{position:relative;width:100%;line-height:1;text-align:center}
-  .cb .cwk{display:inline-block;animation:catwk var(--cdur) linear infinite}
-  .cb .cem{display:inline-block;animation:catbob .5s ease-in-out infinite}
+  /* .cwk 是满幅的块：translateX 的百分比就按院子宽度算，
+     院子多宽它就溜达多远。做成 inline-block 的话百分比只按猫自己那么点宽度算，
+     院子一宽它就只在正中间挪一小步 */
+  .cb .cwk{display:block;animation:catwk var(--cdur) linear infinite}
+  .cb .cem{position:relative;display:inline-block;animation:catbob .5s ease-in-out infinite}
   /* 苹果那只猫脸朝左，所以往右走的那半程要翻过来 */
   @keyframes catwk{
-    0%{transform:translateX(-88%) scaleX(-1)}
-    46%{transform:translateX(88%) scaleX(-1)}
-    50%,54%{transform:translateX(88%) scaleX(1)}
-    96%,100%{transform:translateX(-88%) scaleX(1)}
+    0%{transform:translateX(-30%) scaleX(-1)}
+    46%{transform:translateX(30%) scaleX(-1)}
+    50%,54%{transform:translateX(30%) scaleX(1)}
+    96%,100%{transform:translateX(-30%) scaleX(1)}
   }
+  /* 摸一把：蹦一下就完，不循环 */
+  .cb .cy.pet{animation:catpet .5s ease}
+  @keyframes catpet{0%,100%{transform:translateY(0)}32%{transform:translateY(-13px)}}
   @keyframes catbob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
   .cb .cy.perk .cem{animation-duration:.34s}          /* 撒欢蹦得急 */
   /* 打盹：不走，只一起一伏地喘气，头顶飘瞌睡泡 */
   .cb .cy.nap .cwk{animation:none}
   .cb .cy.nap .cem{animation:catbr 3.4s ease-in-out infinite}
   @keyframes catbr{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
-  .cb .cy .cz{position:absolute;left:62%;top:2%;font-size:.34em;
+  /* 瞌睡泡贴在猫脑袋上头。它脸朝左，脑袋就在左边 */
+  .cb .cy .cz{position:absolute;left:2%;top:-20%;font-size:.34em;
     animation:catz 2.8s ease-in-out infinite}
   @keyframes catz{0%{transform:translate(0,0) scale(.8);opacity:0}
     30%{opacity:.85}100%{transform:translate(16px,-34px) scale(1.2);opacity:0}}
-  /* 等食：蹲在碗跟前不动，隔一会儿晃一下 */
-  .cb .cy.wait .cwk{animation:none;transform:translateX(-42%) scaleX(-1)}
+  /* 等食：蹲在碗跟前不动，隔一会儿晃一下。这张不翻面 ——
+     不翻它才脸朝左，正对着摆在左手边的空碗 */
+  .cb .cy.wait .cwk{animation:none;transform:translateX(10%)}
   .cb .cy.wait .cem{animation:catsw 2.6s ease-in-out infinite}
   @keyframes catsw{0%,86%,100%{transform:rotate(0)}91%{transform:rotate(-5deg)}96%{transform:rotate(5deg)}}
-  .cb .cy .cbw{position:absolute;right:14%;bottom:6%;font-size:.42em;opacity:.9}
+  .cb .cy .cbw{position:absolute;right:96%;bottom:0;font-size:.44em;opacity:.9}
   .cb .cnm{display:flex;align-items:baseline;justify-content:center;gap:6px;margin-bottom:8px}
   /* 名字是可以改的：写成一条下划线，看着像填在纸上，不像个输入框 */
   .cb .cnm input{width:6.5em;text-align:center;font:inherit;font-size:17px;letter-spacing:4px;
@@ -1543,7 +1551,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v54" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v55" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -2920,15 +2928,15 @@ function catGift(){
    这一格本来要的就是「系统里那只猫」，不是我画的猫。
    姿态也不靠形，靠它怎么动 —— 溜达、撒欢、打盹、蹲在空碗边等。
    k = 膘，只管它多大个儿。 */
+const catSize = k => Math.round(54 + 30 * clamp(k, 0, 1));   // 瘦的小一圈，圆的大一圈
 function catArt(pose, k){
-  k = clamp(k, 0, 1);
-  const sz = Math.round(54 + 30 * k);                 // 瘦的小一圈，圆的大一圈
   const dur = pose === "perk" ? 5.4 : 10.5;           // 撒欢走得快，平常慢悠悠
-  // 打盹头上飘个瞌睡泡，等食的跟前摆只空碗；溜达、撒欢什么都不加
+  /* 打盹头上飘个瞌睡泡，等食的跟前摆只空碗。这两样塞在猫肚子里（.cem 内），
+     不摆在院子上 —— 院子多宽它们都跟着猫走，不会甩在半空 */
   const ex = pose === "nap"  ? `<span class="cz">💤</span>`
            : pose === "wait" ? `<span class="cbw">🥣</span>` : "";
-  return `<div class="cy ${pose}" style="font-size:${sz}px;--cdur:${dur}s">`
-       + `<span class="cwk"><span class="cem">🐈</span></span>${ex}</div>`;
+  return `<div class="cy ${pose}" style="font-size:${catSize(k)}px;--cdur:${dur}s">`
+       + `<span class="cwk"><span class="cem">🐈${ex}</span></span></div>`;
 }
 
 /* 今天头一回批折：结算连批天数，返回该给的加赏 */
@@ -3543,10 +3551,13 @@ function paintCatChip(){
   $("#ctBtn").classList.toggle("hungry", c.f < .3);
   $("#ctChip").textContent = c.f < .2 ? "御猫饿" : "御猫";
 }
+let catKey = "";     // 上一回画出来的是什么姿势、多大个儿
 /* 画整个猫窝。gift 是这一次开门它有没有叼东西回来，没有就不占地方 */
 function paintCat(gift){
-  const c = catState();
-  $("#ctArt").innerHTML = catArt(catPose(), c.f);
+  const c = catState(), p = catPose(), key = p + "|" + catSize(c.f);
+  /* 姿势和个头都没变就别重画。innerHTML 一赋值就是全新的节点，
+     CSS 动画从 0% 重新起算 —— 猫会当场瞬移回起点。摸一把最容易撞上这个 */
+  if (key !== catKey){ catKey = key; $("#ctArt").innerHTML = catArt(p, c.f); }
   $("#ctName").value = c.nm || "";
   $("#ctSay").textContent = catSay();
   $("#ctBar").style.width = Math.round(c.f * 100) + "%";
@@ -3574,10 +3585,15 @@ function openCat(){
 $("#ctBtn").onclick = openCat;
 $("#ctClose").onclick = () => mask12.classList.remove("on");
 mask12.addEventListener("click", e => { if (e.target === mask12) mask12.classList.remove("on"); });
-// 摸一把：它应你一声，顺手重画（说不定就换了个姿势）
+// 摸一把：它应你一声，蹦一下
 $("#ctArt").onclick = () => {
   toast(CATPUR[Math.floor(Math.random() * CATPUR.length)]);
   paintCat(null);
+  /* 蹦这一下挂在院子（.cy）上，跟横挪的 .cwk、上下颠的 .cem 各是一层，
+     所以蹦完它接着往前走，不打断。remove → 读一次 offsetWidth → add
+     是为了逼浏览器重排，不然同一帧里加回同名 class 动画不会重放 */
+  const y = $("#ctArt").firstElementChild;
+  if (y){ y.classList.remove("pet"); void y.offsetWidth; y.classList.add("pet"); }
 };
 $("#ctName").oninput = e => {
   catState().nm = e.target.value.slice(0, 6);
