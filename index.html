@@ -1611,7 +1611,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v59" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v60" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -2382,13 +2382,19 @@ const WARESN = Object.values(WARES).filter(v => v.p > 0).length;
      lift  猫往上抬多少（占猫身高的比例）。抬得越多露得越多：
            箱子露头和肩，筐沿低些露得多，瓮口窄就只露一个脑袋
      hot   烫。这一张不进去，挨近了还要叫一声 */
+/* 挑过一轮。Unicode 里没有「打开的纸箱」—— 📦 是唯一的纸箱，各家都画成
+   封了胶带的，猫从封盖上头冒出来，看着像站在箱子后面而不是坐在里头；
+   🏺 陶瓮又太窄，猫的头和尾从两边支出来。都换成真有开口的容器。
+   id 一个没动，买过的还是买过的。
+   bw / lift 是拿系统字体逐个渲出来对着调的，不是估的。 */
 const BEDS = {
-  bed_cao:  {n:"草席",   p:0,   e:"",   pv:"x-em", in:{bw:.62, front:0, lift:0}},
-  bed_xiang:{n:"纸箱",   p:40,  e:"📦", pv:"x-em", in:{bw:1.18, front:1, lift:.42}},
+  bed_cao:  {n:"草席",   p:0,   e:"",   pv:"x-em", in:{bw:.62,  front:0, lift:0}},
+  bed_xiang:{n:"纸盒",   p:40,  e:"🥡", pv:"x-em", in:{bw:1.10, front:1, lift:.32}},
   bed_kuang:{n:"竹筐",   p:70,  e:"🧺", pv:"x-em", in:{bw:1.10, front:1, lift:.36}},
-  bed_weng: {n:"陶瓮",   p:100, e:"🏺", pv:"x-em", in:{bw:1.20, front:1, lift:.30}},
+  bed_yu:   {n:"浴桶",   p:90,  e:"🛁", pv:"x-em", in:{bw:1.30, front:1, lift:.26}},
+  bed_weng: {n:"木桶",   p:100, e:"🪣", pv:"x-em", in:{bw:1.10, front:1, lift:.40}},
   bed_pen:  {n:"炭盆",   p:120, e:"🔥", pv:"x-em", in:{bw:.70,  front:0, lift:0, hot:1}},
-  bed_ta:   {n:"锦榻",   p:140, e:"🛏", pv:"x-em", in:{bw:1.35, front:0, lift:.16}},
+  bed_ta:   {n:"锦榻",   p:140, e:"🛏", pv:"x-em", in:{bw:1.35, front:0, lift:.20}},
 };
 const bedIn = b => (b && b.in) || {bw:.62, front:0, lift:0};
 const CATHOT = ["离炭盆远着点 —— 再蹭就成碳咪了。", "它凑近炭盆闻了闻，胡子差点燎了。",
