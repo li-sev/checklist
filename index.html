@@ -402,7 +402,9 @@
      不该顺带把整页拽上拽下。代价是院子这一块不能用来滚对话框，认了 */
   .cb .cst{height:170px;margin:6px 0 2px;cursor:pointer;overflow:hidden;
     position:relative;touch-action:none;user-select:none;-webkit-user-select:none;
-    overscroll-behavior:contain}
+    overscroll-behavior:contain;
+    /* 手机上按下去别闪那层灰蒙板，长按也别弹选择/预览的浮层 */
+    -webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
   .cb .cst.laser{cursor:none}                    /* 摆了激光笔，鼠标自己变成那颗红点 */
   .cb .cy{position:absolute;inset:0;line-height:1}
   .cb .cy>span{position:absolute;bottom:12%;left:0;display:block}
@@ -1670,7 +1672,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v63" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v64" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -3220,7 +3222,11 @@ function catBob(v){
 function catDepth(){
   const A = CA; if (!A || !A.el.bed) return;
   const ins = bedIn(BEDS[G().catbed]);
-  A.el.bed.classList.toggle("front", !!((A.inBed && ins.front) || A.y < A.bedY - 7));
+  /* 前后翻面留一道回差：往里过了 12 才盖上，往外退回 2 才让开。
+     只用一条线的话，猫在那条线上晃一晃，窝就一盖一让，看着像在闪 */
+  const on = A.el.bed.classList.contains("front");
+  const back = A.y < A.bedY - (on ? 2 : 12);
+  A.el.bed.classList.toggle("front", !!((A.inBed && ins.front) || back));
 }
 function catFace(d){
   const A = CA; if (!A) return;
@@ -3489,15 +3495,18 @@ function catChase(px, py, force){
     A.el.z.hidden = true;
     catOut();
   }
+  clearTimeout(A.timer);
   const tx = clamp(px - A.cw / 2, A.pad, Math.max(A.pad, A.W - A.cw - A.pad));
   const ty = clamp(py, A.yLo, A.yHi);
-  /* 手指挪一点就重新给一次目标，等于每帧掐断上一段位移 —— 又抖又费。
-     挪够八个像素、或者隔了九十毫秒，才重新起一段 */
-  const now = Date.now();
-  if (!force && Math.hypot(tx - A.x, ty - A.y) < 8 && now - (A.reT || 0) < 90) return;
+  /* 这儿要限的是「多久才准重新起一段」，不是「挪了多远才算数」。
+     原先写的是「挪不够八像素 且 没到九十毫秒」才跳过 —— 手指一快，
+     每个 pointermove 都够八像素，于是每三十几毫秒就掐断上一段重来，
+     一段 0.3 秒的位移只走完十分之一就作废，看着就是一抖一抖的。
+     现在改成每 240 毫秒才重新给一次目标（除非手指一下子甩出去老远），
+     每一段都跑得完大半 —— 也正好是「猫慢慢跟过来」该有的样子。 */
+  const now = Date.now(), d = Math.hypot(tx - A.x, ty - A.y);
+  if (!force && now - (A.reT || 0) < 240 && d < 70) return;
   A.reT = now;
-  clearTimeout(A.timer);
-  const d = Math.hypot(tx - A.x, ty - A.y);
   if (Math.abs(tx - A.x) > 2) A.dir = tx > A.x ? -1 : 1;
   A.x = tx; A.y = ty;
   catBob(.34);
@@ -3555,7 +3564,7 @@ function catDragTo(cx, cy){
   A.moved = 1;
   A.toyX = clamp(cx - r.left - A.toyW / 2, A.pad, Math.max(A.pad, A.W - A.toyW - A.pad));
   A.toyY = catDepthOf(A, cy - r.top);
-  A.el.toyw.style.transitionDuration = "0s";
+  // 拖着的时候 .drag 已经把 transition 关了，不必每帧再写一遍时长
   A.el.toyw.style.transform = `translate(${Math.round(A.toyX)}px,${Math.round(A.toyY)}px)`;
   catChase(A.toyX + A.toyW / 2, A.toyY);          // 猫追着你手上那样东西
 }
