@@ -315,6 +315,11 @@
   .purse.hlp .tm{background:var(--accent);color:var(--onacc);font-weight:700;letter-spacing:2px}
   .purse.bkp{margin-left:7px}
   .purse.bkp .bk{color:var(--accent);font-weight:700;letter-spacing:3px}
+  /* ── 御猫那块牌 ── */
+  .purse.ctp{margin-left:7px}
+  .purse.ctp .ct{color:var(--ink);font-weight:700;letter-spacing:3px}
+  .purse.ctp.hungry .ct{color:var(--accent)}   /* 饿着 */
+  .purse.ctp.hungry .dot{display:block;background:var(--accent)}
   /* 加赏用金字，不铺底色 —— 铺了得另配一个前景色，深浅两套纸都不好配 */
   .purse.hlp .jx{color:var(--gold);font-weight:700;letter-spacing:1px;
     border-left:1px solid var(--line)}
@@ -388,6 +393,33 @@
   .qb .qj{border-left:3px solid var(--accent);padding:8px 12px;margin-bottom:10px;
     font-size:13px;line-height:1.95;letter-spacing:.5px;color:var(--ink);background:var(--card)}
   .qb .qday{font-size:11.5px;line-height:1.8;color:var(--dim);letter-spacing:.5px;margin:0 0 4px}
+
+  /* ── 猫窝 ── */
+  .cb .cst{height:170px;margin:6px 0 2px;cursor:pointer;
+    display:flex;align-items:flex-end;justify-content:center}
+  .cb .cst svg{display:block;height:100%;width:auto;max-width:100%}
+  .cb .cst:active svg{transform:translateY(2px)}
+  .cb .cnm{display:flex;align-items:baseline;justify-content:center;gap:6px;margin-bottom:8px}
+  /* 名字是可以改的：写成一条下划线，看着像填在纸上，不像个输入框 */
+  .cb .cnm input{width:6.5em;text-align:center;font:inherit;font-size:17px;letter-spacing:4px;
+    color:var(--accent);background:transparent;border:0;border-bottom:1px dashed var(--line);
+    padding:2px 0;outline:none}
+  .cb .cnm input:focus{border-bottom-color:var(--accent)}
+  .cb .cnm span{font-size:12px;letter-spacing:2px;color:var(--dim)}
+  .cb .csay{margin:0 0 10px;font-size:13.5px;line-height:1.95;letter-spacing:.5px;
+    color:var(--ink);text-align:center}
+  .cb .cbar{height:7px;border-radius:4px;background:var(--card);
+    border:1px solid var(--line);overflow:hidden}
+  .cb .cbar i{display:block;height:100%;background:var(--gold);transition:width .5s ease}
+  .cb .cmeta{margin:5px 0 0;font-size:11.5px;line-height:1.8;letter-spacing:.5px;
+    color:var(--dim);text-align:center}
+  .cb .cgift{margin:10px 0 0;padding:8px 12px;border-left:3px solid var(--gold);
+    background:var(--card);font-size:12.5px;line-height:1.9;letter-spacing:.5px;color:var(--ink)}
+  .cb .ctoys{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .cb .ctoys .ty{border:1px solid var(--line);border-radius:4px;padding:4px 8px;
+    font-size:11.5px;letter-spacing:1px;color:var(--ink);background:var(--card)}
+  .cb .ctoys .ty.no{color:var(--dim);opacity:.5}
+  .cb .cnote{margin:10px 0 0;font-size:11.5px;line-height:1.8;color:var(--dim);letter-spacing:.5px}
 
   /* ── 问卜：两条路的岔口 ── */
   .bkb .bkc{display:block;width:100%;text-align:left;cursor:pointer;margin-bottom:10px;
@@ -1021,6 +1053,10 @@
   <button class="purse bkp" id="bkBtn" title="问卜：求签、起卦">
     <span class="bk">问卜</span>
   </button>
+  <!-- 御猫：饿了牌子上点一颗灯，不点开也知道它在等 -->
+  <button class="purse ctp" id="ctBtn" title="御猫">
+    <span class="ct" id="ctChip">御猫</span><i class="dot"></i>
+  </button>
 </div>
 <div class="app">
 <aside id="side"></aside>
@@ -1355,6 +1391,25 @@
   </div>
 </div></div>
 
+<!-- 猫窝：御猫住这儿。点它一下会应你 -->
+<div class="mask" id="mask12"><div class="dlg sheet cb">
+  <h2>猫窝</h2>
+  <div class="cst" id="ctArt" title="摸一把"></div>
+  <div class="cnm">
+    <input id="ctName" maxlength="6" placeholder="雪奴" spellcheck="false"><span>·御猫</span>
+  </div>
+  <p class="csay" id="ctSay"></p>
+  <div class="cbar"><i id="ctBar"></i></div>
+  <p class="cmeta" id="ctMeta"></p>
+  <p class="cgift" id="ctGift" hidden></p>
+  <div class="ctoys" id="ctToys"></div>
+  <p class="cnote">它不会死。喂不上就瘦着、蹲在门口等你回来。
+    存档、驿传都带着它走 —— 换个机子它还在。</p>
+  <div class="btns">
+    <button class="btn pri" id="ctClose">摸够了</button>
+  </div>
+</div></div>
+
 <!-- 且慢：花钱、动刀子的事都从这儿过一道 -->
 <div class="mask ask" id="mask7"><div class="dlg ask">
   <h2 id="akT">且慢</h2>
@@ -1442,7 +1497,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v50" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v51" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -2368,10 +2423,13 @@ const miDef = () => Object.fromEntries(MINISTRY.map(m => [m.id, {e:50, l:60, d:"
 const VAC = 3;
 // 空悬期间这个部按几分计入朝纲。比在位的底限 25 还低，所以「准辞了事」是要付账的
 const VACS = 20;
+/* 御猫。f 膘（0 瘦 1 圆）· d 上回结算掉膘的日子 · g 这回隔了几天才回来
+   · gd 上回叼东西回来的日子 · toys 攒下的玩物 · nm 你给它起的名字 */
+const catDef = () => ({f:.45, d:"", g:0, gd:"", toys:[], nm:""});
 const GDEF = () => ({ag: DEMO ? 99999 : 0, owe:0, tot:0, cnt:0, nc:0, day:"", tn:0, run:0, best:0, sfx:1,
                      own: DEMO ? Object.keys(WARES) : Object.values(KIT).map(r => r.d), med:[],
                      seal:"zhun", paper:"xuan", font:"song", mount:"sumian", grain:"jiehang", fx:"fxno",
-                     mi:miDef(), mday:"", jq:[], jxd:"", qd:"", qn:-1, hist:{}});
+                     mi:miDef(), mday:"", jq:[], jxd:"", qd:"", qn:-1, hist:{}, cat:catDef()});
 function G(){
   if (!D.g || typeof D.g !== "object") D.g = GDEF();
   const d = GDEF();
@@ -2724,6 +2782,224 @@ function histTrim(){
   ks.sort().slice(0, ks.length - 400).forEach(k => delete g.hist[k]);
 }
 
+/* ══════════ 御猫 ══════════
+   宋人宫里是真养猫的，徽宗那只狮猫有名分。这儿养一只：
+   你每批一道折子它吃一口，批得勤它就圆，几天不来它就瘦、就蹲到门口等。
+   ——它不会死。最惨也就是瘦成一条、看你一眼。
+   （养过的水母都是手机一丢就没了的，这只不吃这套：它跟着存档和驿传走。） */
+const CATFEED = .035;          // 一道折子喂一口
+const CATDROP = .09;           // 一天不来掉这么多膘
+const CATTOY = [
+  {id:"ye",  n:"银杏叶",   d:"半黄不黄的一片，边上还带着虫牙"},
+  {id:"qian",n:"一枚铜钱", d:"字口都磨平了，看不出哪朝的"},
+  {id:"bi",  n:"半截笔",   d:"你上个月找不着的那半截，原来在它那儿"},
+  {id:"qiu", n:"丝线球",   d:"缠得死紧，解不开了"},
+  {id:"qi",  n:"一颗棋子", d:"黑的。另一颗大概也在这屋里"},
+  {id:"chan",n:"蝉蜕",     d:"完完整整一个空壳，它叼回来时没敢咬碎"},
+  {id:"gui", n:"一穗桂花", d:"香得很，隔天就蔫了，它还守着"},
+  {id:"ling",n:"小铜铃",   d:"不是它项上那个。哪儿来的问不出来"},
+];
+const CATPUR = ["它眯了眯眼。", "呼噜声起来了。", "尾巴尖动了一下。",
+                "它把头往你手里蹭。", "它翻了个身，肚皮朝上。", "它拿爪子按了按你的手。"];
+const dayNo = s => Math.round(new Date(s + "T00:00:00").getTime() / 864e5);
+/* 取猫的状态，顺手把「这些天没来」的膘一次结清。
+   懒结算：不挂在开机流程上，谁读它谁结 —— 免得漏掉一条路进来就少扣一天。 */
+function catState(){
+  const g = G();
+  if (!g.cat || typeof g.cat !== "object") g.cat = catDef();
+  const c = g.cat, d = catDef();
+  for (const k in d) if (typeof c[k] !== typeof d[k]) c[k] = d[k];
+  if (!Array.isArray(c.toys)) c.toys = [];
+  c.f = clamp(c.f, 0, 1);
+  const t = ymd(Date.now());
+  if (c.d !== t){
+    const gap = c.d ? clamp(dayNo(t) - dayNo(c.d), 0, 400) : 0;
+    if (gap > 0){ c.f = clamp(c.f - gap * CATDROP, 0, 1); c.g = gap; }
+    c.d = t;
+  }
+  return c;
+}
+function feedCat(n){
+  const c = catState();
+  c.f = clamp(c.f + CATFEED * n, 0, 1);
+}
+/* 什么姿势，全看你最近来得勤不勤 */
+function catPose(){
+  const c = catState(), g = G();
+  if (c.f < .2) return "wait";                                  // 瘦成一条，蹲在门口
+  const td = g.day === ymd(Date.now()) ? (g.tn || 0) : 0;       // 今天批了几件
+  if (td >= 3 && c.f > .6) return "belly";                      // 批得欢，它才敢翻肚皮
+  const h = new Date().getHours();
+  if (!td || h >= 22 || h < 6) return "nap";
+  return "sit";
+}
+function catName(){ return (catState().nm || "").trim() || "雪奴"; }
+/* 一句话交代它现在什么光景 */
+function catSay(){
+  const c = catState(), p = catPose(), n = catName();
+  if (p === "wait")
+    return c.g >= 3 ? `${n}瘦了一圈，蹲在门口，你一进来它才回头。`
+                    : `${n}瘦得脊梁骨都摸得着了。批几道折子罢。`;
+  if (c.g >= 7) return `你有 ${c.g} 天没来了。${n}还在，只是不太理你。`;
+  if (c.g >= 2) return `隔了 ${c.g} 天。${n}闻了闻你的手，认得。`;
+  if (p === "belly") return `${n}吃饱了，四脚朝天摊在案边上，一点正形没有。`;
+  if (p === "nap") return `${n}蜷着睡，尾巴盖在鼻子上。`;
+  return `${n}端端正正坐着，看你批折子。`;
+}
+/* 叼东西回来：一天至多一回，还得它有力气出门（太瘦了就不去）。
+   银子走 histLog + earn，跟国库、邸报是同一本账 —— 不进 scoreTick，
+   那儿的总数是要拿去对数的，塞进随机数就对不上了。 */
+function catGift(){
+  const c = catState(), t = ymd(Date.now());
+  if (c.gd === t || c.f < .3) return null;
+  c.gd = t;
+  const left = CATTOY.filter(x => !c.toys.includes(x.id));
+  const roll = Math.random();
+  if (left.length && roll < .3){
+    const toy = left[Math.floor(Math.random() * left.length)];
+    c.toys.push(toy.id);
+    return {toy};
+  }
+  if (roll < .8){
+    const n = 1 + Math.floor(Math.random() * 6);
+    histLog(t, 0, n, null);
+    earn(n);
+    return {ag:n};
+  }
+  return {none:true};
+}
+
+/* 画猫。宋人画的狮猫：白毛、墨线、朱项圈、金铃。
+   k = 膘，0 瘦 1 圆。色号全写死 —— 万年红那种纸会把 --zhu 顶成白的，
+   拿主题变量画猫，换张纸猫就没了。 */
+const INK = "#3f372c", FUR = "#fdfaf4", SHA = "#e9e1d3", PINK = "#d59a95",
+      RED = "#a8342a", GOLD = "#c9a227", EYE = "#8a6a1f";
+function catArt(pose, k){
+  k = clamp(k, 0, 1);
+  const L = `fill="none" stroke="${INK}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"`;
+  const F = `fill="${FUR}" stroke="${INK}" stroke-width="2.2" stroke-linejoin="round"`;
+  const P = [];
+  const ear = (x, y, d) => `<path d="M ${x} ${y} L ${x + d * 9} ${y - 13} L ${x + d * 15} ${y + 2} Z" ${F}/>`
+    + `<path d="M ${x + d * 3.5} ${y - 1} L ${x + d * 8.5} ${y - 8.5} L ${x + d * 11.5} ${y + 0.5} Z" fill="${PINK}" stroke="none"/>`;
+  /* 耳朵照头心摆，别一处一处手填坐标 —— 手填的迟早飘出头外，就不像猫了 */
+  const ears = (hx, hy, r, tilt = 0) =>
+    ear(hx - r * .08, hy - r * .62 + tilt, -1) + ear(hx + r * .08, hy - r * .62 - tilt, 1);
+  const collar = (cx, cy, w) =>
+    `<path d="M ${cx - w} ${cy} Q ${cx} ${cy + 6} ${cx + w} ${cy}" fill="none" stroke="${RED}" stroke-width="4.5" stroke-linecap="round"/>`
+    + `<circle cx="${cx}" cy="${cy + 5.5}" r="3.6" fill="${GOLD}" stroke="${INK}" stroke-width="1.2"/>`
+    + `<circle cx="${cx}" cy="${cy + 6.4}" r="1" fill="${INK}"/>`;
+  const eyesOpen = (cx, cy) =>
+    `<ellipse cx="${cx - 6.5}" cy="${cy}" rx="2.6" ry="3.4" fill="${EYE}"/>`
+    + `<ellipse cx="${cx + 6.5}" cy="${cy}" rx="2.6" ry="3.4" fill="${EYE}"/>`
+    + `<ellipse cx="${cx - 6.5}" cy="${cy}" rx="1" ry="2.6" fill="${INK}"/>`
+    + `<ellipse cx="${cx + 6.5}" cy="${cy}" rx="1" ry="2.6" fill="${INK}"/>`;
+  const eyesShut = (cx, cy) =>
+    `<path d="M ${cx - 10} ${cy} q 3.5 3.5 7 0" ${L}/><path d="M ${cx + 3} ${cy} q 3.5 3.5 7 0" ${L}/>`;
+  const muzzle = (cx, cy) =>
+    `<path d="M ${cx} ${cy} l -2.6 -2.2 h 5.2 Z" fill="${PINK}" stroke="none"/>`
+    + `<path d="M ${cx} ${cy} v 2.4 M ${cx} ${cy + 2.4} q -3 2.4 -5.4 0 M ${cx} ${cy + 2.4} q 3 2.4 5.4 0" ${L}/>`;
+  const whisk = (cx, cy) =>
+    `<path d="M ${cx - 7} ${cy} l -13 -2.5 M ${cx - 7} ${cy + 3} l -13 2.5 M ${cx + 7} ${cy} l 13 -2.5 M ${cx + 7} ${cy + 3} l 13 2.5"
+       fill="none" stroke="${INK}" stroke-width="1.2" stroke-linecap="round" opacity=".75"/>`;
+  /* 毛茸茸的一笔：先粗墨线，再压一道细白线在上面 —— 尾巴用它。
+     纯墨描出来是死黑一坨，那就不是白猫了 */
+  const fur = (d, w) =>
+    `<path d="${d}" fill="none" stroke="${INK}" stroke-width="${w}" stroke-linecap="round"/>`
+    + `<path d="${d}" fill="none" stroke="${FUR}" stroke-width="${w - 3.6}" stroke-linecap="round"/>`;
+  /* 一条腿是一整块剪影，不是「棍子上顶个球」——
+     拿圆当爪子扣在腿尖上，两圈墨边一叠，看着就是根棒棒糖。
+     这儿沿一条二次曲线两边各让开半个腿宽，末端拿圆弧兜过去，一笔收口。 */
+  const limb = (a, c, b, wb, wt) => {
+    const nrm = (p, q) => { const dx = q[0] - p[0], dy = q[1] - p[1], n = Math.hypot(dx, dy) || 1;
+                            return [-dy / n, dx / n]; };
+    const n1 = nrm(a, c), n2 = nrm(c, b), nm = [(n1[0] + n2[0]) / 2, (n1[1] + n2[1]) / 2];
+    const wm = (wb + wt) / 2;
+    const at = (pt, nn, w, s) => `${(pt[0] + nn[0] * w * s).toFixed(1)} ${(pt[1] + nn[1] * w * s).toFixed(1)}`;
+    return `<path d="M ${at(a, n1, wb, 1)} Q ${at(c, nm, wm, 1)} ${at(b, n2, wt, 1)}
+       A ${wt} ${wt} 0 0 0 ${at(b, n2, wt, -1)} Q ${at(c, nm, wm, -1)} ${at(a, n1, wb, -1)} Z" ${F}/>`;
+  };
+  /* 爪尖上两道趾缝：顺着腿伸出去的方向划，横着划会像捆了根绳 */
+  const toes = (b, dir, r) => {
+    const px = -dir[1], py = dir[0];
+    const seg = s => `M ${b[0] + px * r * .4 * s - dir[0] * r * .15} ${b[1] + py * r * .4 * s - dir[1] * r * .15}`
+                   + ` l ${dir[0] * r * .8} ${dir[1] * r * .8}`;
+    return `<path d="${seg(-1)} ${seg(1)}" fill="none" stroke="${INK}" stroke-width="1"
+       stroke-linecap="round" opacity=".5"/>`;
+  };
+
+  if (pose === "sit"){
+    const w = 21 + 11 * k, hy = 47 - 2 * k, hr = 17 + 2.5 * k;
+    P.push(`<ellipse cx="60" cy="106" rx="${w + 12}" ry="4" fill="${SHA}" stroke="none" opacity=".7"/>`);
+    P.push(fur(`M ${60 + w - 3} 100 C ${60 + w + 17} 104, ${60 + w + 19} 80, ${60 + w + 2} 77`, 8));
+    P.push(`<path d="M ${60 - w} 103 C ${60 - w} ${72 - 4 * k}, ${60 - w * .55} ${60 - 3 * k}, 60 ${60 - 3 * k}
+       C ${60 + w * .55} ${60 - 3 * k}, ${60 + w} ${72 - 4 * k}, ${60 + w} 103 Z" ${F}/>`);
+    P.push(`<ellipse cx="${60 - 8 - 2 * k}" cy="101" rx="7" ry="4.6" ${F}/>`);
+    P.push(`<ellipse cx="${60 + 8 + 2 * k}" cy="101" rx="7" ry="4.6" ${F}/>`);
+    P.push(ears(60, hy, hr));
+    P.push(`<ellipse cx="60" cy="${hy}" rx="${hr}" ry="${hr - 1.5}" ${F}/>`);
+    P.push(eyesOpen(60, hy - 1), muzzle(60, hy + 7), whisk(60, hy + 8));
+    P.push(collar(60, hy + hr - 2, 12 + 2 * k));
+  }
+  if (pose === "nap"){
+    // 蜷成一团：一个大圆团，头搁在左前，尾巴从身后绕到脸前圈起来
+    const rx = 33 + 7 * k, ry = 20 + 5 * k, cy = 82;
+    P.push(`<ellipse cx="62" cy="104" rx="${rx + 6}" ry="4.5" fill="${SHA}" stroke="none" opacity=".7"/>`);
+    P.push(fur(`M ${62 + rx - 4} ${cy + 12} C ${62 + rx + 12} ${cy + 4}, ${62 + rx + 6} ${cy - 14}, ${62 + rx - 8} ${cy - 12}`, 8));
+    P.push(`<ellipse cx="62" cy="${cy}" rx="${rx}" ry="${ry}" ${F}/>`);
+    P.push(`<path d="M ${62 - rx + 8} ${cy + 6} q ${rx * .9} ${ry * .7} ${rx * 1.7} -2" fill="none"
+       stroke="${SHA}" stroke-width="2.2"/>`);
+    P.push(fur(`M ${62 + rx - 10} ${cy + ry - 4} C ${62 + 6} ${cy + ry + 8}, ${62 - rx + 2} ${cy + ry + 4}, ${62 - rx - 4} ${cy + 4}`, 8));
+    const hx = 62 - rx + 13, hy = cy - 6;
+    P.push(ears(hx, hy, 14.5, 1.5));
+    P.push(`<ellipse cx="${hx}" cy="${hy}" rx="14.5" ry="13.5" ${F}/>`);
+    P.push(eyesShut(hx, hy - 1), muzzle(hx, hy + 6), whisk(hx, hy + 7));
+    P.push(`<path d="M ${hx + 26} ${hy - 22} q 5 -4 0 -8 q -5 -4 0 -8" fill="none" stroke="${INK}"
+       stroke-width="1.8" stroke-linecap="round" opacity=".5"/>`);
+  }
+  if (pose === "belly"){
+    const rx = 30 + 7 * k, ry = 17 + 4 * k, cx = 64, cy = 88, top = cy - ry;
+    P.push(`<ellipse cx="${cx}" cy="106" rx="${rx + 8}" ry="4" fill="${SHA}" stroke="none" opacity=".7"/>`);
+    P.push(fur(`M ${cx + rx - 4} ${cy + 6} C ${cx + rx + 16} ${cy + 2}, ${cx + rx + 12} ${cy - 20}, ${cx + rx - 2} ${cy - 18}`, 8));
+    // 后腿有胯：屁股那边先垫一团肉，腿才不像凭空插上去的
+    P.push(`<ellipse cx="${cx + rx * .5}" cy="${top + 5}" rx="${rx * .34}" ry="${ry * .55}" ${F}/>`);
+    /* 四条腿先画、根扎进肚子里，等下让身子把关节盖住；画在身子上头，
+       墨线横穿肚皮，看着像四根插着的火柴。
+       [根部x, 往哪边抬, 冒出肚皮多高, 根粗, 爪粗]：前爪短、后腿长 */
+    [[cx - rx * .4, -1, 4, 5.6, 4.4], [cx - rx * .1, -1, 7, 5.6, 4.4],
+     [cx + rx * .34, 1, 12, 6.6, 5.2], [cx + rx * .66, 1, 8, 6.6, 5.2]]
+      .forEach(([x, d, up, wb, wt]) => {
+        // 控制点甩到爪子外头去：曲线先往外抬再拐回来，爪尖便是往里耷的
+        const a = [x, cy + 2], c = [x + d * 17, cy - ry * .55], b = [x + d * 8, top - up];
+        const dx = b[0] - c[0], dy = b[1] - c[1], n = Math.hypot(dx, dy) || 1;
+        P.push(limb(a, c, b, wb, wt), toes(b, [dx / n, dy / n], wt));
+      });
+    P.push(`<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" ${F}/>`);
+    P.push(`<ellipse cx="${cx + 6}" cy="${cy + 4}" rx="${rx * .5}" ry="${ry * .45}" fill="${SHA}"
+       stroke="none" opacity=".3"/>`);
+    const hx = cx - rx + 2, hy = cy + 6;
+    P.push(ears(hx, hy, 14.5, 2));
+    P.push(`<ellipse cx="${hx}" cy="${hy}" rx="14.5" ry="13.5" ${F}/>`);
+    P.push(eyesShut(hx, hy - 1), muzzle(hx, hy + 6), whisk(hx, hy + 7));
+  }
+  if (pose === "wait"){
+    // 背对着你蹲在门口，只回过来半张脸。瘦，所以不吃 k
+    P.push(`<path d="M 22 20 v 86 M 22 20 h 24" fill="none" stroke="${INK}"
+       stroke-width="2.4" opacity=".26" stroke-linecap="round"/>`);
+    P.push(`<ellipse cx="66" cy="107" rx="27" ry="4" fill="${SHA}" stroke="none" opacity=".7"/>`);
+    P.push(fur("M 84 102 C 101 107, 104 80, 88 75", 8));
+    P.push(`<path d="M 48 105 C 45 74, 54 52, 66 52 C 78 52, 87 74, 84 105 Z" ${F}/>`);
+    P.push(`<path d="M 66 66 C 63 80, 63 94, 65 104" fill="none" stroke="${SHA}" stroke-width="2.4"/>`);
+    P.push(ears(66, 58, 16));
+    P.push(`<ellipse cx="66" cy="58" rx="16" ry="15" ${F}/>`);
+    P.push(`<ellipse cx="76" cy="56" rx="2.5" ry="3.3" fill="${EYE}"/>`);
+    P.push(`<ellipse cx="76" cy="56" rx="1" ry="2.5" fill="${INK}"/>`);
+    P.push(`<path d="M 80.5 63 l -2.4 -2 h 4.8 Z" fill="${PINK}" stroke="none"/>`);
+    P.push(`<path d="M 74 64 l 13 -2.5 M 74 66.5 l 13 2.5" fill="none" stroke="${INK}"
+       stroke-width="1.2" stroke-linecap="round" opacity=".75"/>`);
+  }
+  return `<svg viewBox="0 0 128 116" width="100%" height="100%">${P.join("")}</svg>`;
+}
+
 /* 今天头一回批折：结算连批天数，返回该给的加赏 */
 function touchDay(){
   const g = G(), t = ymd(Date.now());
@@ -2749,6 +3025,7 @@ function scoreTick(it, on, el, mid){
     it.pd = ymd(Date.now());                      // 记账那天，撤回时照它退
     histLog(it.pd, 1, it.p, mid);
     earn(it.p, el);
+    feedCat(1);                                   // 御猫跟着吃一口。撤折子它不吐
     if (mid) bump(mid, 2, 1);
     /* toast 是同一块牌，后来的把先前的顶掉，所以两条话并成一条报 */
     const say = [];
@@ -2886,6 +3163,7 @@ function paintPurse(){
     .some(([k, v]) => v.p > 0 && !g.own.includes(k) && g.ag >= v.p
                       && !(v.r && sc < v.r));       // 够不着的恩典之物不点灯，免得白高兴
   $("#purse").classList.toggle("buyable", buyable);
+  paintCatChip();                                  // 喂过、掉过膘，牌子上跟着变
   /* 纸色、书体、装裱、纸纹都是往 body 上挂个类。
      先把这四档所有可能的类摘干净再挂当下这几个 —— 只摘自己的，
      别把 applyFilter 挂上去的 searching、海晏河清的 hy 一起抹了 */
@@ -3325,6 +3603,56 @@ $("#bkClose").onclick = () => mask10.classList.remove("on");
 mask10.addEventListener("click", e => { if (e.target === mask10) mask10.classList.remove("on"); });
 $("#bkQ").onclick = () => { mask10.classList.remove("on"); openQ(); };
 $("#bkG").onclick = () => { mask10.classList.remove("on"); gReset(); mask11.classList.add("on"); };
+
+/* ── 御猫 ── */
+const catFat = () => { const f = catState().f;
+  return f < .2 ? "瘦得脱形" : f < .45 ? "偏瘦" : f < .7 ? "不肥不瘦" : f < .9 ? "圆润" : "圆得快滚了"; };
+function paintCatChip(){
+  const c = catState();
+  $("#ctBtn").classList.toggle("hungry", c.f < .3);
+  $("#ctChip").textContent = c.f < .2 ? "御猫饿" : "御猫";
+}
+/* 画整个猫窝。gift 是这一次开门它有没有叼东西回来，没有就不占地方 */
+function paintCat(gift){
+  const c = catState();
+  $("#ctArt").innerHTML = catArt(catPose(), c.f);
+  $("#ctName").value = c.nm || "";
+  $("#ctSay").textContent = catSay();
+  $("#ctBar").style.width = Math.round(c.f * 100) + "%";
+  $("#ctMeta").textContent = `膘：${catFat()} · 玩物 ${c.toys.length}/${CATTOY.length}`
+    + (c.gd === ymd(Date.now()) ? " · 今日已出过门" : "");
+  const gv = $("#ctGift");
+  if (gift && !gift.none){
+    gv.hidden = false;
+    gv.textContent = gift.toy
+      ? `它从外头叼回来一样东西，放在你脚边：${gift.toy.n} —— ${gift.toy.d}`
+      : `它从外头叼回来 ${gift.ag} 两碎银，扔在案上，自己走开了。`;
+  } else gv.hidden = true;
+  // 攒到的亮着、没攒到的留个灰位子 —— 看得见还差几样，才有攒下去的意思
+  $("#ctToys").innerHTML = CATTOY.map(t => c.toys.includes(t.id)
+    ? `<span class="ty" title="${esc(t.d)}">${esc(t.n)}</span>`
+    : `<span class="ty no">？</span>`).join("");
+  paintCatChip();
+}
+function openCat(){
+  const gift = catGift();          // 一天至多一回，进门就结
+  paintCat(gift);
+  mask12.classList.add("on");
+  save(true);
+}
+$("#ctBtn").onclick = openCat;
+$("#ctClose").onclick = () => mask12.classList.remove("on");
+mask12.addEventListener("click", e => { if (e.target === mask12) mask12.classList.remove("on"); });
+// 摸一把：它应你一声，顺手重画（说不定就换了个姿势）
+$("#ctArt").onclick = () => {
+  toast(CATPUR[Math.floor(Math.random() * CATPUR.length)]);
+  paintCat(null);
+};
+$("#ctName").oninput = e => {
+  catState().nm = e.target.value.slice(0, 6);
+  $("#ctSay").textContent = catSay();
+  save(true);
+};
 
 /* ── 起卦：三枚铜钱掷六回 ──
    背作三、字作二。三枚一掷：六是老阴（要变阳）、七少阳、八少阴、九是老阳（要变阴）。
