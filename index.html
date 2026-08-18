@@ -1497,7 +1497,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v51" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v52" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -2828,7 +2828,7 @@ function catPose(){
   const c = catState(), g = G();
   if (c.f < .2) return "wait";                                  // 瘦成一条，蹲在门口
   const td = g.day === ymd(Date.now()) ? (g.tn || 0) : 0;       // 今天批了几件
-  if (td >= 3 && c.f > .6) return "belly";                      // 批得欢，它才敢翻肚皮
+  if (td >= 3 && c.f > .6) return "perk";                       // 批得欢，它才眯眼翘尾巴
   const h = new Date().getHours();
   if (!td || h >= 22 || h < 6) return "nap";
   return "sit";
@@ -2842,8 +2842,8 @@ function catSay(){
                     : `${n}瘦得脊梁骨都摸得着了。批几道折子罢。`;
   if (c.g >= 7) return `你有 ${c.g} 天没来了。${n}还在，只是不太理你。`;
   if (c.g >= 2) return `隔了 ${c.g} 天。${n}闻了闻你的手，认得。`;
-  if (p === "belly") return `${n}吃饱了，四脚朝天摊在案边上，一点正形没有。`;
-  if (p === "nap") return `${n}蜷着睡，尾巴盖在鼻子上。`;
+  if (p === "perk") return `${n}吃饱了，眯着眼，尾巴翘得老高。`;
+  if (p === "nap") return `${n}趴在案角上打盹，尾巴慢悠悠地扫。`;
   return `${n}端端正正坐着，看你批折子。`;
 }
 /* 叼东西回来：一天至多一回，还得它有力气出门（太瘦了就不去）。
@@ -2869,133 +2869,155 @@ function catGift(){
   return {none:true};
 }
 
-/* 画猫。宋人画的狮猫：白毛、墨线、朱项圈、金铃。
+/* 画猫。细线白描：一根匀细的墨线勾满，白肚子，点眼睛，长胡须，长尾巴。
    k = 膘，0 瘦 1 圆。色号全写死 —— 万年红那种纸会把 --zhu 顶成白的，
    拿主题变量画猫，换张纸猫就没了。 */
-const INK = "#3f372c", FUR = "#fdfaf4", SHA = "#e9e1d3", PINK = "#d59a95",
-      RED = "#a8342a", GOLD = "#c9a227", EYE = "#8a6a1f";
+const INK = "#4a4239", FUR = "#fffdf8", PINK = "#d59a95", RED = "#a8342a", GOLD = "#c9a227";
+const CATW = 1.9;   // 线粗。全篇一个粗细，这是这一路画法的命根子
+
 function catArt(pose, k){
   k = clamp(k, 0, 1);
-  const L = `fill="none" stroke="${INK}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"`;
-  const F = `fill="${FUR}" stroke="${INK}" stroke-width="2.2" stroke-linejoin="round"`;
+  const F = `fill="${FUR}" stroke="${INK}" stroke-width="${CATW}" stroke-linejoin="round" stroke-linecap="round"`;
+  const S = `fill="none" stroke="${INK}" stroke-width="${CATW}" stroke-linecap="round" stroke-linejoin="round"`;
+  const T = `fill="none" stroke="${INK}" stroke-width="1.4" stroke-linecap="round"`;
   const P = [];
-  const ear = (x, y, d) => `<path d="M ${x} ${y} L ${x + d * 9} ${y - 13} L ${x + d * 15} ${y + 2} Z" ${F}/>`
-    + `<path d="M ${x + d * 3.5} ${y - 1} L ${x + d * 8.5} ${y - 8.5} L ${x + d * 11.5} ${y + 0.5} Z" fill="${PINK}" stroke="none"/>`;
-  /* 耳朵照头心摆，别一处一处手填坐标 —— 手填的迟早飘出头外，就不像猫了 */
-  const ears = (hx, hy, r, tilt = 0) =>
-    ear(hx - r * .08, hy - r * .62 + tilt, -1) + ear(hx + r * .08, hy - r * .62 - tilt, 1);
+  const n = v => (Math.round(v * 10) / 10);
+
+  /* 头连着耳朵一笔画完 —— 耳朵单画成三角贴上去，接缝一眼看得出来。
+     cx,cy 是眼睛那条线的中点；r 是脸的半宽。 */
+  const head = (cx, cy, r, dp = 0) => {
+    const X = v => n(cx + v * r / 15), Y = v => n(cy + v * r / 15);
+    // dp 是耳朵耷拉的程度：尖儿往外撇、往下坠。蔫头耷脑就差这两毫米
+    return `<path d="M ${X(-14)} ${Y(3)} C ${X(-15)} ${Y(-5)} ${X(-14)} ${Y(-11)} ${X(-12)} ${Y(-14)}
+      L ${X(-15 - dp * 5)} ${Y(-27 + dp * 10)} L ${X(-3.5)} ${Y(-17.5)}
+      C ${X(-1.2)} ${Y(-18)} ${X(1.2)} ${Y(-18)} ${X(3.5)} ${Y(-17.5)}
+      L ${X(15 + dp * 5)} ${Y(-27 + dp * 10)} L ${X(12)} ${Y(-14)}
+      C ${X(14)} ${Y(-11)} ${X(15)} ${Y(-5)} ${X(14)} ${Y(3)}
+      C ${X(13)} ${Y(10.5)} ${X(7)} ${Y(15)} ${X(0)} ${Y(15)}
+      C ${X(-7)} ${Y(15)} ${X(-13)} ${Y(10.5)} ${X(-14)} ${Y(3)} Z" ${F}/>`;
+  };
+  const eyeDot = (cx, cy, r) => {
+    const d = 6.2 * r / 15;
+    return `<ellipse cx="${n(cx - d)}" cy="${n(cy)}" rx="${n(1.9 * r / 15)}" ry="${n(2.4 * r / 15)}" fill="${INK}"/>`
+         + `<ellipse cx="${n(cx + d)}" cy="${n(cy)}" rx="${n(1.9 * r / 15)}" ry="${n(2.4 * r / 15)}" fill="${INK}"/>`;
+  };
+  /* 眯着的眼：up=1 往上弓（美，得意），up=-1 往下弓（睡着） */
+  const eyeArc = (cx, cy, r, up) => {
+    const d = 6.2 * r / 15, w = 3.6 * r / 15, h = 2.8 * r / 15 * up;
+    return `<path d="M ${n(cx - d - w)} ${n(cy)} q ${n(w)} ${n(-h)} ${n(w * 2)} 0
+       M ${n(cx + d - w)} ${n(cy)} q ${n(w)} ${n(-h)} ${n(w * 2)} 0" ${S}/>`;
+  };
+  const nose = (cx, cy, r) => {
+    const s = r / 15;
+    return `<path d="M ${n(cx - 2.1 * s)} ${n(cy)} L ${n(cx + 2.1 * s)} ${n(cy)} L ${n(cx)} ${n(cy + 2.2 * s)} Z"
+       fill="${PINK}" stroke="${INK}" stroke-width="1.1" stroke-linejoin="round"/>`
+      + `<path d="M ${n(cx)} ${n(cy + 2.2 * s)} v ${n(1.6 * s)}
+         M ${n(cx)} ${n(cy + 3.8 * s)} q ${n(-2.6 * s)} ${n(2.2 * s)} ${n(-4.6 * s)} 0
+         M ${n(cx)} ${n(cy + 3.8 * s)} q ${n(2.6 * s)} ${n(2.2 * s)} ${n(4.6 * s)} 0" ${T}/>`;
+  };
+  /* 胡须要长、要出头 —— 参考图上它比脸还宽出去半张脸，短了就小家子气 */
+  const whisk = (cx, cy, r, side = 3) => {
+    const s = r / 15, o = [];
+    if (side & 1) o.push(`M ${n(cx - 13 * s)} ${n(cy - 1.5 * s)} L ${n(cx - 34 * s)} ${n(cy - 6 * s)}`,
+                         `M ${n(cx - 13.5 * s)} ${n(cy + 1.5 * s)} L ${n(cx - 35 * s)} ${n(cy + 1 * s)}`,
+                         `M ${n(cx - 13 * s)} ${n(cy + 4.5 * s)} L ${n(cx - 33 * s)} ${n(cy + 8.5 * s)}`);
+    if (side & 2) o.push(`M ${n(cx + 13 * s)} ${n(cy - 1.5 * s)} L ${n(cx + 34 * s)} ${n(cy - 6 * s)}`,
+                         `M ${n(cx + 13.5 * s)} ${n(cy + 1.5 * s)} L ${n(cx + 35 * s)} ${n(cy + 1 * s)}`,
+                         `M ${n(cx + 13 * s)} ${n(cy + 4.5 * s)} L ${n(cx + 33 * s)} ${n(cy + 8.5 * s)}`);
+    return `<path d="${o.join(" ")}" ${T}/>`;
+  };
+  // 项圈：朱红一道细线加一颗金铃。线粗跟别处一样，才不跳出这一路画法
   const collar = (cx, cy, w) =>
-    `<path d="M ${cx - w} ${cy} Q ${cx} ${cy + 6} ${cx + w} ${cy}" fill="none" stroke="${RED}" stroke-width="4.5" stroke-linecap="round"/>`
-    + `<circle cx="${cx}" cy="${cy + 5.5}" r="3.6" fill="${GOLD}" stroke="${INK}" stroke-width="1.2"/>`
-    + `<circle cx="${cx}" cy="${cy + 6.4}" r="1" fill="${INK}"/>`;
-  const eyesOpen = (cx, cy) =>
-    `<ellipse cx="${cx - 6.5}" cy="${cy}" rx="2.6" ry="3.4" fill="${EYE}"/>`
-    + `<ellipse cx="${cx + 6.5}" cy="${cy}" rx="2.6" ry="3.4" fill="${EYE}"/>`
-    + `<ellipse cx="${cx - 6.5}" cy="${cy}" rx="1" ry="2.6" fill="${INK}"/>`
-    + `<ellipse cx="${cx + 6.5}" cy="${cy}" rx="1" ry="2.6" fill="${INK}"/>`;
-  const eyesShut = (cx, cy) =>
-    `<path d="M ${cx - 10} ${cy} q 3.5 3.5 7 0" ${L}/><path d="M ${cx + 3} ${cy} q 3.5 3.5 7 0" ${L}/>`;
-  const muzzle = (cx, cy) =>
-    `<path d="M ${cx} ${cy} l -2.6 -2.2 h 5.2 Z" fill="${PINK}" stroke="none"/>`
-    + `<path d="M ${cx} ${cy} v 2.4 M ${cx} ${cy + 2.4} q -3 2.4 -5.4 0 M ${cx} ${cy + 2.4} q 3 2.4 5.4 0" ${L}/>`;
-  const whisk = (cx, cy) =>
-    `<path d="M ${cx - 7} ${cy} l -13 -2.5 M ${cx - 7} ${cy + 3} l -13 2.5 M ${cx + 7} ${cy} l 13 -2.5 M ${cx + 7} ${cy + 3} l 13 2.5"
-       fill="none" stroke="${INK}" stroke-width="1.2" stroke-linecap="round" opacity=".75"/>`;
-  /* 毛茸茸的一笔：先粗墨线，再压一道细白线在上面 —— 尾巴用它。
-     纯墨描出来是死黑一坨，那就不是白猫了 */
-  const fur = (d, w) =>
-    `<path d="${d}" fill="none" stroke="${INK}" stroke-width="${w}" stroke-linecap="round"/>`
-    + `<path d="${d}" fill="none" stroke="${FUR}" stroke-width="${w - 3.6}" stroke-linecap="round"/>`;
-  /* 一条腿是一整块剪影，不是「棍子上顶个球」——
-     拿圆当爪子扣在腿尖上，两圈墨边一叠，看着就是根棒棒糖。
-     这儿沿一条二次曲线两边各让开半个腿宽，末端拿圆弧兜过去，一笔收口。 */
-  const limb = (a, c, b, wb, wt) => {
-    const nrm = (p, q) => { const dx = q[0] - p[0], dy = q[1] - p[1], n = Math.hypot(dx, dy) || 1;
-                            return [-dy / n, dx / n]; };
-    const n1 = nrm(a, c), n2 = nrm(c, b), nm = [(n1[0] + n2[0]) / 2, (n1[1] + n2[1]) / 2];
-    const wm = (wb + wt) / 2;
-    const at = (pt, nn, w, s) => `${(pt[0] + nn[0] * w * s).toFixed(1)} ${(pt[1] + nn[1] * w * s).toFixed(1)}`;
-    return `<path d="M ${at(a, n1, wb, 1)} Q ${at(c, nm, wm, 1)} ${at(b, n2, wt, 1)}
-       A ${wt} ${wt} 0 0 0 ${at(b, n2, wt, -1)} Q ${at(c, nm, wm, -1)} ${at(a, n1, wb, -1)} Z" ${F}/>`;
-  };
-  /* 爪尖上两道趾缝：顺着腿伸出去的方向划，横着划会像捆了根绳 */
-  const toes = (b, dir, r) => {
-    const px = -dir[1], py = dir[0];
-    const seg = s => `M ${b[0] + px * r * .4 * s - dir[0] * r * .15} ${b[1] + py * r * .4 * s - dir[1] * r * .15}`
-                   + ` l ${dir[0] * r * .8} ${dir[1] * r * .8}`;
-    return `<path d="${seg(-1)} ${seg(1)}" fill="none" stroke="${INK}" stroke-width="1"
-       stroke-linecap="round" opacity=".5"/>`;
-  };
+    `<path d="M ${n(cx - w)} ${n(cy)} Q ${n(cx)} ${n(cy + 5)} ${n(cx + w)} ${n(cy)}"
+       fill="none" stroke="${RED}" stroke-width="2" stroke-linecap="round"/>`
+    + `<circle cx="${n(cx)} " cy="${n(cy + 5)}" r="2.6" fill="${GOLD}" stroke="${INK}" stroke-width="1.1"/>`;
+  // 两只前爪：地上两个小拱，中间一道趾缝
+  const paws = (cx, gy, sp) =>
+    [cx - sp, cx + sp].map(x =>
+      `<path d="M ${n(x - 6)} ${n(gy)} C ${n(x - 6)} ${n(gy - 5.5)} ${n(x - 3)} ${n(gy - 7)} ${n(x)} ${n(gy - 7)}
+         C ${n(x + 3)} ${n(gy - 7)} ${n(x + 6)} ${n(gy - 5.5)} ${n(x + 6)} ${n(gy)} Z" ${F}/>`
+      + `<path d="M ${n(x)} ${n(gy)} v -3.4" ${T}/>`).join("");
 
   if (pose === "sit"){
-    const w = 21 + 11 * k, hy = 47 - 2 * k, hr = 17 + 2.5 * k;
-    P.push(`<ellipse cx="60" cy="106" rx="${w + 12}" ry="4" fill="${SHA}" stroke="none" opacity=".7"/>`);
-    P.push(fur(`M ${60 + w - 3} 100 C ${60 + w + 17} 104, ${60 + w + 19} 80, ${60 + w + 2} 77`, 8));
-    P.push(`<path d="M ${60 - w} 103 C ${60 - w} ${72 - 4 * k}, ${60 - w * .55} ${60 - 3 * k}, 60 ${60 - 3 * k}
-       C ${60 + w * .55} ${60 - 3 * k}, ${60 + w} ${72 - 4 * k}, ${60 + w} 103 Z" ${F}/>`);
-    P.push(`<ellipse cx="${60 - 8 - 2 * k}" cy="101" rx="7" ry="4.6" ${F}/>`);
-    P.push(`<ellipse cx="${60 + 8 + 2 * k}" cy="101" rx="7" ry="4.6" ${F}/>`);
-    P.push(ears(60, hy, hr));
-    P.push(`<ellipse cx="60" cy="${hy}" rx="${hr}" ry="${hr - 1.5}" ${F}/>`);
-    P.push(eyesOpen(60, hy - 1), muzzle(60, hy + 7), whisk(60, hy + 8));
-    P.push(collar(60, hy + hr - 2, 12 + 2 * k));
+    // 参考图一：正面端坐。身子一只钟，尾巴从右腚绕到身前贴地
+    const bx = 57, w = 20 + 6 * k, gy = 106, hr = 15 + 1.5 * k, hy = 47;
+    P.push(`<path d="M ${n(bx - 9)} ${n(hy + 12)} C ${n(bx - w + 3)} ${n(hy + 26)} ${n(bx - w)} 88 ${n(bx - w)} ${gy - 6}
+       C ${n(bx - w)} ${gy - 1} ${n(bx - w + 3)} ${gy} ${n(bx - w + 7)} ${gy}
+       L ${n(bx + w - 7)} ${gy} C ${n(bx + w - 3)} ${gy} ${n(bx + w)} ${gy - 1} ${n(bx + w)} ${gy - 6}
+       C ${n(bx + w)} 88 ${n(bx + w - 3)} ${n(hy + 26)} ${n(bx + 9)} ${n(hy + 12)} Z" ${F}/>`);
+    P.push(paws(bx, gy, 11 + k));
+    /* 尾巴从右腚出来，贴地往右摊开，梢儿再挑起来一点。
+       别让它绕回身前 —— 一绕回来就把爪子圈在里头，看着像脚下垫了块滑板。 */
+    P.push(`<path d="M ${n(bx + w - 6)} 100 C ${n(bx + w + 11)} 104, ${n(bx + w + 21)} 108, ${n(bx + w + 25)} 100.5
+       C ${n(bx + w + 27)} 95 ${n(bx + w + 21)} 93.5 ${n(bx + w + 20)} 98" ${S}/>`);
+    P.push(head(bx, hy, hr));
+    P.push(eyeDot(bx, hy, hr), nose(bx, hy + 6.5, hr), whisk(bx, hy + 3, hr));
+    P.push(collar(bx, hy + hr + 3, 10 + 1.5 * k));
   }
+
+  if (pose === "perk"){
+    // 参考图二：眯眼得意，尾巴翘上去打个钩
+    const w = 18 + 6 * k, gy = 106, hr = 15 + 1.5 * k, hy = 48;
+    // 尾巴一路扬到肩那么高，梢儿往回勾 —— 这一勾就是「今天心情好」
+    P.push(`<path d="M ${n(64 + w - 5)} 100 C ${n(64 + w + 17)} 101, ${n(64 + w + 21)} 78, ${n(64 + w + 10)} 68
+       C ${n(64 + w + 4)} 62.5, ${n(64 + w - 4)} 65, ${n(64 + w - 2)} 71" ${S}/>`);
+    P.push(`<path d="M ${n(64 - 9)} ${n(hy + 12)} C ${n(64 - w + 2)} ${n(hy + 26)} ${n(64 - w)} 89 ${n(64 - w)} ${gy - 6}
+       C ${n(64 - w)} ${gy - 1} ${n(64 - w + 3)} ${gy} ${n(64 - w + 7)} ${gy}
+       L ${n(64 + w - 7)} ${gy} C ${n(64 + w - 3)} ${gy} ${n(64 + w)} ${gy - 1} ${n(64 + w)} ${gy - 6}
+       C ${n(64 + w)} 89 ${n(64 + w - 2)} ${n(hy + 26)} ${n(64 + 9)} ${n(hy + 12)} Z" ${F}/>`);
+    // 两条前腿：两笔干净的竖线。起笔要在项圈底下，不然像背了副背带
+    P.push(`<path d="M ${n(64 - 8)} 85 C ${n(64 - 9)} 93 ${n(64 - 9)} 99 ${n(64 - 8)} ${gy}
+       M ${n(64 + 8)} 85 C ${n(64 + 9)} 93 ${n(64 + 9)} 99 ${n(64 + 8)} ${gy}" ${S}/>`);
+    P.push(paws(64, gy, 8));
+    P.push(head(64, hy, hr));
+    P.push(eyeArc(64, hy, hr, 1), nose(64, hy + 6.5, hr), whisk(64, hy + 3, hr));
+    P.push(collar(64, hy + hr + 3, 10 + 1.5 * k));
+  }
+
   if (pose === "nap"){
-    // 蜷成一团：一个大圆团，头搁在左前，尾巴从身后绕到脸前圈起来
-    const rx = 33 + 7 * k, ry = 20 + 5 * k, cy = 82;
-    P.push(`<ellipse cx="62" cy="104" rx="${rx + 6}" ry="4.5" fill="${SHA}" stroke="none" opacity=".7"/>`);
-    P.push(fur(`M ${62 + rx - 4} ${cy + 12} C ${62 + rx + 12} ${cy + 4}, ${62 + rx + 6} ${cy - 14}, ${62 + rx - 8} ${cy - 12}`, 8));
-    P.push(`<ellipse cx="62" cy="${cy}" rx="${rx}" ry="${ry}" ${F}/>`);
-    P.push(`<path d="M ${62 - rx + 8} ${cy + 6} q ${rx * .9} ${ry * .7} ${rx * 1.7} -2" fill="none"
-       stroke="${SHA}" stroke-width="2.2"/>`);
-    P.push(fur(`M ${62 + rx - 10} ${cy + ry - 4} C ${62 + 6} ${cy + ry + 8}, ${62 - rx + 2} ${cy + ry + 4}, ${62 - rx - 4} ${cy + 4}`, 8));
-    const hx = 62 - rx + 13, hy = cy - 6;
-    P.push(ears(hx, hy, 14.5, 1.5));
-    P.push(`<ellipse cx="${hx}" cy="${hy}" rx="14.5" ry="13.5" ${F}/>`);
-    P.push(eyesShut(hx, hy - 1), muzzle(hx, hy + 6), whisk(hx, hy + 7));
-    P.push(`<path d="M ${hx + 26} ${hy - 22} q 5 -4 0 -8 q -5 -4 0 -8" fill="none" stroke="${INK}"
-       stroke-width="1.8" stroke-linecap="round" opacity=".5"/>`);
+    // 参考图三：侧躺，头在左，尾巴在右边扬起一道大 S
+    const rx = 29 + 6 * k, cy = 92, cx = 66;
+    /* 尾巴是这张的题眼：从后胯一路甩上去，比它自己还高，梢儿在顶上往回一勾 */
+    P.push(`<path d="M ${n(cx + rx - 5)} ${n(cy - 6)} C ${n(cx + rx + 15)} ${n(cy - 14)}, ${n(cx + rx + 17)} ${n(cy - 42)}, ${n(cx + rx + 3)} ${n(cy - 49)}
+       C ${n(cx + rx - 7)} ${n(cy - 54)}, ${n(cx + rx - 16)} ${n(cy - 46)}, ${n(cx + rx - 8)} ${n(cy - 40)}" ${S}/>`);
+    P.push(`<path d="M ${n(cx - rx + 4)} ${n(cy - 4)}
+       C ${n(cx - rx - 2)} ${n(cy - 17)} ${n(cx - rx + 12)} ${n(cy - 23)} ${n(cx)} ${n(cy - 21)}
+       C ${n(cx + rx - 6)} ${n(cy - 19)} ${n(cx + rx)} ${n(cy - 12)} ${n(cx + rx)} ${n(cy - 2)}
+       C ${n(cx + rx)} ${n(cy + 5)} ${n(cx + rx - 8)} ${n(cy + 8)} ${n(cx + rx - 18)} ${n(cy + 8)}
+       L ${n(cx - rx + 12)} ${n(cy + 8)} C ${n(cx - rx + 3)} ${n(cy + 8)} ${n(cx - rx + 3)} ${n(cy + 2)} ${n(cx - rx + 4)} ${n(cy - 4)} Z" ${F}/>`);
+    // 头往上提一点，耳朵才不陷进背里
+    const hx = cx - rx + 3, hy = cy - 18, hr = 14;
+    P.push(head(hx, hy, hr));
+    P.push(eyeArc(hx, hy, hr, -1), nose(hx, hy + 6.5, hr), whisk(hx, hy + 3, hr, 1));
+    // 前爪窝在下巴底下，一条短弧
+    P.push(`<path d="M ${n(hx + 3)} ${n(cy + 8)} c 1 -6 6 -8 12 -7.5" ${T}/>`);
   }
-  if (pose === "belly"){
-    const rx = 30 + 7 * k, ry = 17 + 4 * k, cx = 64, cy = 88, top = cy - ry;
-    P.push(`<ellipse cx="${cx}" cy="106" rx="${rx + 8}" ry="4" fill="${SHA}" stroke="none" opacity=".7"/>`);
-    P.push(fur(`M ${cx + rx - 4} ${cy + 6} C ${cx + rx + 16} ${cy + 2}, ${cx + rx + 12} ${cy - 20}, ${cx + rx - 2} ${cy - 18}`, 8));
-    // 后腿有胯：屁股那边先垫一团肉，腿才不像凭空插上去的
-    P.push(`<ellipse cx="${cx + rx * .5}" cy="${top + 5}" rx="${rx * .34}" ry="${ry * .55}" ${F}/>`);
-    /* 四条腿先画、根扎进肚子里，等下让身子把关节盖住；画在身子上头，
-       墨线横穿肚皮，看着像四根插着的火柴。
-       [根部x, 往哪边抬, 冒出肚皮多高, 根粗, 爪粗]：前爪短、后腿长 */
-    [[cx - rx * .4, -1, 4, 5.6, 4.4], [cx - rx * .1, -1, 7, 5.6, 4.4],
-     [cx + rx * .34, 1, 12, 6.6, 5.2], [cx + rx * .66, 1, 8, 6.6, 5.2]]
-      .forEach(([x, d, up, wb, wt]) => {
-        // 控制点甩到爪子外头去：曲线先往外抬再拐回来，爪尖便是往里耷的
-        const a = [x, cy + 2], c = [x + d * 17, cy - ry * .55], b = [x + d * 8, top - up];
-        const dx = b[0] - c[0], dy = b[1] - c[1], n = Math.hypot(dx, dy) || 1;
-        P.push(limb(a, c, b, wb, wt), toes(b, [dx / n, dy / n], wt));
-      });
-    P.push(`<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" ${F}/>`);
-    P.push(`<ellipse cx="${cx + 6}" cy="${cy + 4}" rx="${rx * .5}" ry="${ry * .45}" fill="${SHA}"
-       stroke="none" opacity=".3"/>`);
-    const hx = cx - rx + 2, hy = cy + 6;
-    P.push(ears(hx, hy, 14.5, 2));
-    P.push(`<ellipse cx="${hx}" cy="${hy}" rx="14.5" ry="13.5" ${F}/>`);
-    P.push(eyesShut(hx, hy - 1), muzzle(hx, hy + 6), whisk(hx, hy + 7));
-  }
+
   if (pose === "wait"){
-    // 背对着你蹲在门口，只回过来半张脸。瘦，所以不吃 k
-    P.push(`<path d="M 22 20 v 86 M 22 20 h 24" fill="none" stroke="${INK}"
-       stroke-width="2.4" opacity=".26" stroke-linecap="round"/>`);
-    P.push(`<ellipse cx="66" cy="107" rx="27" ry="4" fill="${SHA}" stroke="none" opacity=".7"/>`);
-    P.push(fur("M 84 102 C 101 107, 104 80, 88 75", 8));
-    P.push(`<path d="M 48 105 C 45 74, 54 52, 66 52 C 78 52, 87 74, 84 105 Z" ${F}/>`);
-    P.push(`<path d="M 66 66 C 63 80, 63 94, 65 104" fill="none" stroke="${SHA}" stroke-width="2.4"/>`);
-    P.push(ears(66, 58, 16));
-    P.push(`<ellipse cx="66" cy="58" rx="16" ry="15" ${F}/>`);
-    P.push(`<ellipse cx="76" cy="56" rx="2.5" ry="3.3" fill="${EYE}"/>`);
-    P.push(`<ellipse cx="76" cy="56" rx="1" ry="2.5" fill="${INK}"/>`);
-    P.push(`<path d="M 80.5 63 l -2.4 -2 h 4.8 Z" fill="${PINK}" stroke="none"/>`);
-    P.push(`<path d="M 74 64 l 13 -2.5 M 74 66.5 l 13 2.5" fill="none" stroke="${INK}"
-       stroke-width="1.2" stroke-linecap="round" opacity=".75"/>`);
+    /* 门口。这一张不吃 k：饿到这份上就是这个样子。
+       门在左边，它侧着脸朝门口，耳朵耷着，尾巴摊在地上一动不动。 */
+    const cx = 66, w = 16, gy = 107, hr = 14.5, hy = 52;
+    P.push(`<path d="M 17 12 v 96 M 17 12 h 24" fill="none" stroke="${INK}"
+       stroke-width="2" opacity=".2" stroke-linecap="round"/>`);
+    P.push(`<path d="M ${n(cx - 8)} ${n(hy + 12)} C ${n(cx - w + 2)} ${n(hy + 24)} ${n(cx - w)} 92 ${n(cx - w)} ${gy - 5}
+       C ${n(cx - w)} ${gy - 1} ${n(cx - w + 3)} ${gy} ${n(cx - w + 6)} ${gy}
+       L ${n(cx + w - 6)} ${gy} C ${n(cx + w - 3)} ${gy} ${n(cx + w)} ${gy - 1} ${n(cx + w)} ${gy - 5}
+       C ${n(cx + w)} 92 ${n(cx + w - 2)} ${n(hy + 24)} ${n(cx + 8)} ${n(hy + 12)} Z" ${F}/>`);
+    P.push(paws(cx, gy, 9));
+    // 尾巴一点不翘，直挺挺摊在地上拖着，梢儿也不勾
+    P.push(`<path d="M ${n(cx + w - 6)} 100 C ${n(cx + w + 10)} 105, ${n(cx + w + 18)} 109, ${n(cx + w + 28)} 107.5" ${S}/>`);
+    P.push(head(cx, hy, hr, .38));
+    // 侧过半张脸朝着门：鼻子挪到左颊，胡须也偏过去
+    P.push(`<ellipse cx="${n(cx - 8)}" cy="${n(hy)}" rx="2" ry="2.5" fill="${INK}"/>`,
+           `<ellipse cx="${n(cx + 3.5)}" cy="${n(hy)}" rx="1.7" ry="2.2" fill="${INK}"/>`);
+    P.push(`<path d="M ${n(cx - 13)} ${n(hy + 5.5)} L ${n(cx - 9)} ${n(hy + 5.5)} L ${n(cx - 11)} ${n(hy + 8)} Z"
+       fill="${PINK}" stroke="${INK}" stroke-width="1.1" stroke-linejoin="round"/>`);
+    P.push(`<path d="M ${n(cx - 11)} ${n(hy + 8)} q -3 2.4 -5.4 .4" ${T}/>`);
+    P.push(`<path d="M ${n(cx - 14)} ${n(hy + 1.5)} L ${n(cx - 35)} ${n(hy - 4)}
+       M ${n(cx - 15)} ${n(hy + 4.5)} L ${n(cx - 36)} ${n(hy + 3)}
+       M ${n(cx - 14)} ${n(hy + 8)} L ${n(cx - 34)} ${n(hy + 12)}
+       M ${n(cx + 12)} ${n(hy + 3)} L ${n(cx + 25)} ${n(hy - 1)}
+       M ${n(cx + 12)} ${n(hy + 6)} L ${n(cx + 26)} ${n(hy + 7)}" ${T}/>`);
   }
   return `<svg viewBox="0 0 128 116" width="100%" height="100%">${P.join("")}</svg>`;
 }
