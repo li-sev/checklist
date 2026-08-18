@@ -487,6 +487,10 @@
     font-size:11.5px;letter-spacing:1px;color:var(--ink);background:var(--card)}
   .cb .ctoys .ty.no{color:var(--dim);opacity:.5}
   .cb .ctoys .ty.on{border-color:var(--accent);color:var(--accent);font-weight:700}
+  .cb .ctoys.pick .ty{cursor:pointer;transition:border-color .15s,color .15s}
+  .cb .ctoys.pick .ty.no{opacity:.6}
+  .cb .ctoys.pick .ty:active{border-color:var(--accent)}
+  .cb .ctoys.pick .ty.on{background:var(--soft)}
   .cb .ctl{display:block;margin:12px 0 4px;font-size:11.5px;letter-spacing:2px;color:var(--dim)}
   .cb .ctl small{margin-left:6px;letter-spacing:.5px;opacity:.8}
   .cb .cnote{margin:10px 0 0;font-size:11.5px;line-height:1.8;color:var(--dim);letter-spacing:.5px}
@@ -1499,10 +1503,12 @@
   <div class="cbar"><i id="ctBar"></i></div>
   <p class="cmeta" id="ctMeta"></p>
   <p class="cgift" id="ctGift" hidden></p>
+  <label class="ctl">猫窝 <small>点一下就换。没买的写着价，就地也能买</small></label>
+  <div class="ctoys pick" id="ctBed"></div>
+  <label class="ctl">玩具 <small>一次摆一样。摆上它会自己过去扑</small></label>
+  <div class="ctoys pick" id="ctBuy"></div>
   <label class="ctl">它叼回来的 <small>只能等它自己带，买不着</small></label>
   <div class="ctoys" id="ctToys"></div>
-  <label class="ctl">你给它买的 <small>在内务府·猫市添置，摆一样在院子里</small></label>
-  <div class="ctoys" id="ctBuy"></div>
   <p class="cnote">它不会死。喂不上就瘦着、守着空碗等你回来。<br>
     批折子挣鱼干，喂不喂你说了算 —— 折子撤回，鱼干也照退。<br>
     存档、驿传都带着它走 —— 换个机子它还在。</p>
@@ -1598,7 +1604,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v57" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v58" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -3943,12 +3949,18 @@ function paintCat(gift){
   $("#ctToys").innerHTML = CATTOY.map(t => c.toys.includes(t.id)
     ? `<span class="ty" title="${esc(t.d)}">${esc(t.n)}</span>`
     : `<span class="ty no">？</span>`).join("");
-  // 买来的那一架：有的亮着，眼下摆着的那样描红，没买的留灰位子
-  $("#ctBuy").innerHTML = Object.entries(PETS).filter(([k, v]) => v.p > 0)
-    .map(([k, v]) => g.own.includes(k)
-      ? `<span class="ty${g.catpet === k ? " on" : ""}">${v.e} ${esc(v.n)}${
-          g.catpet === k ? " ·摆着" : ""}</span>`
-      : `<span class="ty no">${v.e} ${v.p} 两</span>`).join("");
+  /* 猫窝和玩具这两架就地能点：买过的点一下换上，没买的点一下就地出库
+     （走的还是内务府那一套 pickWare，问一句、扣银子、记治绩，一样不少） */
+  for (const kind of ["bed", "pet"]){
+    const r = CATKIT[kind];
+    $(kind === "bed" ? "#ctBed" : "#ctBuy").innerHTML = Object.entries(r.list)
+      .map(([k, v]) => {
+        const own = g.own.includes(k), on = g[r.cur] === k;
+        return `<span class="ty${on ? " on" : ""}${own ? "" : " no"}"
+          data-buy="${k}" data-kind="${kind}">${v.e || "○"} ${esc(v.n)}${
+          on ? " ·摆着" : own ? "" : " " + v.p + "两"}</span>`;
+      }).join("");
+  }
   paintCatChip();
 }
 function openCat(){
@@ -3962,7 +3974,11 @@ function openCat(){
 function shutCat(){ catLaserOff(); catHalt(); mask12.classList.remove("on"); }
 $("#ctBtn").onclick = openCat;
 $("#ctClose").onclick = shutCat;
-mask12.addEventListener("click", e => { if (e.target === mask12) shutCat(); });
+mask12.addEventListener("click", e => {
+  const b = e.target.closest("[data-buy]");
+  if (b) return pickWare(b);                      // 就地换窝、换玩具，不必跑回内库
+  if (e.target === mask12) shutCat();
+});
 /* 戳它。睡着的时候是叫醒 —— 要戳够那一到六下；醒着就是摸一把。
    摆了激光笔又亮着红点的时候，这一下是让它扑上去 */
 $("#ctArt").onclick = () => {
@@ -4670,8 +4686,9 @@ mask6.addEventListener("click", async e => {
   paintPurse(); paintShop(); save(true);
 });
 
-mask6.addEventListener("click", async e => {
-  const b = e.target.closest("[data-buy]"); if (!b) return;
+/* 点一样货：没买过先问一句再出库，买过的直接换上。
+   内务府和猫窝两处都用这一个 —— 换玩具不必再跑回内库 */
+async function pickWare(b){
   const g = G(), k = b.dataset.buy, kind = b.dataset.kind;
   const v = (ALLKIT[kind] || {list:{}}).list[k]; if (!v) return;
   const had = g.own.includes(k);
@@ -4699,6 +4716,10 @@ mask6.addEventListener("click", async e => {
   sweep();                                        // 添置、置齐、用上玉玺，各算一件治绩
   paintPurse(); paintShop(); save(true);
   if (kind === "seal") render();                  // 印章换了，每一条的印都要重画
+  if (CATKIT[kind]) paintCat(null);               // 换了窝或玩具，院子要重摆
+}
+mask6.addEventListener("click", e => {
+  const b = e.target.closest("[data-buy]"); if (b) pickWare(b);
 });
 $("#ihReset").onclick = async () => {
   if (!await ask("重开一局",
