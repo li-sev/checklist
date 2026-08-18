@@ -427,11 +427,18 @@
   @keyframes catz{0%{transform:translate(0,0) scale(.8);opacity:0}
     30%{opacity:.85}100%{transform:translate(16px,-34px) scale(1.2);opacity:0}}
   /* 窝、玩具、空碗。窝压在最底下，猫趴上去要盖住它 */
-  .cb .cy .cbed{font-size:.62em;z-index:0;transition:transform .3s ease}
+  /* 窝默认在猫后头。猫躺进去、或者绕到窝后面（y 更靠里）时，
+     才把窝提到前头来挡住它 —— 这一层是真按前后关系排的，不是写死的 */
+  .cb .cy .cbed{z-index:0;transition:transform .3s ease}
+  .cb .cy .cbed.front{z-index:4}
   /* 玩具也是两层：.ctoyw 管它摆在哪（inline 的 translateX），
      .ctoy 管它挨打时怎么翻。搁一层上的话，拍飞那个 keyframe 会连位移一起盖掉 ——
      玩具当场归零，飞到院子最左边去 */
-  .cb .cy .ctoyw{font-size:.4em;z-index:1;transition:transform .3s ease}
+  .cb .cy .ctoyw{font-size:.4em;z-index:1;transition:transform .3s ease;
+    cursor:grab;touch-action:none}
+  .cb .cy .ctoyw.drag{cursor:grabbing;transition:none;z-index:5;
+    filter:drop-shadow(0 6px 5px rgba(0,0,0,.28))}
+  .cb .cy .ctoyw.drag .ctoy{animation:none;transform:scale(1.22)}
   .cb .cy .cbw{font-size:.44em;opacity:.9;z-index:0}
   .cb .cy .cwk{z-index:2}
   /* 挨打：翻着跟头弹一下再落回原地。这一层没有位移，只有它自己那点翻滚，
@@ -1604,7 +1611,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v58" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v59" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -2369,14 +2376,23 @@ const WARESN = Object.values(WARES).filter(v => v.p > 0).length;
 /* 键一律带 bed_ / pet_ 的前缀。买过什么全记在同一个 g.own 里，
    跟文房那边撞了号就是一样东西 —— 「竹筐」原先叫 lan，正好跟藏蓝夜奏那张纸同名，
    买张纸能白得一个筐。加前缀是为了往后再添货也撞不上 */
+/* in 那一格是「猫躺进去之后长什么样」，逐张窝分开定：
+     bw    窝画多大（相对猫的字号）
+     front 猫躺进去的时候窝盖在猫前头 —— 装得进去的（箱、筐、瓮）才要
+     lift  猫往上抬多少（占猫身高的比例）。抬得越多露得越多：
+           箱子露头和肩，筐沿低些露得多，瓮口窄就只露一个脑袋
+     hot   烫。这一张不进去，挨近了还要叫一声 */
 const BEDS = {
-  bed_cao:  {n:"草席",   p:0,   e:"",   pv:"x-em"},
-  bed_xiang:{n:"纸箱",   p:40,  e:"📦", pv:"x-em"},
-  bed_kuang:{n:"竹筐",   p:70,  e:"🧺", pv:"x-em"},
-  bed_weng: {n:"陶瓮",   p:100, e:"🏺", pv:"x-em"},
-  bed_pen:  {n:"炭盆",   p:120, e:"🔥", pv:"x-em"},
-  bed_ta:   {n:"锦榻",   p:140, e:"🛏", pv:"x-em"},
+  bed_cao:  {n:"草席",   p:0,   e:"",   pv:"x-em", in:{bw:.62, front:0, lift:0}},
+  bed_xiang:{n:"纸箱",   p:40,  e:"📦", pv:"x-em", in:{bw:1.18, front:1, lift:.42}},
+  bed_kuang:{n:"竹筐",   p:70,  e:"🧺", pv:"x-em", in:{bw:1.10, front:1, lift:.36}},
+  bed_weng: {n:"陶瓮",   p:100, e:"🏺", pv:"x-em", in:{bw:1.20, front:1, lift:.30}},
+  bed_pen:  {n:"炭盆",   p:120, e:"🔥", pv:"x-em", in:{bw:.70,  front:0, lift:0, hot:1}},
+  bed_ta:   {n:"锦榻",   p:140, e:"🛏", pv:"x-em", in:{bw:1.35, front:0, lift:.16}},
 };
+const bedIn = b => (b && b.in) || {bw:.62, front:0, lift:0};
+const CATHOT = ["离炭盆远着点 —— 再蹭就成碳咪了。", "它凑近炭盆闻了闻，胡子差点燎了。",
+                "炭盆是烤火的，不是睡的。"];
 const PETS = {
   pet_no:   {n:"不摆",   p:0,   e:"",   pv:"x-em"},
   pet_qiu:  {n:"毛线团", p:30,  e:"🧶", pv:"x-em"},
@@ -3056,7 +3072,7 @@ function catScene(){
   const g = G(), c = catState();
   const bed = BEDS[g.catbed] || BEDS.bed_cao, pet = PETS[g.catpet] || PETS.pet_no;
   const P = [];
-  if (bed.e) P.push(`<span class="cbed">${bed.e}</span>`);
+  if (bed.e) P.push(`<span class="cbed" style="font-size:${bedIn(bed).bw}em">${bed.e}</span>`);
   if (pet.e && !pet.laser) P.push(`<span class="ctoyw"><span class="ctoy">${pet.e}</span></span>`);
   if (c.f < .2) P.push(`<span class="cbw">🥣</span>`);
   P.push(`<span class="cwk"><span class="cem">🐈<span class="cz" hidden>💤</span></span></span>`);
@@ -3075,23 +3091,37 @@ function catAfter(ms, fn){
   clearTimeout(A.timer);
   A.timer = setTimeout(() => { if (CA === A) fn(); }, Math.max(30, ms));
 }
+/* 猫这一刻该长什么样：横着到哪、前后到哪、脸朝哪边、躺窝里抬多高。
+   y 是院子的进深 —— 负的靠里、正的靠外，跟横坐标一样是真坐标，
+   激光、拖玩具、随便溜达都在这个平面上走 */
+const catXf = A => `translate(${Math.round(A.x)}px,${Math.round(A.y - (A.lift || 0))}px)`
+                 + ` scaleX(${A.dir})`;
+/* 前后关系：猫绕到窝后面（y 比窝还靠里）、或者干脆躺进了窝里，
+   窝就得盖住猫。箱、筐、瓮才装得进去，榻和炭盆不遮 */
+function catDepth(){
+  const A = CA; if (!A || !A.el.bed) return;
+  const ins = bedIn(BEDS[G().catbed]);
+  A.el.bed.classList.toggle("front", !!((A.inBed && ins.front) || A.y < A.bedY - 7));
+}
 function catFace(d){
   const A = CA; if (!A) return;
   A.dir = d;
   A.el.wk.style.transitionDuration = "0s";
-  A.el.wk.style.transform = `translateX(${Math.round(A.x)}px) scaleX(${d})`;
+  A.el.wk.style.transform = catXf(A);
 }
-/* 走到 tx（px），速度 px/秒。苹果那只猫脸朝左，所以往右走要 scaleX(-1) 翻过来 */
-function catMove(tx, sp, then){
+// 走到 (tx,ty)，速度 px/秒。苹果那只猫脸朝左，往右走要 scaleX(-1) 翻过来
+function catMove(tx, ty, sp, then){
   const A = CA; if (!A) return;
   tx = clamp(tx, A.pad, Math.max(A.pad, A.W - A.cw - A.pad));
-  const d = Math.abs(tx - A.x), t = d < 1 ? 0 : d / sp;
-  if (d > 1) A.dir = tx > A.x ? -1 : 1;
-  A.x = tx;
+  ty = clamp(ty, A.yLo, A.yHi);
+  const d = Math.hypot(tx - A.x, ty - A.y), t = d < 1 ? 0 : d / sp;
+  if (Math.abs(tx - A.x) > 1) A.dir = tx > A.x ? -1 : 1;
+  A.x = tx; A.y = ty;
   A.el.cy.style.setProperty("--cbob", (sp > 50 ? .32 : .5) + "s");
   A.el.cy.classList.toggle("go", t > 0);
   A.el.wk.style.transitionDuration = t + "s";
-  A.el.wk.style.transform = `translateX(${Math.round(tx)}px) scaleX(${A.dir})`;
+  A.el.wk.style.transform = catXf(A);
+  catDepth();
   catAfter(t * 1000 + 50, then || catStep);
 }
 // 一次性的小动作（扑、蹦、伸懒腰）：加个 class，完了摘掉
@@ -3105,11 +3135,18 @@ function catTell(act){
   if (CA) CA.act = act;
   const el = $("#ctSay"); if (el) el.textContent = catSay(act);
 }
+// 从窝里爬出来：抬高归零，窝退回后头
+function catOut(){
+  const A = CA; if (!A) return;
+  A.inBed = 0; A.lift = 0;
+  catDepth();
+}
 /* 一步走完了，下一步干什么。心气儿（catPose）定倾向，这儿掷骰子 */
 function catStep(){
-  const A = CA; if (!A || A.laserOn) return;
+  const A = CA; if (!A || A.chasing || A.drag) return;
   A.el.cy.classList.remove("zz");
   A.el.z.hidden = true;
+  catOut();
   const mood = catPose();
   if (mood === "wait") return catGuardBowl();
   if (mood === "nap") return catSleep(false);
@@ -3126,13 +3163,21 @@ function catStep(){
   }
   A.legs++;
   catTell("walk");
-  catMove(A.pad + Math.random() * Math.max(1, A.W - A.cw - A.pad * 2), fast ? 62 : 34);
+  let tx = A.pad + Math.random() * Math.max(1, A.W - A.cw - A.pad * 2);
+  const ty = A.yLo + Math.random() * (A.yHi - A.yLo);
+  // 炭盆烫。溜达也别往那儿凑，凑近了推开，还得叫它一声
+  const hot = A.el.bed && bedIn(BEDS[G().catbed]).hot;
+  if (hot && Math.abs(tx - A.bedX) < A.cw * .75){
+    tx = A.bedX + A.cw * (tx < A.bedX ? -.95 : .95);
+    if (Math.random() < .5) toast(CATHOT[Math.floor(Math.random() * CATHOT.length)]);
+  }
+  catMove(tx, ty, fast ? 62 : 34);
 }
 // 饿到守碗：挪到碗边上，脸朝着碗，不再溜达
 function catGuardBowl(){
   const A = CA; if (!A) return;
   catTell("wait");
-  catMove(A.bowlX + A.bowlW * .85, 26, () => {
+  catMove(A.bowlX + A.bowlW * .85, 0, 26, () => {
     A.el.cy.classList.remove("go");
     catFace(1);                                   // 不翻面才脸朝左，正对着左手边的碗
     catAfter(3200, catStep);
@@ -3140,11 +3185,13 @@ function catGuardBowl(){
 }
 /* 睡。doze = 走着走着自己打的盹，那种会自己醒；
    到点了才睡的（夜里、午睡、今天一件没批）就一直睡着，等你戳。
-   戳几下才醒是每回入睡现掷的一到六 —— 所以你不知道这一觉沉不沉。 */
+   戳几下才醒是每回入睡现掷的一到六 —— 所以你不知道这一觉沉不沉。
+   有窝就先走回窝里；炭盆那张烫，只肯睡在旁边。 */
 function catSleep(doze){
   const A = CA; if (!A) return;
   A.wake = 1 + Math.floor(Math.random() * 6);
   A.poked = 0;
+  const ins = bedIn(BEDS[G().catbed]);
   const lie = () => {
     if (!CA || CA !== A) return;
     A.el.cy.classList.remove("go");
@@ -3154,14 +3201,29 @@ function catSleep(doze){
     if (doze) catAfter(11000 + Math.random() * 15000, () => catWake(true));
     else clearTimeout(A.timer);                   // 不设闹钟：等人戳
   };
-  if (A.el.bed) catMove(A.bedX + (A.bedW - A.cw) / 2, 34, lie);   // 有窝就回窝里趴
-  else lie();
+  if (A.el.bed && !ins.hot){
+    // 躺进去：横着对准窝心，往上抬到该露出来的高度，窝提到前头挡住下半身
+    catMove(A.bedX + (A.bedW - A.cw) / 2, A.bedY, 34, () => {
+      A.inBed = 1; A.lift = A.cw * ins.lift;
+      A.el.wk.style.transitionDuration = ".28s";
+      A.el.wk.style.transform = catXf(A);
+      catDepth();
+      catAfter(300, lie);
+    });
+  } else if (A.el.bed && ins.hot){
+    toast(CATHOT[Math.floor(Math.random() * CATHOT.length)]);
+    catMove(A.bedX + A.bedW + A.cw * .15, A.bedY, 34, lie);   // 挨着炭盆睡，不进去
+  } else lie();
 }
 function catWake(self){
   const A = CA; if (!A) return;
   A.legs = 0; A.wake = 0;
   A.el.cy.classList.remove("zz");
   A.el.z.hidden = true;
+  // 先从窝里站起来（抬高归零、窝退回后头），再伸懒腰
+  catOut();
+  A.el.wk.style.transitionDuration = ".3s";
+  A.el.wk.style.transform = catXf(A);
   catFlash("yawn", 800);
   if (!self) toast(`${catName()}总算睁了眼，冲你哈了一口气。`);
   catTell("walk");
@@ -3170,15 +3232,16 @@ function catWake(self){
 /* 去扑玩具。真的走过去站定、真的拍 —— 玩具会翻着跟头弹开。
    拍完三成的时候会叼起来换个地方撂下 */
 function catPlay(){
-  const A = CA; if (!A || !A.el.toy) return catStep();
+  const A = CA; if (!A || !A.el.toy || A.drag) return catStep();
   A.legs = 0;
+  catOut();
   catTell("play");
-  catMove(A.toyX - A.cw + A.toyW * .55, 62, () => {
+  catMove(A.toyX - A.cw + A.toyW * .55, A.toyY, 62, () => {
     catFace(-1);                                  // 转过身冲着玩具
     A.el.cy.classList.remove("go");
     let n = 1 + Math.floor(Math.random() * 3);
     const hit = () => {
-      if (!CA || CA !== A || !A.el.toy) return catStep();
+      if (!CA || CA !== A || !A.el.toy || A.drag) return catStep();
       catFlash("pounce", 420);
       const t = A.el.toy;
       t.classList.remove("hit"); void t.offsetWidth; t.classList.add("hit");
@@ -3194,7 +3257,7 @@ function catPlay(){
 /* 叼着走两步，换个地方撂下。
    办法是把玩具整个搬进猫那个元素（.cem）里去 —— 从此它就是猫身上的一块，
    猫走它跟着走、猫掉头它跟着翻，不用拿两条 transition 去对齐（对不齐的，
-   一层是位移一层是跟随，差半帧就飘）。撂下时再搬回院子里，给它一个新的落点。 */
+   一层是位移一层是跟随，差半帧就飘）。撂下时再搬回院子，给它一个新的落点。 */
 function catCarry(){
   const A = CA; if (!A || !A.el.toy || !A.el.toyw) return catStep();
   const t = A.el.toy, nm = (PETS[G().catpet] || {}).n || "玩具";
@@ -3202,52 +3265,104 @@ function catCarry(){
   t.classList.add("held");
   A.el.em.appendChild(t);                        // 叼起来：进嘴
   toast(`${catName()}叼起${nm}，换了个地方撂下。`);
-  catMove(A.pad + Math.random() * Math.max(1, A.W - A.cw - A.pad * 2), 44, () => {
+  catMove(A.pad + Math.random() * Math.max(1, A.W - A.cw - A.pad * 2),
+          A.yLo + Math.random() * (A.yHi - A.yLo), 44, () => {
     if (!CA || CA !== A) return;
     // 撂在脚边：猫脸朝哪边，就撂在哪边
     A.toyX = clamp(A.x + (A.dir < 0 ? A.cw - A.toyW : 0), A.pad, Math.max(A.pad, A.W - A.toyW - A.pad));
+    A.toyY = A.y;
     t.classList.remove("held");
     A.el.toyw.appendChild(t);                    // 放下：回院子
     A.el.toyw.style.transitionDuration = "0s";
-    A.el.toyw.style.transform = `translateX(${Math.round(A.toyX)}px)`;
+    A.el.toyw.style.transform = `translate(${Math.round(A.toyX)}px,${Math.round(A.toyY)}px)`;
     catAfter(760, catStep);
   });
 }
-/* ── 激光笔 ──
-   摆上这一样，鼠标（或手指）在院子里的横坐标就是那颗红点，猫追着它跑。
-   出了院子红点就灭，它回去过自己的日子。 */
-const catLaserOn = () => !!(PETS[G().catpet] || {}).laser;
-function catLaserAt(cx){
-  const A = CA; if (!A || !A.el.lz) return;
-  const r = A.el.y.getBoundingClientRect();
-  const x = clamp(cx - r.left, 0, r.width);
-  A.el.lz.style.left = x + "px";
-  A.el.lz.style.top = Math.round(r.height * .8) + "px";
-  A.el.lz.classList.add("on");
-  if (!A.laserOn){
-    A.laserOn = 1;
+/* ── 追东西 ──
+   激光的红点、和你手上拖着的玩具，走的是同一条路：给个院子里的坐标，
+   它就往那儿扑。松开就散，回去过自己的日子。 */
+function catChase(px, py){
+  const A = CA; if (!A) return;
+  if (!A.chasing){
+    A.chasing = 1;
     A.el.cy.classList.remove("zz");
     A.el.z.hidden = true;
-    catTell("chase");
+    catOut();
   }
-  if (Math.abs(x - (A.lzTo == null ? -9e9 : A.lzTo)) < 14) return;   // 挪十几个像素才重新给目标
-  A.lzTo = x;
   clearTimeout(A.timer);
-  const tx = clamp(x - A.cw / 2, A.pad, Math.max(A.pad, A.W - A.cw - A.pad));
-  const d = Math.abs(tx - A.x);
-  if (d > 2) A.dir = tx > A.x ? -1 : 1;
-  A.x = tx;
+  const tx = clamp(px - A.cw / 2, A.pad, Math.max(A.pad, A.W - A.cw - A.pad));
+  const ty = clamp(py, A.yLo, A.yHi);
+  const d = Math.hypot(tx - A.x, ty - A.y);
+  if (Math.abs(tx - A.x) > 2) A.dir = tx > A.x ? -1 : 1;
+  A.x = tx; A.y = ty;
   A.el.cy.style.setProperty("--cbob", ".28s");
   A.el.cy.classList.add("go");
   A.el.wk.style.transitionDuration = clamp(d / 210, .14, .75) + "s";
-  A.el.wk.style.transform = `translateX(${Math.round(tx)}px) scaleX(${A.dir})`;
+  A.el.wk.style.transform = catXf(A);
+  catDepth();
+}
+/* 屏幕上的纵坐标 → 院子里的进深。
+   贴着院子上沿是最里头（yLo），贴着下沿是最外头（yHi），整幅摊开线性对过去。
+   写反过一次：屏幕 y 越大是越靠下、也就是越靠外，加不是减。 */
+const catDepthOf = (A, sy) =>
+  clamp(A.yLo + (sy / (A.H || 170)) * (A.yHi - A.yLo), A.yLo, A.yHi);
+function catChaseEnd(next){
+  const A = CA; if (!A || !A.chasing) return;
+  A.chasing = 0;
+  A.el.cy.classList.remove("go");
+  catAfter(600, next || catStep);
+}
+/* 激光笔。鼠标（或手指）在院子里那一点就是红点，猫追着它跑，横竖都追。
+   出了院子红点就灭。 */
+const catLaserOn = () => !!(PETS[G().catpet] || {}).laser;
+function catLaserAt(cx, cy){
+  const A = CA; if (!A || !A.el.lz) return;
+  const r = A.el.y.getBoundingClientRect();
+  const x = clamp(cx - r.left, 0, r.width), y = clamp(cy - r.top, 0, r.height);
+  A.el.lz.style.left = x + "px";
+  A.el.lz.style.top = y + "px";
+  A.el.lz.classList.add("on");
+  if (!A.laserOn){ A.laserOn = 1; catTell("chase"); }
+  // 挪够十几个像素才重新给目标，免得每动一下都重排
+  if (Math.hypot(x - (A.lzX == null ? -9e9 : A.lzX), y - (A.lzY || 0)) < 14) return;
+  A.lzX = x; A.lzY = y;
+  catChase(x, catDepthOf(A, y));
 }
 function catLaserOff(){
   const A = CA; if (!A || !A.laserOn) return;
-  A.laserOn = 0; A.lzTo = null;
+  A.laserOn = 0; A.lzX = A.lzY = null;
   if (A.el.lz) A.el.lz.classList.remove("on");
-  A.el.cy.classList.remove("go");
-  catAfter(600, catStep);
+  catChaseEnd();
+}
+/* ── 拖玩具 ──
+   按住玩具拖，猫跟着你的手跑；撂下它就扑上去。 */
+function catDragStart(e, tw){
+  const A = CA; if (!A) return;
+  A.drag = 1; A.moved = 0;
+  tw.classList.add("drag");
+  try{ A.el.y.setPointerCapture(e.pointerId); }catch(_){}
+  catTell("chase");
+}
+function catDragTo(cx, cy){
+  const A = CA; if (!A || !A.drag || !A.el.toyw) return;
+  const r = A.el.y.getBoundingClientRect();
+  A.moved = 1;
+  A.toyX = clamp(cx - r.left - A.toyW / 2, A.pad, Math.max(A.pad, A.W - A.toyW - A.pad));
+  A.toyY = catDepthOf(A, cy - r.top);
+  A.el.toyw.style.transitionDuration = "0s";
+  A.el.toyw.style.transform = `translate(${Math.round(A.toyX)}px,${Math.round(A.toyY)}px)`;
+  catChase(A.toyX + A.toyW / 2, A.toyY);          // 猫追着你手上那样东西
+}
+function catDragEnd(){
+  const A = CA; if (!A || !A.drag) return;
+  A.drag = 0;
+  if (A.el.toyw){
+    A.el.toyw.classList.remove("drag");
+    A.el.toyw.style.transitionDuration = ".3s";
+  }
+  A.noClick = 1;                                  // 拖完手一松，那一下不算戳猫
+  setTimeout(() => { if (CA === A) A.noClick = 0; }, 260);
+  catChaseEnd(A.moved ? catPlay : catStep);       // 撂下就扑上去
 }
 /* 开场：量一遍院子，把东西摆好，行为机跑起来。
    猫窝那扇门一关就 catHalt()，不在后台空转。 */
@@ -3263,14 +3378,21 @@ function catStart(){
     el:{y, cy, wk:cy.querySelector(".cwk"), em:cy.querySelector(".cem"),
         z:cy.querySelector(".cz"), bed:cy.querySelector(".cbed"),
         toyw:cy.querySelector(".ctoyw"), toy:cy.querySelector(".ctoy"),
-        bowl:cy.querySelector(".cbw"),
-        lz:cy.querySelector(".clz")},
-    x:0, dir:1, legs:0, wake:0, poked:0, laserOn:0, lzTo:null, timer:null, act:"walk", pad:6,
+        bowl:cy.querySelector(".cbw"), lz:cy.querySelector(".clz")},
+    x:0, y:0, dir:1, lift:0, inBed:0, legs:0, wake:0, poked:0,
+    laserOn:0, chasing:0, drag:0, moved:0, noClick:0, lzX:null, lzY:null,
+    timer:null, act:"walk", pad:6,
   };
   A.W = y.clientWidth || 260;
+  A.H = y.clientHeight || 170;
   A.cw = A.el.em.offsetWidth || parseFloat(cy.style.fontSize) || 70;
-  const put = (el, x) => { if (el){ el.style.transitionDuration = "0s";
-                                   el.style.transform = `translateX(${Math.round(x)}px)`; } };
+  /* 进深。院子只有一百七十来高，猫自己就占七十，能退的余地不多 ——
+     往里三十四、往外六，够看出前后，又不至于飞起来。
+     鼠标／手指的纵坐标怎么换算成这个进深，见 catDepthOf */
+  A.yLo = -34; A.yHi = 6;
+  A.bedY = 0; A.toyY = 0;
+  const put = (el, x, yy) => { if (el){ el.style.transitionDuration = "0s";
+    el.style.transform = `translate(${Math.round(x)}px,${Math.round(yy || 0)}px)`; } };
   A.bedW = A.el.bed ? (A.el.bed.offsetWidth || A.cw * .62) : 0;
   A.toyW = A.el.toyw ? (A.el.toyw.offsetWidth || A.cw * .4) : 0;
   A.bowlW = A.el.bowl ? (A.el.bowl.offsetWidth || A.cw * .44) : 0;
@@ -3279,10 +3401,11 @@ function catStart(){
   A.bedX = A.pad + Math.max(0, (A.cw - A.bedW) / 2);
   A.toyX = Math.max(A.pad, A.W - A.toyW - A.pad * 3);
   A.bowlX = Math.max(A.pad, A.W * .3);
-  put(A.el.bed, A.bedX); put(A.el.toyw, A.toyX); put(A.el.bowl, A.bowlX);
+  put(A.el.bed, A.bedX, A.bedY); put(A.el.toyw, A.toyX, A.toyY); put(A.el.bowl, A.bowlX, 0);
   A.x = (A.W - A.cw) / 2;
-  put(A.el.wk, A.x);
+  put(A.el.wk, A.x, 0);
   CA = A;
+  catDepth();
   catAfter(420, catStep);
 }
 
@@ -3984,6 +4107,7 @@ mask12.addEventListener("click", e => {
 $("#ctArt").onclick = () => {
   const A = CA;
   if (!A){ return toast(CATPUR[Math.floor(Math.random() * CATPUR.length)]); }
+  if (A.noClick || A.drag) return;                // 刚拖完玩具，手一松那下不算戳猫
   if (A.laserOn){
     catFlash("pounce", 420);
     return toast(`${catName()}一爪按住那点红光 —— 抬起爪子，又没了。`);
@@ -3996,12 +4120,28 @@ $("#ctArt").onclick = () => {
   catFlash("pet", 500);
   toast(CATPUR[Math.floor(Math.random() * CATPUR.length)]);
 };
-/* 激光笔：鼠标在院子里晃就是那颗红点。手指抬起来、鼠标出了院子，红点就灭 */
-$("#ctArt").addEventListener("pointermove", e => { if (catLaserOn() && CA) catLaserAt(e.clientX); });
-$("#ctArt").addEventListener("pointerdown", e => { if (catLaserOn() && CA) catLaserAt(e.clientX); });
-$("#ctArt").addEventListener("pointerleave", catLaserOff);
-$("#ctArt").addEventListener("pointercancel", catLaserOff);
-$("#ctArt").addEventListener("pointerup", e => { if (e.pointerType !== "mouse") catLaserOff(); });
+/* 院子里的手：按在玩具上是拖（猫跟着你的手跑，撂下就扑）；
+   摆了激光笔的时候，鼠标／手指在哪儿就是那颗红点在哪儿，横竖都追。
+   两件事互不打架 —— 摆激光笔的时候地上本来就没有玩具。 */
+$("#ctArt").addEventListener("pointerdown", e => {
+  if (!CA) return;
+  const tw = e.target.closest(".ctoyw");
+  if (tw){ e.preventDefault(); return catDragStart(e, tw); }
+  if (catLaserOn()) catLaserAt(e.clientX, e.clientY);
+});
+$("#ctArt").addEventListener("pointermove", e => {
+  if (!CA) return;
+  if (CA.drag){ e.preventDefault(); return catDragTo(e.clientX, e.clientY); }
+  if (catLaserOn()) catLaserAt(e.clientX, e.clientY);
+});
+const catHandOff = e => {
+  if (!CA) return;
+  if (CA.drag) return catDragEnd();
+  // 鼠标出了院子红点才灭；手指是抬起来就灭
+  if (e.type !== "pointerup" || e.pointerType !== "mouse") catLaserOff();
+};
+["pointerup", "pointerleave", "pointercancel"].forEach(t =>
+  $("#ctArt").addEventListener(t, catHandOff));
 
 /* 喂鱼干。点一下一条，按住三百多毫秒之后连着倒，松手就停。
    倒的时候只改数目字（paintCatBits），不重搭场子 —— 猫照走它的 */
