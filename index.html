@@ -395,10 +395,36 @@
   .qb .qday{font-size:11.5px;line-height:1.8;color:var(--dim);letter-spacing:.5px;margin:0 0 4px}
 
   /* ── 猫窝 ── */
-  .cb .cst{height:170px;margin:6px 0 2px;cursor:pointer;
-    display:flex;align-items:flex-end;justify-content:center}
-  .cb .cst svg{display:block;height:100%;width:auto;max-width:100%}
-  .cb .cst:active svg{transform:translateY(2px)}
+  /* 院子。猫是系统 emoji，姿态全在它怎么走：
+     .cwk 管横着挪和掉头，.cem 管上下颠 —— 两层分开，互不打架 */
+  .cb .cst{height:170px;margin:6px 0 2px;cursor:pointer;overflow:hidden;
+    display:flex;align-items:center;justify-content:center}
+  .cb .cst:active .cy{transform:translateY(2px)}
+  .cb .cy{position:relative;width:100%;line-height:1;text-align:center}
+  .cb .cwk{display:inline-block;animation:catwk var(--cdur) linear infinite}
+  .cb .cem{display:inline-block;animation:catbob .5s ease-in-out infinite}
+  /* 苹果那只猫脸朝左，所以往右走的那半程要翻过来 */
+  @keyframes catwk{
+    0%{transform:translateX(-88%) scaleX(-1)}
+    46%{transform:translateX(88%) scaleX(-1)}
+    50%,54%{transform:translateX(88%) scaleX(1)}
+    96%,100%{transform:translateX(-88%) scaleX(1)}
+  }
+  @keyframes catbob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+  .cb .cy.perk .cem{animation-duration:.34s}          /* 撒欢蹦得急 */
+  /* 打盹：不走，只一起一伏地喘气，头顶飘瞌睡泡 */
+  .cb .cy.nap .cwk{animation:none}
+  .cb .cy.nap .cem{animation:catbr 3.4s ease-in-out infinite}
+  @keyframes catbr{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+  .cb .cy .cz{position:absolute;left:62%;top:2%;font-size:.34em;
+    animation:catz 2.8s ease-in-out infinite}
+  @keyframes catz{0%{transform:translate(0,0) scale(.8);opacity:0}
+    30%{opacity:.85}100%{transform:translate(16px,-34px) scale(1.2);opacity:0}}
+  /* 等食：蹲在碗跟前不动，隔一会儿晃一下 */
+  .cb .cy.wait .cwk{animation:none;transform:translateX(-42%) scaleX(-1)}
+  .cb .cy.wait .cem{animation:catsw 2.6s ease-in-out infinite}
+  @keyframes catsw{0%,86%,100%{transform:rotate(0)}91%{transform:rotate(-5deg)}96%{transform:rotate(5deg)}}
+  .cb .cy .cbw{position:absolute;right:14%;bottom:6%;font-size:.42em;opacity:.9}
   .cb .cnm{display:flex;align-items:baseline;justify-content:center;gap:6px;margin-bottom:8px}
   /* 名字是可以改的：写成一条下划线，看着像填在纸上，不像个输入框 */
   .cb .cnm input{width:6.5em;text-align:center;font:inherit;font-size:17px;letter-spacing:4px;
@@ -593,6 +619,8 @@
     .hit,.ring,.pane.on{animation:none}
     .btn:active,.good:active,.tab:active,.icon:active,.pen:active,.dots:active{transform:none}
     .spark{display:none}
+    /* 关了动效就别让它满院子跑：站住，该有的泡泡和碗还留着 */
+    .cb .cwk,.cb .cem,.cb .cy .cz{animation:none}
   }
 
   /* 内务府 */
@@ -1515,7 +1543,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v53" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v54" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -2857,12 +2885,12 @@ function catSay(){
   const c = catState(), p = catPose(), n = catName();
   if (p === "wait")
     return c.g >= 3 ? `${n}瘦了一圈，蹲在门口，你一进来它才回头。`
-                    : `${n}瘦得脊梁骨都摸得着了。批几道折子罢。`;
+                    : `${n}瘦得脊梁骨都摸得着了。碗是空的，批几道折子罢。`;
   if (c.g >= 7) return `你有 ${c.g} 天没来了。${n}还在，只是不太理你。`;
   if (c.g >= 2) return `隔了 ${c.g} 天。${n}闻了闻你的手，认得。`;
-  if (p === "perk") return `${n}吃饱了，眯着眼，尾巴翘得老高。`;
-  if (p === "nap") return `${n}趴在案角上打盹，尾巴慢悠悠地扫。`;
-  return `${n}端端正正坐着，看你批折子。`;
+  if (p === "perk") return `${n}吃饱了，在案上来回撒欢，尾巴翘得老高。`;
+  if (p === "nap") return `${n}蜷在案角打盹，肚子一起一伏。`;
+  return `${n}在案上慢慢溜达，走两步回头看你一眼。`;
 }
 /* 叼东西回来：一天至多一回，还得它有力气出门（太瘦了就不去）。
    银子走 histLog + earn，跟国库、邸报是同一本账 —— 不进 scoreTick，
@@ -2887,157 +2915,20 @@ function catGift(){
   return {none:true};
 }
 
-/* 画猫。第三稿，对着参考图重描。前两稿尖嘴猴腮，毛病全在脸的比例上：
-     · 眼睛要在脸的中线**以下** —— 上头留一大块脑门，摆正中间就是成年猫
-     · 鼻子嘴巴挤成一小簇紧贴眼睛底下。人中一长，嘴筒子就抻出来了
-     · 脸最宽的地方在眼线**底下**。鼓在眼睛那一层就是颧骨高，猴腮由此来
-     · 耳朵矮、底宽、尖儿别甩到脸外头 —— 甩出去就成狐狸
-     · 肩线要塞进下巴里头（neck = hy + 16*hr/15，下巴在 19.2 那道），
-       塞浅了头就飘成棒棒糖
-   k = 膘，0 瘦 1 圆。色号全写死 —— 万年红那种纸会把 --zhu 顶成白的，
-   拿主题变量画猫，换张纸猫就没了。 */
-const INK = "#4a4239", FUR = "#fffdf8", PINK = "#e0a39c", RED = "#a8342a", GOLD = "#c9a227";
-const CATW = 2;      // 线粗。全篇一个粗细，这是这一路画法的命根子
-
+/* 画猫。不自己描了 —— 前后三稿都尖嘴猴腮，索性交给系统自带的 emoji。
+   🐈 在苹果那边是只四条腿的橘猫；Windows、安卓各家长相不同，这认了：
+   这一格本来要的就是「系统里那只猫」，不是我画的猫。
+   姿态也不靠形，靠它怎么动 —— 溜达、撒欢、打盹、蹲在空碗边等。
+   k = 膘，只管它多大个儿。 */
 function catArt(pose, k){
   k = clamp(k, 0, 1);
-  const F = `fill="${FUR}" stroke="${INK}" stroke-width="${CATW}" stroke-linejoin="round" stroke-linecap="round"`;
-  const S = `fill="none" stroke="${INK}" stroke-width="${CATW}" stroke-linecap="round" stroke-linejoin="round"`;
-  const T = `fill="none" stroke="${INK}" stroke-width="1.5" stroke-linecap="round"`;
-  const P = [];
-  const n = v => Math.round(v * 10) / 10;
-
-  /* 头。cx,cy 是**眼睛那条线**，不是脸的正中 —— 脑门在它上头留了 18，
-     下巴在它底下只有 17，就靠这点差把脸压成娃娃脸。r 是脸的半宽。
-     dp = 耳朵耷拉的程度。 */
-  const head = (cx, cy, r, dp = 0) => {
-    const X = v => n(cx + v * r / 15), Y = v => n(cy + v * r / 15);
-    /* 最宽的地方在眼线**底下**（y≈7 那圈），不是眼线上。腮帮子鼓在眼睛下面
-       才是娃娃脸；鼓在眼睛那一层就成了颧骨高的成年猫，猴腮就是这么来的。 */
-    return `<path d="M ${X(-14)} ${Y(0)}
-      C ${X(-14.6)} ${Y(-5)} ${X(-14)} ${Y(-9)} ${X(-12.5)} ${Y(-12)}
-      L ${X(-13 - dp * 4)} ${Y(-22 + dp * 9)} L ${X(-3)} ${Y(-15.5)}
-      C ${X(-1)} ${Y(-16.2)} ${X(1)} ${Y(-16.2)} ${X(3)} ${Y(-15.5)}
-      L ${X(13 + dp * 4)} ${Y(-22 + dp * 9)} L ${X(12.5)} ${Y(-12)}
-      C ${X(14)} ${Y(-9)} ${X(14.6)} ${Y(-5)} ${X(14)} ${Y(0)}
-      C ${X(15.8)} ${Y(6)} ${X(14)} ${Y(13.5)} ${X(8.5)} ${Y(17)}
-      C ${X(5)} ${Y(19.2)} ${X(-5)} ${Y(19.2)} ${X(-8.5)} ${Y(17)}
-      C ${X(-14)} ${Y(13.5)} ${X(-15.8)} ${Y(6)} ${X(-14)} ${Y(0)} Z" ${F}/>`;
-  };
-  const eyeDot = (cx, cy, r) => {
-    const s = r / 15;
-    return [-7, 7].map(d =>
-      `<ellipse cx="${n(cx + d * s)}" cy="${n(cy)}" rx="${n(2.8 * s)}" ry="${n(3.4 * s)}" fill="${INK}"/>`
-    ).join("");
-  };
-  // 眯着的眼：up=1 往上弓（得意），up=-1 往下弓（睡着）
-  const eyeArc = (cx, cy, r, up) => {
-    const s = r / 15, w = 4 * s, h = 3 * s * up;
-    return `<path d="M ${n(cx - 7 * s - w)} ${n(cy)} q ${n(w)} ${n(-h)} ${n(w * 2)} 0
-       M ${n(cx + 7 * s - w)} ${n(cy)} q ${n(w)} ${n(-h)} ${n(w * 2)} 0" ${S}/>`;
-  };
-  /* 鼻子和嘴挤成一小簇，紧贴眼睛底下。人中只留 1 —— 这一道是嘴筒子的总开关 */
-  const muzzle = (cx, cy, r) => {
-    const s = r / 15, y = cy + 8 * s;
-    return `<path d="M ${n(cx - 2.4 * s)} ${n(y)} L ${n(cx + 2.4 * s)} ${n(y)} L ${n(cx)} ${n(y + 2.4 * s)} Z"
-       fill="${PINK}" stroke="${INK}" stroke-width="1.2" stroke-linejoin="round"/>`
-      + `<path d="M ${n(cx)} ${n(y + 2.4 * s)} v ${n(1 * s)}
-         M ${n(cx)} ${n(y + 3.4 * s)} q ${n(-1.9 * s)} ${n(1.9 * s)} ${n(-3.6 * s)} ${n(.3 * s)}
-         M ${n(cx)} ${n(y + 3.4 * s)} q ${n(1.9 * s)} ${n(1.9 * s)} ${n(3.6 * s)} ${n(.3 * s)}" ${T}/>`;
-  };
-  // 胡须从腮帮子上生出来，三根一把往外扇。side: 1 左 2 右 3 两边
-  const whisk = (cx, cy, r, side = 3, len = 28) => {
-    const s = r / 15, o = [], y = cy + 6 * s;
-    const one = (g) => {
-      o.push(`M ${n(cx + g * 11 * s)} ${n(y - 2.5 * s)} L ${n(cx + g * len * s)} ${n(y - 6.5 * s)}`,
-             `M ${n(cx + g * 11.5 * s)} ${n(y + .5 * s)} L ${n(cx + g * (len + 1) * s)} ${n(y - .5 * s)}`,
-             `M ${n(cx + g * 11 * s)} ${n(y + 3.5 * s)} L ${n(cx + g * len * s)} ${n(y + 5.5 * s)}`);
-    };
-    if (side & 1) one(-1);
-    if (side & 2) one(1);
-    return `<path d="${o.join(" ")}" ${T}/>`;
-  };
-  const collar = (cx, cy, w) =>
-    `<path d="M ${n(cx - w)} ${n(cy)} Q ${n(cx)} ${n(cy + 5.5)} ${n(cx + w)} ${n(cy)}"
-       fill="none" stroke="${RED}" stroke-width="2.2" stroke-linecap="round"/>`
-    + `<circle cx="${n(cx)}" cy="${n(cy + 5.6)}" r="2.7" fill="${GOLD}" stroke="${INK}" stroke-width="1.2"/>`;
-  const paws = (cx, gy, sp) =>
-    [cx - sp, cx + sp].map(x =>
-      `<path d="M ${n(x - 6.5)} ${n(gy)} C ${n(x - 6.5)} ${n(gy - 6)} ${n(x - 3.2)} ${n(gy - 7.5)} ${n(x)} ${n(gy - 7.5)}
-         C ${n(x + 3.2)} ${n(gy - 7.5)} ${n(x + 6.5)} ${n(gy - 6)} ${n(x + 6.5)} ${n(gy)} Z" ${F}/>`
-      + `<path d="M ${n(x)} ${n(gy)} v -3.6" ${T}/>`).join("");
-  /* 坐着的身子：一只钟。肩窄、屁股宽、底下是圆的不是平的。
-     neck 是脖子那道线的高度，w 是坐盘的半宽。 */
-  const bell = (bx, neck, w, gy) =>
-    `<path d="M ${n(bx - 13)} ${n(neck)}
-       C ${n(bx - w - 1)} ${n(neck + 18)} ${n(bx - w)} ${n(gy - 22)} ${n(bx - w)} ${n(gy - 7)}
-       C ${n(bx - w)} ${n(gy - 2.5)} ${n(bx - w + 5)} ${gy} ${n(bx - w + 10)} ${gy}
-       L ${n(bx + w - 10)} ${gy}
-       C ${n(bx + w - 5)} ${gy} ${n(bx + w)} ${n(gy - 2.5)} ${n(bx + w)} ${n(gy - 7)}
-       C ${n(bx + w)} ${n(gy - 22)} ${n(bx + w - 1)} ${n(neck + 18)} ${n(bx + 13)} ${n(neck)} Z" ${F}/>`;
-
-  if (pose === "sit"){
-    // 参考图一：端坐。尾巴从左边腚下摊出去，梢儿挑起来
-    const bx = 70, hr = 16 + 1.5 * k, hy = 40, gy = 108, w = 24 + 5 * k, neck = hy + 16 * hr / 15;
-    // 一个开口的 J：贴着地往左扫，末了梢儿抬起来。收成个小圈就成了钩子
-    P.push(`<path d="M ${n(bx - w + 8)} 103 C ${n(bx - w - 12)} 109, ${n(bx - w - 25)} 105, ${n(bx - w - 27)} 95" ${S}/>`);
-    P.push(bell(bx, neck, w, gy));
-    // 两条前腿垂到地上，参考图上是两笔干净的线
-    P.push(`<path d="M ${n(bx - 9)} ${n(gy - 22)} C ${n(bx - 10)} ${n(gy - 14)} ${n(bx - 10)} ${n(gy - 6)} ${n(bx - 9)} ${gy}
-       M ${n(bx + 9)} ${n(gy - 22)} C ${n(bx + 10)} ${n(gy - 14)} ${n(bx + 10)} ${n(gy - 6)} ${n(bx + 9)} ${gy}" ${S}/>`);
-    P.push(paws(bx, gy, 9));
-    P.push(head(bx, hy, hr));
-    P.push(eyeDot(bx, hy, hr), muzzle(bx, hy, hr), whisk(bx, hy, hr));
-    P.push(collar(bx, neck + 6, 11 + 1.5 * k));
-  }
-
-  if (pose === "perk"){
-    // 参考图二：眯眼得意，尾巴扬起来在右边打个钩
-    const bx = 58, hr = 16 + 1.5 * k, hy = 41, gy = 108, w = 23 + 5 * k, neck = hy + 16 * hr / 15;
-    P.push(`<path d="M ${n(bx + w - 6)} 101 C ${n(bx + w + 17)} 102, ${n(bx + w + 22)} 78, ${n(bx + w + 11)} 68
-       C ${n(bx + w + 5)} 62.5, ${n(bx + w - 3)} 65, ${n(bx + w - 1)} 71" ${S}/>`);
-    P.push(bell(bx, neck, w, gy));
-    P.push(`<path d="M ${n(bx - 9)} ${n(gy - 22)} C ${n(bx - 10)} ${n(gy - 14)} ${n(bx - 10)} ${n(gy - 6)} ${n(bx - 9)} ${gy}
-       M ${n(bx + 9)} ${n(gy - 22)} C ${n(bx + 10)} ${n(gy - 14)} ${n(bx + 10)} ${n(gy - 6)} ${n(bx + 9)} ${gy}" ${S}/>`);
-    P.push(paws(bx, gy, 9));
-    P.push(head(bx, hy, hr));
-    P.push(eyeArc(bx, hy, hr, 1), muzzle(bx, hy, hr), whisk(bx, hy, hr, 3, 30));
-    P.push(collar(bx, neck + 6, 11 + 1.5 * k));
-  }
-
-  if (pose === "nap"){
-    // 参考图三：圆滚滚趴着，头大身子短，尾巴在右边划一道又高又长的弧
-    const hr = 18.5, hx = 43, hy = 60, cy = 92, rx = 25 + 5 * k, cx = 76;
-    P.push(`<path d="M ${n(cx + rx - 6)} ${n(cy - 8)}
-       C ${n(cx + rx + 13)} ${n(cy - 18)}, ${n(cx + rx + 14)} ${n(cy - 46)}, ${n(cx + rx - 1)} ${n(cy - 52)}
-       C ${n(cx + rx - 11)} ${n(cy - 56)}, ${n(cx + rx - 19)} ${n(cy - 47)}, ${n(cx + rx - 11)} ${n(cy - 42)}" ${S}/>`);
-    P.push(`<path d="M ${n(cx - rx)} ${n(cy - 2)}
-       C ${n(cx - rx - 1)} ${n(cy - 16)} ${n(cx - rx + 12)} ${n(cy - 22)} ${n(cx)} ${n(cy - 21)}
-       C ${n(cx + rx - 7)} ${n(cy - 20)} ${n(cx + rx)} ${n(cy - 13)} ${n(cx + rx)} ${n(cy - 3)}
-       C ${n(cx + rx)} ${n(cy + 5)} ${n(cx + rx - 8)} ${n(cy + 8)} ${n(cx + rx - 18)} ${n(cy + 8)}
-       L ${n(cx - rx + 10)} ${n(cy + 8)} C ${n(cx - rx - 1)} ${n(cy + 8)} ${n(cx - rx - 1)} ${n(cy + 2)} ${n(cx - rx)} ${n(cy - 2)} Z" ${F}/>`);
-    P.push(head(hx, hy, hr));
-    P.push(eyeArc(hx, hy, hr, -1), muzzle(hx, hy, hr), whisk(hx, hy, hr, 1, 26));
-    // 两只前爪并在下巴前头
-    P.push(`<path d="M ${n(hx + 2)} ${n(cy + 8)} C ${n(hx + 2)} ${n(cy + 1)} ${n(hx + 7)} ${n(cy - 1)} ${n(hx + 13)} ${n(cy - 1)}" ${T}/>`);
-    P.push(collar(hx + 1, hy + 21, 10));
-  }
-
-  if (pose === "wait"){
-    /* 门口。这张不吃 k：饿到这份上就这个样子。耳朵耷着，尾巴摊在地上不动 */
-    const bx = 66, hr = 15.5, hy = 46, gy = 108, w = 19, neck = hy + 16 * hr / 15;
-    P.push(`<path d="M 15 10 v 98 M 15 10 h 26" fill="none" stroke="${INK}"
-       stroke-width="2" opacity=".18" stroke-linecap="round"/>`);
-    P.push(bell(bx, neck, w, gy));
-    P.push(`<path d="M ${n(bx + w - 7)} 101 C ${n(bx + w + 11)} 105, ${n(bx + w + 19)} 109, ${n(bx + w + 29)} 107.5" ${S}/>`);
-    P.push(`<path d="M ${n(bx - 8)} ${n(gy - 20)} C ${n(bx - 9)} ${n(gy - 12)} ${n(bx - 9)} ${n(gy - 5)} ${n(bx - 8)} ${gy}
-       M ${n(bx + 8)} ${n(gy - 20)} C ${n(bx + 9)} ${n(gy - 12)} ${n(bx + 9)} ${n(gy - 5)} ${n(bx + 8)} ${gy}" ${S}/>`);
-    P.push(paws(bx, gy, 8));
-    P.push(head(bx, hy, hr, .4));
-    P.push(eyeDot(bx, hy, hr), muzzle(bx, hy, hr), whisk(bx, hy, hr, 3, 24));
-    P.push(collar(bx, neck + 6, 10));   // 饿归饿，项圈还挂着 —— 一只猫，四张脸得是同一只
-  }
-  return `<svg viewBox="0 0 128 116" width="100%" height="100%">${P.join("")}</svg>`;
+  const sz = Math.round(54 + 30 * k);                 // 瘦的小一圈，圆的大一圈
+  const dur = pose === "perk" ? 5.4 : 10.5;           // 撒欢走得快，平常慢悠悠
+  // 打盹头上飘个瞌睡泡，等食的跟前摆只空碗；溜达、撒欢什么都不加
+  const ex = pose === "nap"  ? `<span class="cz">💤</span>`
+           : pose === "wait" ? `<span class="cbw">🥣</span>` : "";
+  return `<div class="cy ${pose}" style="font-size:${sz}px;--cdur:${dur}s">`
+       + `<span class="cwk"><span class="cem">🐈</span></span>${ex}</div>`;
 }
 
 /* 今天头一回批折：结算连批天数，返回该给的加赏 */
