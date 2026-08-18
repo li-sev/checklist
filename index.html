@@ -437,7 +437,7 @@
   /* 窝、玩具、空碗。窝压在最底下，猫趴上去要盖住它 */
   /* 窝默认在猫后头。猫躺进去、或者绕到窝后面（y 更靠里）时，
      才把窝提到前头来挡住它 —— 这一层是真按前后关系排的，不是写死的 */
-  .cb .cy .cbed{z-index:0;transition:transform .3s ease}
+  .cb .cy .cbed{z-index:0;transition:transform .3s ease;cursor:pointer}
   .cb .cy .cbed.front{z-index:4}
   /* 玩具也是两层：.ctoyw 管它摆在哪（inline 的 translateX），
      .ctoy 管它挨打时怎么翻。搁一层上的话，拍飞那个 keyframe 会连位移一起盖掉 ——
@@ -1509,7 +1509,7 @@
 <!-- 猫窝：御猫住这儿。点它一下会应你 -->
 <div class="mask" id="mask12"><div class="dlg sheet cb">
   <h2>猫窝</h2>
-  <div class="cst" id="ctArt" title="摸一把"></div>
+  <div class="cst" id="ctArt" title="摸一把它；拍一下窝，叫它回去躺着"></div>
   <div class="cnm">
     <input id="ctName" maxlength="6" placeholder="雪奴" spellcheck="false"><span>·御猫</span>
   </div>
@@ -1525,7 +1525,9 @@
   <div class="ctoys pick" id="ctBuy"></div>
   <label class="ctl">它叼回来的 <small>只能等它自己带，买不着</small></label>
   <div class="ctoys" id="ctToys"></div>
-  <p class="cnote">它不会死。喂不上就瘦着、守着空碗等你回来。<br>
+  <p class="cnote">摸一把它会应你；睡着了得戳几下才醒。拍一下窝叫它回去躺 ——
+    不困的话它只肯眯一秒。玩具能拖着走，撂在哪儿它扑到哪儿。<br>
+    它不会死。喂不上就瘦着、守着空碗等你回来。<br>
     批折子挣鱼干，喂不喂你说了算 —— 折子撤回，鱼干也照退。<br>
     存档、驿传都带着它走 —— 换个机子它还在。</p>
   <div class="btns">
@@ -1620,7 +1622,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v61" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v62" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -3049,6 +3051,7 @@ function catSay(act){
   if (act === "sleep")
     return bed.e ? `${n}蜷在${bed.n}里睡着了。戳戳看叫不叫得醒。`
                  : `${n}就地蜷成一团睡着了。戳戳看叫不叫得醒。`;
+  if (act === "lie")   return `${n}趴是趴下了，眼睛还睁着 —— 它不困。`;
   if (act === "zoom")  return `${n}疯了。满案子乱窜，谁也拦不住。`;
   if (act === "chase") return `那点红光一晃，${n}眼睛就直了。`;
   if (act === "play")  return `${n}盯上了${pet.n}，屁股一撅。`;
@@ -3227,9 +3230,10 @@ function catGuardBowl(){
    到点了才睡的（夜里、午睡、今天一件没批）就一直睡着，等你戳。
    戳几下才醒是每回入睡现掷的一到六 —— 所以你不知道这一觉沉不沉。
    有窝就先走回窝里；炭盆那张烫，只肯睡在旁边。 */
-function catSleep(doze){
+function catSleep(doze, brief){
   const A = CA; if (!A) return;
-  A.wake = 1 + Math.floor(Math.random() * 6);
+  // 敷衍那一下随时叫得醒；正经睡下的才要戳一到六下
+  A.wake = brief ? 1 : 1 + Math.floor(Math.random() * 6);
   A.poked = 0;
   const ins = bedIn(BEDS[G().catbed]);
   const lie = () => {
@@ -3237,8 +3241,13 @@ function catSleep(doze){
     A.el.cy.classList.remove("go");
     A.el.cy.classList.add("zz");
     A.el.z.hidden = false;
-    catTell("sleep");
-    if (doze) catAfter(11000 + Math.random() * 15000, () => catWake(true));
+    catTell(brief ? "lie" : "sleep");
+    if (brief) catAfter(1150, () => {             // 不困，纯粹敷衍你
+      if (!CA || CA !== A) return;
+      toast(`${catName()}眯了一下，翻个身又跳出来了。`);
+      catWake(true);
+    });
+    else if (doze) catAfter(11000 + Math.random() * 15000, () => catWake(true));
     else clearTimeout(A.timer);                   // 不设闹钟：等人戳
   };
   if (A.el.bed && !ins.hot){
@@ -3337,6 +3346,24 @@ function catCarry(){
     catAfter(760, catStep);
   });
 }
+/* 拍一下窝，叫它回去躺着。
+   真困（到了睡的点、或者今天一件没批）就睡下，要戳才醒；
+   一点都不困的话它也回去躺一下 —— 但只肯眯一秒，翻身就跳出来。 */
+function catToBed(){
+  const A = CA; if (!A || !A.el.bed) return;
+  const ins = bedIn(BEDS[G().catbed]);
+  if (ins.hot) return toast(CATHOT[Math.floor(Math.random() * CATHOT.length)]);
+  const mood = catPose();
+  if (mood === "wait") return toast(`碗是空的，${catName()}睡不着。`);
+  A.chasing = 0; A.drag = 0; A.legs = 0;
+  if (mood === "nap"){
+    toast(`${catName()}正困着，你一指窝它就过去了。`);
+    return catSleep(false);
+  }
+  toast(`${catName()}看了看窝，又看了看你 —— 勉强挪过去。`);
+  catSleep(false, true);
+}
+
 /* 嚼光了。这一样从库里消掉（想再要就再买一份），随即发疯三秒 ——
    有玩具就疯狂拍那个玩具，没玩具就满院子乱窜 */
 function catEatUp(){
@@ -4211,10 +4238,12 @@ mask12.addEventListener("click", e => {
 });
 /* 戳它。睡着的时候是叫醒 —— 要戳够那一到六下；醒着就是摸一把。
    摆了激光笔又亮着红点的时候，这一下是让它扑上去 */
-$("#ctArt").onclick = () => {
+$("#ctArt").onclick = e => {
   const A = CA;
   if (!A){ return toast(CATPUR[Math.floor(Math.random() * CATPUR.length)]); }
   if (A.noClick || A.drag) return;                // 刚拖完玩具，手一松那下不算戳猫
+  /* 拍窝：叫它回去躺着。它已经在里头了就当是戳它，照走底下那一路 */
+  if (!A.inBed && e.target.closest(".cbed")) return catToBed();
   if (A.laserOn){
     catFlash("pounce", 420);
     return toast(`${catName()}一爪按住那点红光 —— 抬起爪子，又没了。`);
