@@ -481,6 +481,40 @@
     font-variant-numeric:tabular-nums}
   .cb .cfd .t{font-size:11.5px;letter-spacing:1px;color:var(--dim)}
   .cb .cfd.pour b{animation:catpet .28s ease infinite}
+  /* 猫窝 / 什物匣两页 */
+  .cb .ctabs{display:flex;margin:0 0 12px;border:1px solid var(--line);
+    border-radius:6px;overflow:hidden}
+  .cb .ctb{flex:1;min-height:38px;border:0;background:var(--card);font-size:15px;
+    letter-spacing:3px;color:var(--dim);padding:0 2px;white-space:nowrap}
+  .cb .ctb+.ctb{border-left:1px solid var(--line)}
+  .cb .ctb.on{background:var(--accent);color:var(--onacc);font-weight:700}
+  .cb .ctb i{font-style:normal;font-size:10.5px;letter-spacing:0;opacity:.72;margin-left:4px;
+    font-family:ui-monospace,Consolas,monospace}
+  .cb .cpane{display:none}
+  .cb .cpane.on{display:block;animation:panein .16s ease-out}
+  /* 什物匣：八个格子，收着的亮着，没收的留个空位 */
+  .cb .cbox{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:4px 0 2px}
+  .cb .cbox .it{border:1px solid var(--line);border-radius:6px;background:var(--card);
+    padding:10px 4px 7px;text-align:center;cursor:pointer;transition:border-color .15s}
+  .cb .cbox .it:active{border-color:var(--accent)}
+  .cb .cbox .it b{display:block;font-size:26px;line-height:1.15;font-weight:400}
+  .cb .cbox .it span{display:block;font-size:10.5px;letter-spacing:.5px;color:var(--dim);
+    margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cb .cbox .it.no{cursor:default;opacity:.45;border-style:dashed}
+  .cb .cbox .it.no b{color:var(--dim)}
+  /* 案头那一样：搁在右下角，一点一收。落下来的时候先弹一下 */
+  #ctDrop{position:fixed;right:14px;bottom:14px;z-index:30;border:1px solid var(--line);
+    border-radius:10px;background:var(--card);padding:7px 9px 5px;cursor:pointer;
+    box-shadow:0 3px 10px rgba(0,0,0,.16);animation:dropin .5s cubic-bezier(.2,1.5,.35,1)}
+  #ctDrop b{display:block;font-size:25px;line-height:1;font-weight:400;
+    animation:dropbob 2.4s ease-in-out infinite}
+  #ctDrop::after{content:"御猫叼回来的";display:block;margin-top:3px;
+    font-size:9.5px;letter-spacing:1px;color:var(--dim);white-space:nowrap}
+  #ctDrop:active{transform:translateY(2px)}
+  @keyframes dropin{0%{transform:translateY(-26px) scale(.6);opacity:0}100%{transform:none;opacity:1}}
+  @keyframes dropbob{0%,100%{transform:translateY(0) rotate(-4deg)}
+    50%{transform:translateY(-4px) rotate(4deg)}}
+  @media (prefers-reduced-motion:reduce){#ctDrop,#ctDrop b{animation:none}}
   .cb .cnm{display:flex;align-items:baseline;justify-content:center;gap:6px;margin-bottom:8px}
   /* 名字是可以改的：写成一条下划线，看着像填在纸上，不像个输入框 */
   .cb .cnm input{width:6.5em;text-align:center;font:inherit;font-size:17px;letter-spacing:4px;
@@ -1508,7 +1542,11 @@
 
 <!-- 猫窝：御猫住这儿。点它一下会应你 -->
 <div class="mask" id="mask12"><div class="dlg sheet cb">
-  <h2>猫窝</h2>
+  <div class="ctabs">
+    <button class="ctb on" data-cp="yard">猫窝</button>
+    <button class="ctb" data-cp="box">什物匣<i id="ctBoxN"></i></button>
+  </div>
+  <div class="cpane on" data-cp="yard">
   <div class="cst" id="ctArt" title="摸一把它；拍一下窝，叫它回去躺着"></div>
   <div class="cnm">
     <input id="ctName" maxlength="6" placeholder="雪奴" spellcheck="false"><span>·御猫</span>
@@ -1523,17 +1561,27 @@
   <div class="ctoys pick" id="ctBed"></div>
   <label class="ctl">玩具 <small>一次摆一样。摆上它会自己过去扑</small></label>
   <div class="ctoys pick" id="ctBuy"></div>
-  <label class="ctl">它叼回来的 <small>只能等它自己带，买不着</small></label>
-  <div class="ctoys" id="ctToys"></div>
   <p class="cnote">摸一把它会应你；睡着了得戳几下才醒。拍一下窝叫它回去躺 ——
     不困的话它只肯眯一秒。玩具能拖着走，撂在哪儿它扑到哪儿。<br>
     它不会死。喂不上就瘦着、守着空碗等你回来。<br>
     批折子挣鱼干，喂不喂你说了算 —— 折子撤回，鱼干也照退。<br>
     存档、驿传都带着它走 —— 换个机子它还在。</p>
+  </div>
+  <div class="cpane" data-cp="box">
+    <p class="csay" id="ctBoxSay"></p>
+    <div class="cbox" id="ctToys"></div>
+    <p class="cnote">御猫在外头捡的零碎。一天至多叼一样回来，
+      撂在你案头右下角 —— 点一下才算收进匣里，不收它就不再叼新的。<br>
+      匣里的东西点一下，它告诉你这是打哪儿来的。八样收齐，它就不出门了。<br>
+      这些买不着，只能等它自己带回来。</p>
+  </div>
   <div class="btns">
     <button class="btn pri" id="ctClose">摸够了</button>
   </div>
 </div></div>
+
+<!-- 御猫叼回来撂在案头的那一样。点一下收进什物匣 -->
+<button id="ctDrop" hidden></button>
 
 <!-- 且慢：花钱、动刀子的事都从这儿过一道 -->
 <div class="mask ask" id="mask7"><div class="dlg ask">
@@ -1622,7 +1670,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v62" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v63" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -2408,10 +2456,11 @@ const BEDS = {
   bed_ta:   {n:"锦榻",   p:140, e:"🛏", pv:"x-em", in:{bw:1.35, front:0, lift:.20}},
 };
 const bedIn = b => (b && b.in) || {bw:.62, front:0, lift:0};
-/* 钻得进去的窝，睡着时整只猫收成一个脑袋（😸 眼睛是闭着的两道弧，
-   比 🐱 更像睡熟了），下巴搭在窝沿上。hs 是脑袋多大、sit 是下巴落在
-   窝高的几成处 —— 这两个数是拿系统字体把猫和窝渲出来对着挑的。 */
-const CATHEAD = "😸", CATHS = .60, CATSIT = .68;
+/* 钻得进去的窝，睡着时整只猫收成一个脑袋，下巴搭在窝沿上。
+   用的是落印特效「猫爪」那一只，全篇同一张脸。
+   hs 是脑袋多大、sit 是下巴落在窝高的几成处 ——
+   这两个数是拿系统字体把猫和窝渲出来对着挑的。 */
+const CATHEAD = "🐱", CATHS = .60, CATSIT = .68;
 const CATHOT = ["离炭盆远着点 —— 再蹭就成碳咪了。", "它凑近炭盆闻了闻，胡子差点燎了。",
                 "炭盆是烤火的，不是睡的。"];
 const PETS = {
@@ -2421,7 +2470,7 @@ const PETS = {
   pet_bang: {n:"逗猫棒", p:50,  e:"🎣", pv:"x-em"},
   pet_shu:  {n:"木鼠",   p:60,  e:"🐭", pv:"x-em"},
   // 这一样是嚼得掉的：拍三回就吃光，吃完发疯三秒。便宜，因为要回头再买
-  pet_he:   {n:"猫薄荷", p:25,  e:"🌿", pv:"x-em", eat:3},
+  pet_he:   {n:"猫薄荷", p:10,  e:"🌿", pv:"x-em", eat:3},
   // 这一样不摆在地上：摆上之后鼠标进了院子就成一颗红点，猫追着红点跑
   pet_laser:{n:"激光笔", p:160, e:"🔦", pv:"x-em", laser:true},
 };
@@ -2604,8 +2653,9 @@ const VACS = 20;
    · gd 上回叼东西回来的日子 · toys 攒下的玩物 · nm 你给它起的名字
    · food 攒下的鱼干（批折子挣的，喂它才掉膘条 —— 不再自动喂）
    · hb 猫薄荷还剩几回。嚼完了这一样就从库里消掉，得回头再买
+   · drop 它今天叼回来、还撂在你案头没收的那样。点一下才进什物匣
    摆着的窝和玩具不在这儿，跟印章纸色一样挂在 g 上（g.catbed / g.catpet） */
-const catDef = () => ({f:.45, d:"", g:0, gd:"", toys:[], nm:"", food:0, hb:0});
+const catDef = () => ({f:.45, d:"", g:0, gd:"", toys:[], nm:"", food:0, hb:0, drop:""});
 const GDEF = () => ({ag: DEMO ? 99999 : 0, owe:0, tot:0, cnt:0, nc:0, day:"", tn:0, run:0, best:0, sfx:1,
                      own: DEMO ? Object.keys(ALLWARES) : Object.values(ALLKIT).map(r => r.d), med:[],
                      seal:"zhun", paper:"xuan", font:"song", mount:"sumian", grain:"jiehang", fx:"fxno",
@@ -2971,14 +3021,14 @@ function histTrim(){
 const CATFEED = .035;          // 一道折子喂一口
 const CATDROP = .09;           // 一天不来掉这么多膘
 const CATTOY = [
-  {id:"ye",  n:"银杏叶",   d:"半黄不黄的一片，边上还带着虫牙"},
-  {id:"qian",n:"一枚铜钱", d:"字口都磨平了，看不出哪朝的"},
-  {id:"bi",  n:"半截笔",   d:"你上个月找不着的那半截，原来在它那儿"},
-  {id:"qiu", n:"丝线球",   d:"缠得死紧，解不开了"},
-  {id:"qi",  n:"一颗棋子", d:"黑的。另一颗大概也在这屋里"},
-  {id:"chan",n:"蝉蜕",     d:"完完整整一个空壳，它叼回来时没敢咬碎"},
-  {id:"gui", n:"一穗桂花", d:"香得很，隔天就蔫了，它还守着"},
-  {id:"ling",n:"小铜铃",   d:"不是它项上那个。哪儿来的问不出来"},
+  {id:"ye",  e:"🍂", n:"银杏叶",   d:"半黄不黄的一片，边上还带着虫牙"},
+  {id:"qian",e:"🪙", n:"一枚铜钱", d:"字口都磨平了，看不出哪朝的"},
+  {id:"bi",  e:"✏️", n:"半截笔",   d:"你上个月找不着的那半截，原来在它那儿"},
+  {id:"qiu", e:"🧵", n:"丝线球",   d:"缠得死紧，解不开了"},
+  {id:"qi",  e:"⚫", n:"一颗棋子", d:"黑的。另一颗大概也在这屋里"},
+  {id:"chan",e:"🦗", n:"蝉蜕",     d:"完完整整一个空壳，它叼回来时没敢咬碎"},
+  {id:"gui", e:"🌼", n:"一穗桂花", d:"香得很，隔天就蔫了，它还守着"},
+  {id:"ling",e:"🔔", n:"小铜铃",   d:"不是它项上那个。哪儿来的问不出来"},
 ];
 const CATPUR = ["它眯了眯眼。", "呼噜声起来了。", "尾巴尖动了一下。",
                 "它把头往你手里蹭。", "它翻了个身，肚皮朝上。", "它拿爪子按了按你的手。"];
@@ -3002,6 +3052,7 @@ function catState(){
   const c = g.cat, d = catDef();
   for (const k in d) if (typeof c[k] !== typeof d[k]) c[k] = d[k];
   if (!Array.isArray(c.toys)) c.toys = [];
+  if (c.drop && !CATTOY.some(x => x.id === c.drop)) c.drop = "";   // 认不得的就当没这回事
   c.f = clamp(c.f, 0, 1);
   c.food = Math.max(0, Math.round(c.food) || 0);
   /* 库里还有猫薄荷、却一回都不剩了 —— 只可能是老存档（那会儿它还不是消耗品）。
@@ -3048,10 +3099,17 @@ function catSay(act){
                     : `${n}瘦得脊梁骨都摸得着了。碗是空的，喂它两条鱼干罢。`;
   if (c.g >= 7) return `你有 ${c.g} 天没来了。${n}还在，只是不太理你。`;
   if (c.g >= 2) return `隔了 ${c.g} 天。${n}闻了闻你的手，认得。`;
-  if (act === "sleep")
-    return bed.e ? `${n}蜷在${bed.n}里睡着了。戳戳看叫不叫得醒。`
-                 : `${n}就地蜷成一团睡着了。戳戳看叫不叫得醒。`;
-  if (act === "lie")   return `${n}趴是趴下了，眼睛还睁着 —— 它不困。`;
+  if (act === "sleep" || act === "lie"){
+    const ins = bedIn(bed);
+    /* 措辞按窝分开：炭盆是挨着卧、不是钻进去（钻进去要出人命的）；
+       锦榻是摊在上头；箱筐桶瓮才叫「蜷在里头」 */
+    const how = !bed.e    ? `${n}就地蜷成一团`
+              : ins.hot   ? `${n}挨着${bed.n}卧下，不敢再往里凑`
+              : ins.front ? `${n}蜷在${bed.n}里`
+              :             `${n}摊在${bed.n}上`;
+    return act === "lie" ? `${how}，眼睛却还睁着 —— 它不困。`
+                         : `${how}睡着了。戳戳看叫不叫得醒。`;
+  }
   if (act === "zoom")  return `${n}疯了。满案子乱窜，谁也拦不住。`;
   if (act === "chase") return `那点红光一晃，${n}眼睛就直了。`;
   if (act === "play")  return `${n}盯上了${pet.n}，屁股一撅。`;
@@ -3067,11 +3125,12 @@ function catGift(){
   const c = catState(), t = ymd(Date.now());
   if (c.gd === t || c.f < .3) return null;
   c.gd = t;
-  const left = CATTOY.filter(x => !c.toys.includes(x.id));
+  const left = CATTOY.filter(x => !c.toys.includes(x.id) && x.id !== c.drop);
   const roll = Math.random();
-  if (left.length && roll < .3){
+  // 案头还搁着上回那样没收，就不再叼新的回来 —— 一次只欠你一样
+  if (left.length && !c.drop && roll < .3){
     const toy = left[Math.floor(Math.random() * left.length)];
-    c.toys.push(toy.id);
+    c.drop = toy.id;                       // 撂在案头，你点一下才算收进匣里
     return {toy};
   }
   if (roll < .8){
@@ -3081,6 +3140,28 @@ function catGift(){
     return {ag:n};
   }
   return {none:true};
+}
+
+/* ── 案头那一样 ──
+   御猫在外头捡的零碎，一天至多一样，它撂在你案头（主界面右下角）。
+   点一下才算收进什物匣 —— 不点就一直搁着，它也不会再叼新的回来。 */
+function paintDrop(){
+  const c = catState(), el = $("#ctDrop");
+  if (!el) return;
+  const t = CATTOY.find(x => x.id === c.drop);
+  el.hidden = !t;
+  if (t){
+    el.innerHTML = `<b>${t.e}</b>`;
+    el.title = `御猫叼回来的，点一下收起来`;
+  }
+}
+function takeDrop(){
+  const c = catState(), t = CATTOY.find(x => x.id === c.drop);
+  if (!t) return;
+  if (!c.toys.includes(t.id)) c.toys.push(t.id);
+  c.drop = "";
+  toast(`收起${t.n} —— ${t.d}`);
+  paintDrop(); paintCat(null); save(true);
 }
 
 /* ── 御猫怎么摆、怎么动 ────────────────────────────────────
@@ -3273,7 +3354,7 @@ function catSleep(doze, brief){
     });
   } else if (A.el.bed && ins.hot){
     toast(CATHOT[Math.floor(Math.random() * CATHOT.length)]);
-    catMove(A.bedX + A.bedW + A.cw * .15, A.bedY, 34, lie);   // 挨着炭盆睡，不进去
+    catMove(A.bedX + A.bedW + A.cw * .2, A.bedY, 32, lie);    // 挨着炭盆卧，绝不进去
   } else lie();
 }
 function catWake(self){
@@ -3307,14 +3388,15 @@ function catPlay(){
       const t = A.el.toy;
       t.classList.remove("hit"); void t.offsetWidth; t.classList.add("hit");
       setTimeout(() => t.classList.remove("hit"), 640);
-      // 嚼得掉的（猫薄荷）：拍一回少一回，见底就吃光了
+      /* 嚼得掉的（猫薄荷）：一趟少一回，不是一爪少一回 ——
+         一趟本来就要拍一到三爪，按爪算的话三回一趟就吃光了 */
+      if (--n > 0) return catAfter(780, hit);
       const pv = PETS[G().catpet] || {};
       if (pv.eat){
         const c = catState();
         c.hb = Math.max(0, (c.hb || 0) - 1);
         if (c.hb <= 0) return catEatUp();
       }
-      if (--n > 0) return catAfter(780, hit);
       if (Math.random() < .32) return catAfter(720, catCarry);
       toast(catName() + CATPLAY[Math.floor(Math.random() * CATPLAY.length)]);
       catAfter(950, catStep);
@@ -4186,18 +4268,27 @@ function paintCat(gift){
   $("#ctName").value = c.nm || "";
   $("#ctSay").textContent = catSay(CA && CA.act);
   paintCatBits();
-  const gv = $("#ctGift");
-  if (gift && !gift.none){
+  /* 案头还欠你一样没收，就在这儿提一句；碎银那种当场入库的走 toast，不占地方 */
+  const gv = $("#ctGift"), dpn = CATTOY.find(x => x.id === c.drop);
+  if (dpn){
     gv.hidden = false;
-    gv.textContent = gift.toy
-      ? `它从外头叼回来一样东西，放在你脚边：${gift.toy.n} —— ${gift.toy.d}`
-      : `它从外头叼回来 ${gift.ag} 两碎银，扔在案上，自己走开了。`;
+    gv.textContent = `它叼了${dpn.n}回来，撂在你案头右下角，还没收。`;
+  } else if (gift && gift.ag){
+    gv.hidden = false;
+    gv.textContent = `它从外头叼回来 ${gift.ag} 两碎银，扔在案上，自己走开了。`;
   } else gv.hidden = true;
   // 攒到的亮着、没攒到的留个灰位子 —— 看得见还差几样，才有攒下去的意思
-  // 手机上没有 title 可看，所以点一下让它把这是什么说出来
+  /* 什物匣。手机上没有 title 可看，所以点一下让它把来历说出来 */
   $("#ctToys").innerHTML = CATTOY.map(t => c.toys.includes(t.id)
-    ? `<span class="ty got" data-toy="${t.id}" title="${esc(t.d)}">${esc(t.n)}</span>`
-    : `<span class="ty no">？</span>`).join("");
+    ? `<span class="it" data-toy="${t.id}" title="${esc(t.d)}">
+         <b>${t.e}</b><span>${esc(t.n)}</span></span>`
+    : `<span class="it no"><b>？</b><span>未得</span></span>`).join("");
+  $("#ctBoxN").textContent = c.toys.length + "/" + CATTOY.length;
+  const dp = CATTOY.find(x => x.id === c.drop);
+  $("#ctBoxSay").textContent =
+    dp ? `${catName()}今天叼了${dp.n}回来，撂在你案头 —— 去点一下收起来。`
+       : c.toys.length >= CATTOY.length ? "八样收齐了。它不再往外跑，就在案上看你。"
+       : `已收 ${c.toys.length} 样，还差 ${CATTOY.length - c.toys.length} 样。它一天至多叼一样。`;
   /* 猫窝和玩具这两架就地能点：买过的点一下换上，没买的点一下就地出库
      （走的还是内务府那一套 pickWare，问一句、扣银子、记治绩，一样不少） */
   for (const kind of ["bed", "pet"]){
@@ -4215,20 +4306,28 @@ function paintCat(gift){
   paintCatChip();
 }
 function openCat(){
-  const gift = catGift();          // 一天至多一回，进门就结
+  const gift = catGift();          // 多半在开机时就结过了，这儿是兜底
   /* 先开门再画：院子还 display:none 的时候量不出宽度，行为机就没法排位置 */
   mask12.classList.add("on");
+  $$(".cb .ctb").forEach((x, i) => x.classList.toggle("on", i === 0));
+  $$(".cb .cpane").forEach((x, i) => x.classList.toggle("on", i === 0));
   catKey = "";                     // 每回进门重搭一次场子，顺带把行为机拉起来
   paintCat(gift);
   save(true);
 }
 function shutCat(){ catLaserOff(); catHalt(); mask12.classList.remove("on"); }
+$(".cb .ctabs").addEventListener("click", e => {
+  const b = e.target.closest(".ctb"); if (!b || b.classList.contains("on")) return;
+  $$(".cb .ctb").forEach(x => x.classList.toggle("on", x === b));
+  $$(".cb .cpane").forEach(x => x.classList.toggle("on", x.dataset.cp === b.dataset.cp));
+});
+$("#ctDrop").onclick = takeDrop;
 $("#ctBtn").onclick = openCat;
 $("#ctClose").onclick = shutCat;
 mask12.addEventListener("click", e => {
   const b = e.target.closest("[data-buy]");
   if (b) return pickWare(b);                      // 就地换窝、换玩具，不必跑回内库
-  const t = e.target.closest("[data-toy]");       // 它叼回来的那些，点一下报个来历
+  const t = e.target.closest("[data-toy]");       // 什物匣里那些，点一下报个来历
   if (t){
     const x = CATTOY.find(v => v.id === t.dataset.toy);
     if (x) toast(`${x.n} —— ${x.d}`);
@@ -5176,6 +5275,12 @@ backpay();
 decay();                                         // 结算这些天的荒疏
 // 治绩是一批批加出来的：进门补一遍，早就够格的老账不至于白挣
 setTimeout(sweep, 1400);
+/* 御猫每天出一趟门：开机就结，不必等你去开猫窝。
+   叼回来的零碎撂在案头等你收，碎银当场入库、报一声 */
+const catToday = catGift();
+paintDrop();
+if (catToday && catToday.ag)
+  setTimeout(() => toast(`${catName()}叼回来 ${catToday.ag} 两碎银，扔在案上。`), 2200);
 paintPurse();
 render();
 
