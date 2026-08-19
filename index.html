@@ -1639,7 +1639,7 @@
     <div class="cbox" id="ctToys"></div>
     <p class="cnote">御猫在外头捡的零碎。一天至多叼一样回来，
       撂在你案头右下角 —— 点一下才算收进匣里，不收它就不再叼新的。<br>
-      匣里的东西点一下，它告诉你这是打哪儿来的。十六样收齐，它就不出门了。<br>
+      匣里的东西点一下，它告诉你这是打哪儿来的。二十样收齐，它就不出门了。<br>
       这些买不着，只能等它自己带回来。</p>
   </div>
   <div class="btns">
@@ -1737,7 +1737,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v79" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v80" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -3116,6 +3116,12 @@ const CATTOY = [
   {id:"zhen",e:"🪡", n:"引线针",   d:"你找了三天那根。线还穿着，没断"},
   {id:"feng",e:"🍁", n:"半片枫叶", d:"红得发黑，脆得一碰就碎，它衔得极轻"},
   {id:"hong",e:"🧧", n:"一个红封", d:"空的。里头原本装什么，它不说"},
+  /* 这四样越界得厉害。宫里断不该有的东西，偏偏它叼回来了 ——
+     问它，它不说；再问，它翻个身给你看肚皮 */
+  {id:"long",e:"🦖", n:"一只小恐龙", d:"宫里没这东西。它打哪儿叼的，问不出来"},
+  {id:"guai",e:"👾", n:"一个怪东西", d:"说不上是什么。它护得紧，不给你细看"},
+  {id:"jie", e:"💍", n:"一枚戒指",   d:"金的，还镶着石头。这个你最好别问，也别声张"},
+  {id:"guan",e:"👑", n:"一顶小金冠", d:"谁的冠？它不说。悄悄收着罢"},
 ];
 const CATPUR = ["它眯了眯眼。", "呼噜声起来了。", "尾巴尖动了一下。",
                 "它把头往你手里蹭。", "它翻了个身，肚皮朝上。", "它拿爪子按了按你的手。"];
@@ -3310,10 +3316,10 @@ const catSize = k => Math.round((54 + 30 * clamp(k, 0, 1)) * .85);
 const CATBASE = 78;
 /* 场子摆什么，只看这四样。这串一变才重搭场子 —— 不变就别动 DOM，
    一动 DOM 猫就得从头走起（这正是上一版「摸一把它弹回起点」的病根） */
-function catSceneKey(){
-  const g = G(), c = catState();
-  return [g.catbed, g.catpet, c.f < .2 ? 1 : 0].join("|");
-}
+/* 场子只在「开门」的时候整搭一次。换窝、换玩具、饿了摆碗一概不重搭 ——
+   走 catRefit 就地替换，猫照旧站在它站的地方、干它正在干的事。
+   （所以这儿是个定值：只有 openCat 把 catKey 清空时才会重搭） */
+function catSceneKey(){ return "yard1"; }
 function catScene(){
   const g = G(), c = catState();
   const bed = BEDS[g.catbed] || BEDS.bed_cao, pet = PETS[g.catpet] || PETS.pet_no;
@@ -3337,6 +3343,89 @@ function catScene(){
   if (pet.laser) P.push(`<span class="clz"></span>`);
   return `<div class="cy">${P.join("")}</div>`;
 }
+/* 就地把院子里的摆设换掉：窝、玩具、空碗、激光红点。
+   猫本身一根汗毛都不碰 —— 它站在哪儿、正走到一半、正睡着，全照旧。
+   换完把量出来的尺寸和落点补一遍，行为机接着用。 */
+function catRefit(){
+  const A = CA; if (!A || !A.el.cy) return;
+  const g = G(), c = catState(), cy = A.el.cy, wk = A.el.wk;
+  const bed = BEDS[g.catbed] || BEDS.bed_cao, pet = PETS[g.catpet] || PETS.pet_no;
+  const px = v => Math.round(v * CATBASE) + "px";
+  const mk = (cls, before) => { const e = document.createElement("span");
+    e.className = cls; cy.insertBefore(e, before || null); return e; };
+
+  // 窝
+  let bedEl = cy.querySelector(".cbed");
+  if (bed.e){
+    if (!bedEl) bedEl = mk("cbed", cy.firstChild);
+    if (bedEl.textContent !== bed.e) bedEl.textContent = bed.e;
+    bedEl.style.fontSize = px(bedIn(bed).bw);
+  } else if (bedEl){ bedEl.remove(); bedEl = null; }
+  A.el.bed = bedEl;
+
+  // 玩具。正叼在嘴里的那只先撤掉，免得换完还挂在猫脸上
+  const held = A.el.em && A.el.em.querySelector(".ctoy");
+  if (held) held.remove();
+  let tw = cy.querySelector(".ctoyw");
+  if (pet.e && !pet.laser){
+    if (!tw) tw = mk("ctoyw", wk);
+    tw.hidden = false;
+    tw.classList.remove("kick", "drag");
+    const t0 = tw.querySelector(".ctoy"), sway = pet.play === "swing";
+    // 还是同一样就别重建，重建会把正在跑的翻跟头/闪躲动画掐掉
+    if (!t0 || t0.textContent !== pet.e || t0.classList.contains("sway") !== sway)
+      tw.innerHTML = `<span class="ctoy${sway ? " sway" : ""}" style="font-size:${px(.40)}">${pet.e}</span>`;
+  } else if (tw){ tw.remove(); tw = null; }
+  A.el.toyw = tw;
+  A.el.toy = tw ? tw.querySelector(".ctoy") : null;
+  if (tw) A.kicked = 0;
+
+  // 空碗：瘦到底才摆
+  let bw = cy.querySelector(".cbw");
+  if (c.f < .2){
+    if (!bw){ bw = mk("cbw", wk); bw.textContent = "🥣"; bw.style.fontSize = px(.44); }
+  } else if (bw){ bw.remove(); bw = null; }
+  A.el.bowl = bw;
+
+  // 激光红点
+  let lz = cy.querySelector(".clz");
+  if (pet.laser){ if (!lz){ lz = document.createElement("span"); lz.className = "clz"; cy.appendChild(lz); } }
+  else if (lz){ lz.remove(); lz = null; A.laserOn = 0; A.lzT0 = 0; A.lzRest = 0; }
+  A.el.lz = lz;
+
+  // 重新量一遍，补上落点
+  A.bedW = bedEl ? (bedEl.offsetWidth || A.cw * .62) : 0;
+  A.bedH = bedEl ? (bedEl.offsetHeight || A.bedW) : 0;
+  A.toyW = tw ? (tw.offsetWidth || A.cw * .4) : 0;
+  A.bowlW = bw ? (bw.offsetWidth || A.cw * .44) : 0;
+  A.bedX = A.pad + Math.max(0, (A.cw - A.bedW) / 2);
+  A.bowlX = Math.max(A.pad, A.W * .3);
+  A.toySpin = 0;
+  if (tw) A.toyX = clamp(A.toyX == null ? A.W - A.toyW - A.pad * 3 : A.toyX,
+                         A.pad, Math.max(A.pad, A.W - A.toyW - A.pad));
+  const put = (el, x, y) => { if (el){ el.style.transitionTimingFunction = "";
+    el.style.transitionDuration = "0s";
+    el.style.transform = `translate(${Math.round(x)}px,${Math.round(y || 0)}px)`; } };
+  put(bedEl, A.bedX, A.bedY); put(tw, A.toyX, A.toyY); put(bw, A.bowlX, 0);
+
+  /* 它正躺在窝里、窝却换了一张：抬多高要照新窝重算。
+     换成不能钻的（榻、炭盆）或者干脆没窝了，就让它从窝里起来 */
+  if (A.inBed){
+    const ins = bedIn(bed);
+    if (bedEl && ins.front){
+      A.headW = A.el.em.offsetWidth || A.headW || A.cw * CATHS;
+      A.lift = A.bedH * (ins.sit == null ? CATSIT : ins.sit);
+      A.x = clamp(A.bedX + (A.bedW - A.headW) / 2, A.pad, Math.max(A.pad, A.W - A.cw - A.pad));
+      wk.style.transitionDuration = ".3s"; wk.style.transform = catXf(A); catFlip();
+    } else if (bedEl && !ins.hot){
+      A.el.cy.classList.remove("head");
+      A.lift = A.cw * (ins.lift || 0);
+      wk.style.transitionDuration = ".3s"; wk.style.transform = catXf(A); catFlip();
+    } else catOut();
+  }
+  catDepth();
+}
+
 /* 关了动效的人就别让它满院子跑：摆在中间站着，戳它照样应你 */
 const catCalm = () => { try { return matchMedia("(prefers-reduced-motion: reduce)").matches; }
                         catch(e){ return false; } };
@@ -4821,14 +4910,15 @@ function paintCatBits(){
 /* 画整个猫窝。gift 是这一次开门它有没有叼东西回来，没有就不占地方 */
 function paintCat(gift){
   const c = catState(), g = G(), key = catSceneKey();
-  /* 场子只在窝、玩具、碗有变动时才重搭。innerHTML 一赋值就是全新的节点，
-     走到一半的位移会当场归零 —— 上一版「摸一把它弹回起点」就是这么来的 */
-  if (key !== catKey){
+  /* innerHTML 一赋值就是全新的节点，猫会被连带推倒重来：回到院子正中、
+     正走的那一段归零、正扑的一趟中断、睡着的被弄醒。
+     所以只有开门那一下才整搭；换窝换玩具走 catRefit 就地替换 */
+  if (key !== catKey || !CA){
     catKey = key;
     $("#ctArt").innerHTML = catScene();
-    $("#ctArt").classList.toggle("laser", catLaserOn());
     if (mask12.classList.contains("on")) catStart();
-  }
+  } else catRefit();
+  $("#ctArt").classList.toggle("laser", catLaserOn());
   $("#ctName").value = c.nm || "";
   $("#ctSay").textContent = catSay(CA && CA.act);
   paintCatBits();
@@ -4851,7 +4941,7 @@ function paintCat(gift){
   const dp = CATTOY.find(x => x.id === c.drop);
   $("#ctBoxSay").textContent =
     dp ? `${catName()}今天叼了${dp.n}回来，撂在你案头 —— 去点一下收起来。`
-       : c.toys.length >= CATTOY.length ? "十六样收齐了。它不再往外跑，就在案上看你。"
+       : c.toys.length >= CATTOY.length ? "二十样收齐了。它不再往外跑，就在案上看你。"
        : `已收 ${c.toys.length} 样，还差 ${CATTOY.length - c.toys.length} 样。它一天至多叼一样。`;
   /* 猫窝和玩具这两架就地能点：买过的点一下换上，没买的点一下就地出库
      （走的还是内务府那一套 pickWare，问一句、扣银子、记治绩，一样不少） */
@@ -5656,10 +5746,10 @@ async function pickWare(b){
   sweep();                                        // 添置、置齐、用上玉玺，各算一件治绩
   paintPurse(); paintShop(); save(true);
   if (kind === "seal") render();                  // 印章换了，每一条的印都要重画
-  /* 换了窝或玩具，院子要重摆。这儿把场子的记号清掉再画 ——
-     不清的话，点的要是「眼下已经摆着的那一样」，键没变就不重搭，
-     被踢出院子的玩具也就捡不回来了 */
-  if (CATKIT[kind]){ catKey = ""; paintCat(null); }
+  /* 换了窝或玩具：走 paintCat → catRefit 就地替换，不重搭场子。
+     猫站在哪儿、正干什么，一概不动 ——
+     踢出院子的那只也是在 catRefit 里重新摆回来的 */
+  if (CATKIT[kind]) paintCat(null);
 }
 mask6.addEventListener("click", e => {
   const b = e.target.closest("[data-buy]"); if (b) pickWare(b);
