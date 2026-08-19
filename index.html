@@ -1737,7 +1737,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v77" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v78" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -3127,13 +3127,16 @@ const CATZZZ = ["它耳朵抖了一下。没醒。",
                 "它把爪子搭到脸上 —— 别吵。",
                 "它咂了咂嘴，梦见什么好东西了。",
                 "你已经戳到第六下了。它是真睡熟了，不是装的。"];
-/* 站位一律按**身子的前沿**算，不按鼻子在身宽几成处算。
-   渲图对过：emoji 那只猫的脑袋几乎顶到框边，拿「鼻子对玩具中心」去站，
-   身子就整个压在玩具上 —— 老鼠只露半个，看着像从它身上穿过去。
-   CATGAP 是前沿跟玩具之间留的那点空当。留两像素就够：
-   emoji 的字形本来就没顶满框，两个框挨上，看着正是脸贴上去。 */
-const CATGAP = 2;
-const catGap = () => CATGAP;
+/* 站位按**看得见的那一块**（字形的墨迹）对齐，不按元素的框。
+   量过 Segoe 的字形：🐈 排版宽 90.6，墨迹只占 12.0–78.0，两边各空掉 12px；
+   小玩具排版宽 42.6，墨迹 6–37，两边各空 6px 上下。
+   拿框去对齐，中间就白白隔出二十来像素 —— 看着就是隔空拍。
+   所以两个框其实要**叠**一截，叠掉的正是那两截空白，墨迹才刚好挨上。
+   这两个比例是按 Windows 的字形量的；苹果的字形填得更满，
+   照这个叠会稍微压一点点，也还是「脸贴着」，不至于埋进去。 */
+const CATINK = .13, TOYINK = .16;               // 字形在框里两边各空掉的比例
+const toyInkL = A => A.toyX + A.toyW * TOYINK;  // 玩具看得见的那一块，左边
+const toyInkR = A => A.toyX + A.toyW * (1 - TOYINK);                    // 右边
 const CATKICKP = .05;   // 平常玩耍时，一脚把玩具踢出案子的概率
 const CATPLAY = ["一爪拍飞了，自己愣了一下。", "扑空一次，第二爪按住了。",
                  "拍着拍着滚到一边去了。", "咬了两口，觉得没味道，松开了。",
@@ -3553,10 +3556,10 @@ function catToToy(sp, then, stalk, gap){
   const A = CA; if (!A || !A.el.toy) return catStep();
   const fromLeft = A.x + A.cw / 2 <= A.toyX + A.toyW / 2;
   const face = fromLeft ? -1 : 1;
-  /* 正位 = 身子的前沿停在玩具跟前，脸正好贴上去，不压过去。
-     在左边就是右前沿贴玩具左边，在右边就是左前沿贴玩具右边。 */
-  const g0 = catGap();
-  let stand = fromLeft ? A.toyX - A.cw - g0 : A.toyX + A.toyW + g0;
+  /* 正位 = 让猫**看得见的那一侧**正好挨上玩具看得见的那一边。
+     在左边就是猫的右脸挨玩具左沿，在右边就是猫的左脸挨玩具右沿。 */
+  let stand = fromLeft ? toyInkL(A) - A.cw * (1 - CATINK)
+                       : toyInkR(A) - A.cw * CATINK;
   if (gap) stand += fromLeft ? -gap : gap;
   /* 已经凑得太近（身子压在玩具上）怎么办：**面朝着玩具往后蹭一点**，
      不许绕到另一边去。
@@ -3962,10 +3965,10 @@ function catChase(px, py, force){
     catOut();
   }
   clearTimeout(A.timer);
-  /* 也按前沿去够：往右追就把右前沿停在那一点上，往左追就把左前沿停上去。
-     脸朝哪边、哪边就是前沿，所以前沿就是鼻子那一头 */
+  /* 也按看得见的那一侧去够：往右追就把右脸停在那一点上，往左追就把左脸停上去。
+     拿框去对，鼻子会差出十几像素 —— 那一截是字形留的空白 */
   const goRight = px > A.x + A.cw / 2;
-  const tx = clamp(goRight ? px - A.cw : px,
+  const tx = clamp(goRight ? px - A.cw * (1 - CATINK) : px - A.cw * CATINK,
                    A.pad, Math.max(A.pad, A.W - A.cw - A.pad));
   const ty = clamp(py, A.yLo, A.yHi);
   /* 这儿要限的是「多久才准重新起一段」，不是「挪了多远才算数」。
@@ -4076,9 +4079,8 @@ function catDragTo(cx, cy){
     if (catToyOn()) catWake(false);
     return;
   }
-  // 瞄玩具的**近边**再让开一点，不瞄中心 —— 瞄中心它会一头扎进玩具里
-  const g1 = catGap(A);
-  catChase(A.x + A.cw / 2 <= A.toyX + A.toyW / 2 ? A.toyX - g1 : A.toyX + A.toyW + g1,
+  // 瞄玩具**看得见的那一边**，不瞄中心 —— 瞄中心它会一头扎进玩具里
+  catChase(A.x + A.cw / 2 <= A.toyX + A.toyW / 2 ? toyInkL(A) : toyInkR(A),
            A.toyY);                                // 猫追着你手上那样东西
 }
 function catDragEnd(){
