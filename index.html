@@ -1737,7 +1737,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v75" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v76" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -3127,11 +3127,12 @@ const CATZZZ = ["它耳朵抖了一下。没醒。",
                 "它把爪子搭到脸上 —— 别吵。",
                 "它咂了咂嘴，梦见什么好东西了。",
                 "你已经戳到第六下了。它是真睡熟了，不是装的。"];
-/* 脑袋落在身宽的百分之几处（脸朝右、也就是翻过面的时候算）。
-   苹果那只 🐈 脸朝左，脑袋大约在左边两成的位置；翻过面就是八成。
-   凑玩具、追激光都按这个对齐 —— 拿身子边缘去对，脑袋会差出小半个身子，
-   看着就是「隔着一段够玩具」。 */
-const CATNOSE = .82;
+/* 站位一律按**身子的前沿**算，不按鼻子在身宽几成处算。
+   渲图对过：emoji 那只猫的脑袋几乎顶到框边，拿「鼻子对玩具中心」去站，
+   身子就整个压在玩具上 —— 老鼠只露半个，看着像从它身上穿过去。
+   CATGAP 是前沿跟玩具之间留的那点空当（占身宽的一成，至少四像素）。 */
+const CATGAP = .10;
+const catGap = A => Math.max(4, A.cw * CATGAP);
 const CATKICKP = .05;   // 平常玩耍时，一脚把玩具踢出案子的概率
 const CATPLAY = ["一爪拍飞了，自己愣了一下。", "扑空一次，第二爪按住了。",
                  "拍着拍着滚到一边去了。", "咬了两口，觉得没味道，松开了。",
@@ -3551,12 +3552,10 @@ function catToToy(sp, then, stalk, gap){
   const A = CA; if (!A || !A.el.toy) return catStep();
   const fromLeft = A.x + A.cw / 2 <= A.toyX + A.toyW / 2;
   const face = fromLeft ? -1 : 1;
-  /* 正位 = 让**脑袋**落在玩具中心上。
-     原先拿的是身子的边缘去对，可 emoji 那只猫脑袋并不在边缘上 ——
-     脸朝右时脑袋在身宽的八成处，脸朝左时在两成处，
-     拿边缘对，脑袋就差出小半个身子，看着是隔着一段够玩具。 */
-  const mid = A.toyX + A.toyW / 2;
-  let stand = mid - (fromLeft ? CATNOSE : 1 - CATNOSE) * A.cw;
+  /* 正位 = 身子的前沿停在玩具跟前，留一点空当，不压上去。
+     在左边就是右前沿贴玩具左边，在右边就是左前沿贴玩具右边 */
+  const g0 = catGap(A);
+  let stand = fromLeft ? A.toyX - A.cw - g0 : A.toyX + A.toyW + g0;
   if (gap) stand += fromLeft ? -gap : gap;
   if (fromLeft ? stand < A.x : stand > A.x) stand = A.x;
   A.playSide = face;
@@ -3875,13 +3874,10 @@ function catLaps(n){
    到玩具那一架上点一下（等于重新摆一次），它才回到院子里 */
 function catKick(){
   const A = CA; if (!A || !A.el.toy || !A.el.toyw) return catStep();
-  const fromLeft = A.x + A.cw / 2 <= A.toyX + A.toyW / 2;
-  const face = fromLeft ? -1 : 1;
-  let stand = fromLeft ? A.toyX - A.cw + A.toyW * .55 : A.toyX + A.toyW * .45;
-  if (fromLeft ? stand < A.x : stand > A.x) stand = A.x;
-  catMove(stand, A.toyY, 90, () => {
+  // 站位走 catToToy 那一份，别自己再抄一遍 —— 抄的那份一直是老公式
+  catToToy(90, () => {
     if (!CA || CA !== A || !A.el.toyw) return catStep();
-    catFace(face);
+    const fromLeft = A.playSide === -1;
     catFlash("pounce", 420);
     const tw = A.el.toyw, nm = (PETS[G().catpet] || {}).n || "玩具";
     tw.classList.add("kick");
@@ -3893,7 +3889,7 @@ function catKick(){
     A.kicked = 1; A.el.toy = null;                 // 行为机从此当它没有玩具
     toast(`${catName()}一脚把${nm}踢出了案子 —— 到玩具那一架点一下，才捡得回来。`);
     catAfter(1000, catStep);
-  }, face);
+  });
 }
 
 /* 拍一下窝，叫它回去躺着。
@@ -3958,10 +3954,10 @@ function catChase(px, py, force){
     catOut();
   }
   clearTimeout(A.timer);
-  /* 也拿脑袋去够，不是拿肚子去压 —— 拿身子中心对的话，
-     东西会停在它肚皮底下，看着像没够着 */
+  /* 也按前沿去够：往右追就把右前沿停在那一点上，往左追就把左前沿停上去。
+     脸朝哪边、哪边就是前沿，所以前沿就是鼻子那一头 */
   const goRight = px > A.x + A.cw / 2;
-  const tx = clamp(px - (goRight ? CATNOSE : 1 - CATNOSE) * A.cw,
+  const tx = clamp(goRight ? px - A.cw : px,
                    A.pad, Math.max(A.pad, A.W - A.cw - A.pad));
   const ty = clamp(py, A.yLo, A.yHi);
   /* 这儿要限的是「多久才准重新起一段」，不是「挪了多远才算数」。
@@ -4072,7 +4068,10 @@ function catDragTo(cx, cy){
     if (catToyOn()) catWake(false);
     return;
   }
-  catChase(A.toyX + A.toyW / 2, A.toyY);          // 猫追着你手上那样东西
+  // 瞄玩具的**近边**再让开一点，不瞄中心 —— 瞄中心它会一头扎进玩具里
+  const g1 = catGap(A);
+  catChase(A.x + A.cw / 2 <= A.toyX + A.toyW / 2 ? A.toyX - g1 : A.toyX + A.toyW + g1,
+           A.toyY);                                // 猫追着你手上那样东西
 }
 function catDragEnd(){
   const A = CA; if (!A || !A.drag) return;
