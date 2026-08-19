@@ -1737,7 +1737,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v73" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v74" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -3296,7 +3296,9 @@ function takeDrop(){
    横坐标是 JS 现算的 px，CSS 只负责平滑地送过去。
    走到哪、走多快、什么时候坐下、什么时候睡、去不去扑玩具，
    全在下头那台行为机（catStep）里，不用 keyframe 把路线定死。 */
-const catSize = k => Math.round(54 + 30 * clamp(k, 0, 1));   // 瘦的小一圈，圆的大一圈
+/* 瘦的小一圈，圆的大一圈；整体又收了一成半 —— 原先在院子里显得太占地方。
+   窝、玩具、碗不跟着收（它们按 CATBASE 定死），所以窝反倒显得更宽敞了。 */
+const catSize = k => Math.round((54 + 30 * clamp(k, 0, 1)) * .85);
 /* 院子里除了猫本身，别的东西一律按这个定尺寸。
    原先窝、玩具、碗都写成 em，而那个 em 是猫的字号 —— 猫一胖，
    窝、玩具、碗跟着一起胀，成了整个院子在放大。它们该是死的。 */
@@ -3574,6 +3576,8 @@ function catToToy(sp, then, stalk, gap){
    up=往上扑，够带子那种飘在半空的东西 */
 function catWhack(hit, up){
   const A = CA; if (!A) return;
+  // 玩具举得比它够得着的还高，就得往上扑，不能还平着拍
+  if (A.toyY < A.yLo - 6) up = true;
   catFlash(up ? "pounceup" : "pounce", 460);
   const t = A.el.toy; if (!t) return;
   t.classList.remove("hit", "rev", "dodge"); void t.offsetWidth;
@@ -3588,15 +3592,21 @@ function catWhack(hit, up){
 }
 /* 把玩具送到院子里某处。滚、飘、被踢共用这一件。
    spin 是路上转多少度，dur 毫秒，ease 自己给 */
+/* 玩具眼下该是什么样。转角是**累加**的 ——
+   原先每次都写死一个绝对角度，连着往同一个方向滚两回，两回的
+   transform 一模一样，球就干脆不转了；一左一右滚，又会倒着转回来。
+   动线不对就是这么来的。 */
+const toyXf = A => `translate(${Math.round(A.toyX)}px,${Math.round(A.toyY)}px)`
+                 + (A.toySpin ? ` rotate(${Math.round(A.toySpin)}deg)` : "");
 function catToyTo(x, y, dur, spin, ease){
   const A = CA; if (!A || !A.el.toyw) return;
   A.toyX = clamp(x, A.pad, Math.max(A.pad, A.W - A.toyW - A.pad));
-  A.toyY = clamp(y, A.yLo, A.yHi);
+  A.toyY = clamp(y, A.tyLo, A.yHi);
+  A.toySpin = (A.toySpin || 0) + (spin || 0);
   const tw = A.el.toyw;
   tw.style.transitionTimingFunction = ease || "cubic-bezier(.15,.7,.3,1)";
   tw.style.transitionDuration = (dur / 1000) + "s";
-  tw.style.transform = `translate(${Math.round(A.toyX)}px,${Math.round(A.toyY)}px)`
-                     + (spin ? ` rotate(${Math.round(spin)}deg)` : "");
+  tw.style.transform = toyXf(A);
 }
 const petPlay = () => (PETS[G().catpet] || {}).play || "bat";
 const petSay  = k => { const a = CATSAYS[k]; return a ? a[Math.floor(Math.random() * a.length)] : ""; };
@@ -3608,6 +3618,9 @@ function catPlayEnd(sayKey){
     const c = catState();
     c.hb = Math.max(0, (c.hb || 0) - 1);
     if (c.hb <= 0) return catEatUp();
+    /* 架子上那个「剩 N 回」是 paintCat 画的。回数在这儿减了，
+       不叫它重画一遍，那行字就一直停在买下来时的三 */
+    paintCat(null); save(true);
   }
   if (Math.random() < CATKICKP) return catAfter(700, catKick);   // 手一重，踢出案子
   if (Math.random() < (pv.carry == null ? .32 : pv.carry)) return catAfter(720, catCarry);
@@ -3811,7 +3824,7 @@ function catCarry(toX, then){
     A.el.toyw.appendChild(t);                    // 放下：回院子
     A.el.toyw.style.transitionTimingFunction = "";   // 滚球那条缓动曲线别留着
     A.el.toyw.style.transitionDuration = "0s";
-    A.el.toyw.style.transform = `translate(${Math.round(A.toyX)}px,${Math.round(A.toyY)}px)`;
+    A.el.toyw.style.transform = toyXf(A);            // 转过多少度得留着，不然放下时会转回去
     catAfter(760, then || catStep);
   });
 }
@@ -3874,8 +3887,9 @@ function catKick(){
     const tw = A.el.toyw, nm = (PETS[G().catpet] || {}).n || "玩具";
     tw.classList.add("kick");
     tw.style.transitionDuration = ".55s";
+    A.toySpin = (A.toySpin || 0) + (fromLeft ? 720 : -720);
     tw.style.transform = `translate(${Math.round(fromLeft ? A.W + 110 : -(A.toyW + 110))}px,`
-                       + `${-Math.round(A.H * .55)}px) rotate(720deg)`;
+                       + `${-Math.round(A.H * .55)}px) rotate(${Math.round(A.toySpin)}deg)`;
     setTimeout(() => { if (CA === A && tw) tw.hidden = true; }, 620);
     A.kicked = 1; A.el.toy = null;                 // 行为机从此当它没有玩具
     toast(`${catName()}一脚把${nm}踢出了案子 —— 到玩具那一架点一下，才捡得回来。`);
@@ -4044,9 +4058,15 @@ function catDragTo(cx, cy){
   const r = A.el.y.getBoundingClientRect();
   A.moved = 1;
   A.toyX = clamp(cx - r.left - A.toyW / 2, A.pad, Math.max(A.pad, A.W - A.toyW - A.pad));
-  A.toyY = catDepthOf(A, cy - r.top);
+  /* 玩具能举得比猫高：猫自己只在 yLo…yHi 那条地面带里走，
+     玩具还能再往上提大半个院子 —— 举高了逗它，它就得往上扑 */
+  /* 纵向跟手指一比一走。原先走的是 catDepthOf —— 那是把整个院子的高度
+     压到 yLo…yHi 这四十像素的进深带里，手指划半个院子玩具才挪几像素，
+     根本「挪不高」。这儿要的是真跟着手走：
+     translateY(0) 时玩具中心落在 .88H 减半个身位处，拿它当零点 */
+  A.toyY = clamp((cy - r.top) - (A.H * .88 - A.toyW / 2), A.tyLo, A.yHi);
   // 拖着的时候 .drag 已经把 transition 关了，不必每帧再写一遍时长
-  A.el.toyw.style.transform = `translate(${Math.round(A.toyX)}px,${Math.round(A.toyY)}px)`;
+  A.el.toyw.style.transform = toyXf(A);
   /* 睡着的时候你在旁边怎么晃它都不理 —— 猫就是这样。
      非得把玩具怼到它身上，才肯睁眼 */
   if (A.el.cy.classList.contains("zz")){
@@ -4102,6 +4122,8 @@ function catStart(){
      往里三十四、往外六，够看出前后，又不至于飞起来。
      鼠标／手指的纵坐标怎么换算成这个进深，见 catDepthOf */
   A.yLo = -34; A.yHi = 6;
+  A.tyLo = -Math.round(A.H * .42);                // 玩具能举到的最高处，比猫高得多
+  A.toySpin = 0;
   A.bedY = 0; A.toyY = 0;
   const put = (el, x, yy) => { if (el){ el.style.transitionTimingFunction = "";
     el.style.transitionDuration = "0s";
