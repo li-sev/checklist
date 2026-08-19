@@ -409,7 +409,7 @@
     /* 手机上按下去别闪那层灰蒙板，长按也别弹选择/预览的浮层 */
     -webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
   .cb .cst.laser{cursor:none}                    /* 摆了激光笔，鼠标自己变成那颗红点 */
-  .cb .cy{position:absolute;inset:0;line-height:1}
+  .cb .cy{position:absolute;inset:0;line-height:1;font-size:78px}   /* 兜底，实际逐个写在元素上 */
   .cb .cy>span{position:absolute;bottom:12%;left:0;display:block}
   .cb .cwk{transform:translateX(0);transition:transform 0s linear;will-change:transform}
   .cb .cem{position:relative;display:inline-block;font-style:normal}
@@ -447,12 +447,11 @@
   /* 玩具也是两层：.ctoyw 管它摆在哪（inline 的 translateX），
      .ctoy 管它挨打时怎么翻。搁一层上的话，拍飞那个 keyframe 会连位移一起盖掉 ——
      玩具当场归零，飞到院子最左边去 */
-  .cb .cy .ctoyw{font-size:.4em;z-index:1;transition:transform .3s ease;
-    cursor:grab;touch-action:none}
+  .cb .cy .ctoyw{z-index:1;transition:transform .3s ease;cursor:grab;touch-action:none}
   .cb .cy .ctoyw.drag{cursor:grabbing;transition:none;z-index:5;
     filter:drop-shadow(0 6px 5px rgba(0,0,0,.28))}
   .cb .cy .ctoyw.drag .ctoy{animation:none;transform:scale(1.22)}
-  .cb .cy .cbw{font-size:.44em;opacity:.9;z-index:0}
+  .cb .cy .cbw{opacity:.9;z-index:0}
   .cb .cy .cwk{z-index:2}
   /* 挨打：翻着跟头弹一下再落回原地。这一层没有位移，只有它自己那点翻滚，
      所以拍多少下都不会跑位。距离用 em，跟着玩具大小走 */
@@ -468,8 +467,10 @@
   /* 叼在嘴里：整个塞进猫那个元素里去，位置就再也不用对了 ——
      猫走它跟着走，猫掉头它跟着翻，一格都不会错。嘴在脑袋那头，猫脸朝左，
      所以贴着左边、压到脸下沿 */
+  /* 叼在嘴里：字号跟着 .ctoy 自己身上那个走，不重定 ——
+     重定成 em 的话，进嘴那一下会因为爹换成了猫而突然变大变小 */
   .cb .cem>.ctoy.held{position:absolute;left:-2%;top:40%;z-index:3;
-    font-size:.4em;animation:none;transform:none;transition:none}
+    animation:none;transform:none;transition:none}
   /* 激光红点 */
   .cb .cy .clz{position:absolute;bottom:auto;width:11px;height:11px;border-radius:50%;
     background:radial-gradient(circle at 38% 34%,#ff8b7a,#e02b12 62%,#8d1206);
@@ -1681,7 +1682,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v65" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v66" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -3183,6 +3184,10 @@ function takeDrop(){
    走到哪、走多快、什么时候坐下、什么时候睡、去不去扑玩具，
    全在下头那台行为机（catStep）里，不用 keyframe 把路线定死。 */
 const catSize = k => Math.round(54 + 30 * clamp(k, 0, 1));   // 瘦的小一圈，圆的大一圈
+/* 院子里除了猫本身，别的东西一律按这个定尺寸。
+   原先窝、玩具、碗都写成 em，而那个 em 是猫的字号 —— 猫一胖，
+   窝、玩具、碗跟着一起胀，成了整个院子在放大。它们该是死的。 */
+const CATBASE = 78;
 /* 场子摆什么，只看这四样。这串一变才重搭场子 —— 不变就别动 DOM，
    一动 DOM 猫就得从头走起（这正是上一版「摸一把它弹回起点」的病根） */
 function catSceneKey(){
@@ -3193,13 +3198,19 @@ function catScene(){
   const g = G(), c = catState();
   const bed = BEDS[g.catbed] || BEDS.bed_cao, pet = PETS[g.catpet] || PETS.pet_no;
   const P = [];
-  if (bed.e) P.push(`<span class="cbed" style="font-size:${bedIn(bed).bw}em">${bed.e}</span>`);
-  if (pet.e && !pet.laser) P.push(`<span class="ctoyw"><span class="ctoy">${pet.e}</span></span>`);
-  if (c.f < .2) P.push(`<span class="cbw">🥣</span>`);
-  P.push(`<span class="cwk"><span class="cem"><i class="cbd">🐈</i>`
-       + `<i class="chd">${CATHEAD}</i><span class="cz" hidden>💤</span></span></span>`);
+  const px = v => Math.round(v * CATBASE) + "px";
+  if (bed.e) P.push(`<span class="cbed" style="font-size:${px(bedIn(bed).bw)}">${bed.e}</span>`);
+  // 玩具的字号写在 .ctoy 自己身上：叼进嘴里的时候它会换个爹（挪进 .cem），
+  // 写成 em 就会跟着猫的字号变一次大小
+  if (pet.e && !pet.laser)
+    P.push(`<span class="ctoyw"><span class="ctoy" style="font-size:${px(.40)}">${pet.e}</span></span>`);
+  if (c.f < .2) P.push(`<span class="cbw" style="font-size:${px(.44)}">🥣</span>`);
+  // 只有猫自己吃胖了要变大 —— 字号挂在它这一层，不挂在院子上
+  P.push(`<span class="cwk" style="font-size:${catSize(c.f)}px"><span class="cem">`
+       + `<i class="cbd">🐈</i><i class="chd">${CATHEAD}</i>`
+       + `<span class="cz" hidden>💤</span></span></span>`);
   if (pet.laser) P.push(`<span class="clz"></span>`);
-  return `<div class="cy" style="font-size:${catSize(c.f)}px">${P.join("")}</div>`;
+  return `<div class="cy">${P.join("")}</div>`;
 }
 /* 关了动效的人就别让它满院子跑：摆在中间站着，戳它照样应你 */
 const catCalm = () => { try { return matchMedia("(prefers-reduced-motion: reduce)").matches; }
@@ -4271,9 +4282,9 @@ function paintCatChip(){
 let catKey = "";     // 上一回搭的是什么场子
 /* 只改数目字，不动场子 —— 喂一条鱼干走这条路，猫照走它的，不会弹回起点 */
 function paintCatBits(){
-  const c = catState(), cy = $("#ctArt").querySelector(".cy");
-  if (cy) cy.style.fontSize = catSize(c.f) + "px";        // 吃胖了就地长个儿，不用重搭
-  if (CA && cy) CA.cw = CA.el.em.offsetWidth || CA.cw;
+  const c = catState(), wk = $("#ctArt").querySelector(".cwk");
+  if (wk) wk.style.fontSize = catSize(c.f) + "px";        // 吃胖了就地长个儿，窝和玩具不动
+  if (CA && wk) CA.cw = CA.el.em.offsetWidth || CA.cw;   // 长了个儿，身宽跟着重量
   $("#ctBar").style.width = Math.round(c.f * 100) + "%";
   $("#ctFeed").innerHTML = `<b>🐟</b><span class="n">×${c.food}</span>`
     + `<span class="t">${c.food ? "点一下喂一条，按住连着倒" : "批折子挣鱼干"}</span>`;
