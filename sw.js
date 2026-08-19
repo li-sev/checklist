@@ -5,7 +5,7 @@
  * 新 worker 装好即 skipWaiting 顶上，页面那边收到 controllerchange 自己重载；
  * 手上正开着对话框或正在打字就先记着，等你手一停再换。
  */
-const VERSION = "v72";
+const VERSION = "v73";
 const CACHE = "zoushichu-" + VERSION;
 
 const CORE = [

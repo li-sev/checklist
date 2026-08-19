@@ -442,19 +442,35 @@
   .cb .cy .cem.look{animation:catlook 1.1s ease-in-out infinite}
   @keyframes catlook{0%,100%{transform:translateY(0) scaleY(1)}
     50%{transform:translateY(-3px) scaleY(1.03)}}
-  /* 🐭 潜行：身子压低，慢慢挪 */
-  .cb .cy .cem.stalk{transform:scaleY(.9) translateY(4px);transition:transform .3s ease}
+  /* 🐭 潜行：身子压扁、往前抻长、贴着地挪 —— 真猫伏低的时候就是这样 */
+  .cb .cy .cem.stalk{transform:scaleY(.74) scaleX(1.1) translateY(10px);
+    transition:transform .3s ease}
   /* 🐭 蓄势：扑之前屁股左右晃两下 */
   .cb .cy .cem.crouch{animation:catcro .34s ease-in-out infinite}
-  @keyframes catcro{0%,100%{transform:scaleY(.88) translate(-2px,5px)}
-    50%{transform:scaleY(.88) translate(2px,5px)}}
+  @keyframes catcro{0%,100%{transform:scaleY(.72) scaleX(1.12) translate(-3px,11px)}
+    50%{transform:scaleY(.72) scaleX(1.12) translate(3px,11px)}}
   /* 🌿 打滚：在猫薄荷上左右翻，三个来回 */
-  .cb .cy .cem.roll{animation:catroll .44s ease-in-out 2}
-  @keyframes catroll{0%,100%{transform:rotate(0)}25%{transform:rotate(-28deg)}
-    75%{transform:rotate(28deg)}}
-  /* 🌿 滚完索性整个翻过去，四脚朝天。!important 是防颠步那个动画抢回去 */
-  .cb .cy .cem.belly{transform:rotate(180deg) !important;animation:none !important;
-    transition:transform .42s cubic-bezier(.3,1.5,.4,1)}
+  /* 🌿 猫薄荷：晃两下 → 顺势翻过去 → 四脚朝天躺住 → 再翻回来。
+     三段各是一条 forwards 的动画，上一段停在哪儿、下一段就从哪儿起 ——
+     中间不回零，所以看不出接缝。
+     原先是「晃完停回 0 度，再拿 transition 猛地转 180」，那一下当然突兀。 */
+  .cb .cy .cem.roll{animation:catroll 1.55s cubic-bezier(.45,.05,.35,1) forwards}
+  @keyframes catroll{
+    0%{transform:rotate(0)}
+    14%{transform:rotate(-26deg)}
+    30%{transform:rotate(20deg)}
+    44%{transform:rotate(-16deg)}
+    56%{transform:rotate(34deg)}       /* 从这儿开始不再回摆，顺势往过翻 */
+    78%{transform:rotate(128deg)}
+    92%{transform:rotate(190deg)}      /* 翻过头一点，像真躺下去那样弹一下 */
+    100%{transform:rotate(180deg)}}
+  /* 躺住。!important 是防颠步那个动画抢回去 */
+  .cb .cy .cem.belly{transform:rotate(180deg) !important;animation:none !important}
+  /* 翻回来：接着往前转半圈，不倒着退回去。转满一圈跟 0 度是同一个样子，
+     所以摘掉这个 class 的那一瞬间也看不出跳 */
+  .cb .cy .cem.getup{animation:catgetup .85s cubic-bezier(.4,.05,.3,1) forwards}
+  @keyframes catgetup{0%{transform:rotate(180deg)}
+    72%{transform:rotate(348deg)}100%{transform:rotate(360deg)}}
   /* 摸一把：原地蹦一下 */
   .cb .cy .cem.pet{animation:catpet .5s ease}
   @keyframes catpet{0%,100%{transform:translateY(0)}32%{transform:translateY(-13px)}}
@@ -1721,7 +1737,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v72" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v73" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -3404,7 +3420,7 @@ function catOut(){
 // 玩到一半被打断（睡了、追激光去了、你把它拖走了），脸上那些记号得摘干净
 function catCalmFace(){
   const A = CA; if (!A) return;
-  A.el.em.classList.remove("stalk", "crouch", "roll", "belly", "look");
+  A.el.em.classList.remove("stalk", "crouch", "roll", "belly", "getup", "look");
 }
 function catStep(){
   const A = CA; if (!A || A.chasing || A.drag) return;
@@ -3740,24 +3756,29 @@ function catPlayHunt(round){
         });
       });
     });
-  }, true, A.cw * .62);
+  }, true, A.cw * 1.05);      // 停在整整一个身位开外，别贴上去
 }
 /* 🌿 herb：先在上头滚一身，滚完才嚼。回数扣在 catPlayEnd 里 */
 function catPlayHerb(){
   const A = CA; if (!A || !A.el.toy || A.drag) return catStep();
   catToToy(42, () => {
     if (!CA || CA !== A || !A.el.toy) return catStep();
-    A.el.em.classList.add("roll");                 // 先左右翻两个来回
+    /* 一段连着一段，中间不回零：晃 → 翻过去（roll 一条动画走完）
+       → 躺住（belly）→ 接着往前转半圈起身（getup）*/
+    A.el.em.classList.remove("belly", "getup");
+    A.el.em.classList.add("roll");
     catTell("herb");
-    catAfter(880, () => {
+    catAfter(1560, () => {                         // roll 那条动画正好走完
       if (!CA || CA !== A) return;
+      A.el.em.classList.add("belly");              // 躺住，接在 180 度上
       A.el.em.classList.remove("roll");
-      A.el.em.classList.add("belly");              // 然后整个躺过去，四脚朝天
-      catAfter(1200, () => {
+      catAfter(1100, () => {                       // 四脚朝天躺一会儿
         if (!CA || CA !== A) return;
         A.el.em.classList.remove("belly");
-        catAfter(320, () => {
+        A.el.em.classList.add("getup");            // 顺着再转半圈爬起来
+        catAfter(880, () => {
           if (!CA || CA !== A) return;
+          A.el.em.classList.remove("getup");
           catWhack(true);
           catAfter(560, () => catPlayEnd("herb"));
         });
