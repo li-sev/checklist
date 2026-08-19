@@ -412,6 +412,8 @@
   .cb .cy{position:absolute;inset:0;line-height:1;font-size:78px}   /* 兜底，实际逐个写在元素上 */
   .cb .cy>span{position:absolute;bottom:12%;left:0;display:block}
   .cb .cwk{transform:translateX(0);transition:transform 0s linear;will-change:transform}
+  /* 转身这一层：只管 scaleX，一百六十毫秒翻完，跟走多久没关系 */
+  .cb .cfl{display:inline-block;transform:scaleX(1);transition:transform .16s ease}
   .cb .cem{position:relative;display:inline-block;font-style:normal}
   .cb .cem>i{font-style:normal;display:inline-block}
   .cb .cem>.chd,.cb .cem>.cmd{display:none;font-size:.6em}
@@ -447,9 +449,11 @@
   @keyframes catcro{0%,100%{transform:scaleY(.88) translate(-2px,5px)}
     50%{transform:scaleY(.88) translate(2px,5px)}}
   /* 🌿 打滚：在猫薄荷上左右翻，三个来回 */
-  .cb .cy .cem.roll{animation:catroll .4s ease-in-out 3}
+  .cb .cy .cem.roll{animation:catroll .44s ease-in-out 2}
   @keyframes catroll{0%,100%{transform:rotate(0)}25%{transform:rotate(-28deg)}
     75%{transform:rotate(28deg)}}
+  /* 🌿 滚完索性躺过去，四脚朝天 */
+  .cb .cy .cem.belly{transform:rotate(178deg);transition:transform .42s cubic-bezier(.3,1.5,.4,1)}
   /* 摸一把：原地蹦一下 */
   .cb .cy .cem.pet{animation:catpet .5s ease}
   @keyframes catpet{0%,100%{transform:translateY(0)}32%{transform:translateY(-13px)}}
@@ -766,6 +770,7 @@
     .spark{display:none}
     /* 关了动效就别让它满院子跑：站住，该有的泡泡和碗还留着 */
     .cb .cwk,.cb .cem,.cb .cy .cz{animation:none}
+    .cb .cfl{transition:none}
   }
 
   /* 内务府 */
@@ -1715,7 +1720,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v70" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v71" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -3293,9 +3298,13 @@ function catScene(){
          + ` style="font-size:${px(.40)}">${pet.e}</span></span>`);
   if (c.f < .2) P.push(`<span class="cbw" style="font-size:${px(.44)}">🥣</span>`);
   // 只有猫自己吃胖了要变大 —— 字号挂在它这一层，不挂在院子上
-  P.push(`<span class="cwk" style="font-size:${catSize(c.f)}px"><span class="cem">`
+  /* 三层，各管各的：.cwk 管走到哪、.cfl 管脸朝哪、.cem 管扑打滚这些动作。
+     朝向原先跟位移写在同一个 transform 里 —— 走一段两秒的路，那个翻面
+     就跟着摊成两秒，猫会慢慢地「压扁再翻过来」。拆出来给它自己一条
+     一百六十毫秒的 transition，才是转身该有的利索劲儿。 */
+  P.push(`<span class="cwk" style="font-size:${catSize(c.f)}px"><span class="cfl"><span class="cem">`
        + `<i class="cbd">🐈</i><i class="chd">${CATHEAD}</i><i class="cmd">${CATMADFACE}</i>`
-       + `<span class="cz" hidden>💤</span></span></span>`);
+       + `<span class="cz" hidden>💤</span></span></span></span>`);
   if (pet.laser) P.push(`<span class="clz"></span>`);
   return `<div class="cy">${P.join("")}</div>`;
 }
@@ -3314,8 +3323,12 @@ function catAfter(ms, fn){
 /* 猫这一刻该长什么样：横着到哪、前后到哪、脸朝哪边、躺窝里抬多高。
    y 是院子的进深 —— 负的靠里、正的靠外，跟横坐标一样是真坐标，
    激光、拖玩具、随便溜达都在这个平面上走 */
-const catXf = A => `translate(${Math.round(A.x)}px,${Math.round(A.y - (A.lift || 0))}px)`
-                 + ` scaleX(${A.dir})`;
+const catXf = A => `translate(${Math.round(A.x)}px,${Math.round(A.y - (A.lift || 0))}px)`;
+// 脸朝哪边。单独一层、单独一条短 transition —— 转身就该是一下的事
+function catFlip(){
+  const A = CA; if (!A || !A.el.fl) return;
+  A.el.fl.style.transform = `scaleX(${A.dir})`;
+}
 /* 迈步那一颠的快慢。只在真变了的时候写 ——
    animation-duration 每帧重写一次，CSS 动画就从头起算，看着就是一闪一闪的。
    手机上 pointermove 一秒能来一百多次，拖玩具的时候闪得最凶，病根就在这儿。 */
@@ -3338,8 +3351,7 @@ function catDepth(){
 function catFace(d){
   const A = CA; if (!A) return;
   A.dir = d;
-  A.el.wk.style.transitionDuration = "0s";
-  A.el.wk.style.transform = catXf(A);
+  catFlip();                                      // 只翻脸，不动位置
 }
 // 走到 (tx,ty)，速度 px/秒。苹果那只猫脸朝左，往右走要 scaleX(-1) 翻过来
 /* face 给了就照它摆，不给才按走的方向摆。
@@ -3356,6 +3368,7 @@ function catMove(tx, ty, sp, then, face){
   A.el.cy.classList.toggle("go", t > 0);
   A.el.wk.style.transitionDuration = t + "s";
   A.el.wk.style.transform = catXf(A);
+  catFlip();
   catDepth();
   catAfter(t * 1000 + 50, then || catStep);
 }
@@ -3385,7 +3398,7 @@ function catOut(){
 // 玩到一半被打断（睡了、追激光去了、你把它拖走了），脸上那些记号得摘干净
 function catCalmFace(){
   const A = CA; if (!A) return;
-  A.el.em.classList.remove("stalk", "crouch", "roll", "look");
+  A.el.em.classList.remove("stalk", "crouch", "roll", "belly", "look");
 }
 function catStep(){
   const A = CA; if (!A || A.chasing || A.drag) return;
@@ -3471,6 +3484,7 @@ function catSleep(doze, brief){
       }
       A.el.wk.style.transitionDuration = ".3s";
       A.el.wk.style.transform = catXf(A);
+      catFlip();
       catDepth();
       catAfter(320, lie);
     });
@@ -3490,6 +3504,7 @@ function catWake(self){
   catOut();
   A.el.wk.style.transitionDuration = ".3s";
   A.el.wk.style.transform = catXf(A);
+  catFlip();
   catFlash("yawn", 800);
   if (!self) toast(`${catName()}总算睁了眼，冲你哈了一口气。`);
   catTell("walk");
@@ -3506,12 +3521,16 @@ function catWake(self){
       站位点落在身后，它往回挪一小步，脸也跟着朝后，看上去就是倒退着蹭过去。
    ② 站位点也不许落在「离玩具更远」的一侧：已经够近了就地不动，
       原地转身扑，别先退一步再扑。
-   stalk = 潜行：压低身子、慢慢挪、不迈那一颠的步子。 */
-function catToToy(sp, then, stalk){
+   stalk = 潜行：压低身子、慢慢挪、不迈那一颠的步子。
+   gap   = 停在正位再往外让开这么多。潜行要用 —— 贴上去就没得扑了。 */
+function catToToy(sp, then, stalk, gap){
   const A = CA; if (!A || !A.el.toy) return catStep();
   const fromLeft = A.x + A.cw / 2 <= A.toyX + A.toyW / 2;
   const face = fromLeft ? -1 : 1;
+  /* 正位：脑袋刚好搭在玩具上。往前多走一步，玩具就跑到肚子底下、
+     甚至屁股后头去了 —— 抓老鼠那一下原先就是这么歪的 */
   let stand = fromLeft ? A.toyX - A.cw + A.toyW * .55 : A.toyX + A.toyW * .45;
+  if (gap) stand += fromLeft ? -gap : gap;
   if (fromLeft ? stand < A.x : stand > A.x) stand = A.x;
   A.playSide = face;
   A.el.em.classList.toggle("stalk", !!stalk);
@@ -3680,14 +3699,18 @@ function catPlayHunt(round){
   round = round || 0;
   if (round >= 2) return catPlayEnd("hunt");
   if (!round) toast(`${catName()}压低身子，一寸一寸挪过去 —— 捉老鼠是有讲究的。`);
-  catToToy(24, () => {                             // 一、潜行：慢到平常的六成，一寸一寸挪
+  /* 一、潜行：慢到平常的六成，而且停在**一个身位开外**，不贴上去。
+     留出这段距离，第三步那一窜才有得窜 */
+  catToToy(24, () => {
     if (!CA || CA !== A || !A.el.toy) return catStep();
     A.el.em.classList.add("crouch");               // 二、蓄势：屁股左右晃
     catAfter(700, () => {
       if (!CA || CA !== A || !A.el.toy) return catStep();
       A.el.em.classList.remove("crouch", "stalk");
-      const to = A.playSide === -1 ? A.x + A.cw * .3 : A.x - A.cw * .3;
-      catMove(to, A.toyY, 220, () => {             // 三、突袭：冲刺半个身位
+      /* 三、突袭：从一个身位开外窜到正位 —— 正位就是脑袋搭在老鼠上，
+         不再多走。原先是在正位基础上又往前顶 .3 个身位，
+         老鼠就被顶到肚子底下、看着像在屁股后头 */
+      catToToy(220, () => {
         if (!CA || CA !== A || !A.el.toy) return catStep();
         catWhack(true);
         // 四、叼回窝。没窝就随便撂
@@ -3703,22 +3726,30 @@ function catPlayHunt(round){
             });
           catAfter(300, () => catPlayHunt(round + 1));
         });
-      }, A.playSide);
+      });
     });
-  }, true);
+  }, true, A.cw * .62);
 }
 /* 🌿 herb：先在上头滚一身，滚完才嚼。回数扣在 catPlayEnd 里 */
 function catPlayHerb(){
   const A = CA; if (!A || !A.el.toy || A.drag) return catStep();
   catToToy(42, () => {
     if (!CA || CA !== A || !A.el.toy) return catStep();
-    A.el.em.classList.add("roll");                 // 打滚一秒二
+    A.el.em.classList.add("roll");                 // 先左右翻两个来回
     catTell("herb");
-    catAfter(1250, () => {
+    catAfter(880, () => {
       if (!CA || CA !== A) return;
       A.el.em.classList.remove("roll");
-      catWhack(true);
-      catAfter(560, () => catPlayEnd("herb"));
+      A.el.em.classList.add("belly");              // 然后整个躺过去，四脚朝天
+      catAfter(1200, () => {
+        if (!CA || CA !== A) return;
+        A.el.em.classList.remove("belly");
+        catAfter(320, () => {
+          if (!CA || CA !== A) return;
+          catWhack(true);
+          catAfter(560, () => catPlayEnd("herb"));
+        });
+      });
     });
   });
 }
@@ -3771,6 +3802,7 @@ function catMad(){
     catOut();                                      // 从窝里下来
     A.el.wk.style.transitionDuration = ".3s";
     A.el.wk.style.transform = catXf(A);
+    catFlip();
     /* 打算干嘛先说一声 —— 三条路都有交代，不然它突然窜起来没头没脑 */
     const r = Math.random(), n = catName(), nm = (PETS[G().catpet] || {}).n || "玩具";
     if (A.el.toy && r < .34) return catAfter(360, () => {
@@ -3898,6 +3930,7 @@ function catChase(px, py, force){
   // 猫不是激光制导的：慢慢挪过去，够得着就行
   A.el.wk.style.transitionDuration = clamp(d / 105, .3, 1.6) + "s";
   A.el.wk.style.transform = catXf(A);
+  catFlip();
   catDepth();
 }
 /* 屏幕上的纵坐标 → 院子里的进深。
@@ -4003,12 +4036,18 @@ function catHalt(){
   if (CA) clearTimeout(CA.timer);
   CA = null;
 }
+/* 开场那一下别转：先把 transition 关掉摆正，下一帧再放开 */
+const catFlipInit = A => { if (!A.el.fl) return;
+  A.el.fl.style.transition = "none";
+  A.el.fl.style.transform = `scaleX(${A.dir})`;
+  setTimeout(() => { if (A.el.fl) A.el.fl.style.transition = ""; }, 30); };
 function catStart(){
   catHalt();
   const y = $("#ctArt"), cy = y.querySelector(".cy");
   if (!cy || catCalm()) return;                   // 关了动效：静态摆着就完
   const A = {
-    el:{y, cy, wk:cy.querySelector(".cwk"), em:cy.querySelector(".cem"),
+    el:{y, cy, wk:cy.querySelector(".cwk"), fl:cy.querySelector(".cfl"),
+        em:cy.querySelector(".cem"),
         z:cy.querySelector(".cz"), bed:cy.querySelector(".cbed"),
         toyw:cy.querySelector(".ctoyw"), toy:cy.querySelector(".ctoy"),
         bowl:cy.querySelector(".cbw"), lz:cy.querySelector(".clz")},
@@ -4041,6 +4080,7 @@ function catStart(){
   put(A.el.bed, A.bedX, A.bedY); put(A.el.toyw, A.toyX, A.toyY); put(A.el.bowl, A.bowlX, 0);
   A.x = (A.W - A.cw) / 2;
   put(A.el.wk, A.x, 0);
+  catFlipInit(A);
   CA = A;
   catDepth();
   catAfter(420, catStep);
