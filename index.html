@@ -414,10 +414,15 @@
   .cb .cwk{transform:translateX(0);transition:transform 0s linear;will-change:transform}
   .cb .cem{position:relative;display:inline-block;font-style:normal}
   .cb .cem>i{font-style:normal;display:inline-block}
-  .cb .cem>.chd{display:none;font-size:.6em}
+  .cb .cem>.chd,.cb .cem>.cmd{display:none;font-size:.6em}
   /* 钻进窝里睡着了：整只收成一个脑袋，下巴搭在窝沿上 */
   .cb .cy.head .cem>.cbd{display:none}
   .cb .cy.head .cem>.chd{display:inline-block}
+  /* 翻脸：这一张压过上头两种，气头上不管它是整只还是一个脑袋 */
+  .cb .cy.mad .cem>.cbd,.cb .cy.mad .cem>.chd{display:none}
+  .cb .cy.mad .cem>.cmd{display:inline-block;animation:catmad .5s ease-in-out 3}
+  @keyframes catmad{0%,100%{transform:rotate(0)}30%{transform:rotate(-7deg)}70%{transform:rotate(7deg)}}
+  .cb .cy .ctoyw.kick{z-index:6}                  /* 踢飞的那一下压在最上头 */
   .cb .cy.go .cem{animation:catbob var(--cbob,.5s) ease-in-out infinite}   /* 走着才颠 */
   @keyframes catbob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
   /* 睡着：一起一伏地喘气 */
@@ -1575,16 +1580,14 @@
   <div class="ctoys pick" id="ctBuy"></div>
   <p class="cnote">摸一把它会应你；睡着了得戳几下才醒。拍一下窝叫它回去躺 ——
     不困的话它只肯眯一秒。玩具能拖着走，撂在哪儿它扑到哪儿。<br>
-    它不会死。喂不上就瘦着、守着空碗等你回来。<br>
-    批折子挣鱼干，喂不喂你说了算 —— 折子撤回，鱼干也照退。<br>
-    存档、驿传都带着它走 —— 换个机子它还在。</p>
+    它不会死。喂不上就瘦着、守着空碗等你回来。</p>
   </div>
   <div class="cpane" data-cp="box">
     <p class="csay" id="ctBoxSay"></p>
     <div class="cbox" id="ctToys"></div>
     <p class="cnote">御猫在外头捡的零碎。一天至多叼一样回来，
       撂在你案头右下角 —— 点一下才算收进匣里，不收它就不再叼新的。<br>
-      匣里的东西点一下，它告诉你这是打哪儿来的。八样收齐，它就不出门了。<br>
+      匣里的东西点一下，它告诉你这是打哪儿来的。十六样收齐，它就不出门了。<br>
       这些买不着，只能等它自己带回来。</p>
   </div>
   <div class="btns">
@@ -1682,7 +1685,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v67" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v68" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -2472,7 +2475,12 @@ const bedIn = b => (b && b.in) || {bw:.62, front:0, lift:0};
    用的是落印特效「猫爪」那一只，全篇同一张脸。
    hs 是脑袋多大、sit 是下巴落在窝高的几成处 ——
    这两个数是拿系统字体把猫和窝渲出来对着挑的。 */
-const CATHEAD = "🐱", CATHS = .60, CATSIT = .68;
+const CATHEAD = "🐱", CATMADFACE = "😾", CATHS = .60, CATSIT = .68;
+// 吵醒它太多回，它要翻脸的。翻几回脸算多，每开一场现掷三到五
+const CATMAD = ["你把它吵醒第几回了？它瞪着你，耳朵压平了。",
+                "它翻脸了 —— 尾巴一甩，扭头就走。",
+                "再吵下去它是真恼了。看它那张脸。",
+                "它冲你「哈」了一声。这回不是撒娇。"];
 const CATHOT = ["离炭盆远着点 —— 再蹭就成碳咪了。", "它凑近炭盆闻了闻，胡子差点燎了。",
                 "炭盆是烤火的，不是睡的。"];
 const PETS = {
@@ -3041,6 +3049,14 @@ const CATTOY = [
   {id:"chan",e:"🦗", n:"蝉蜕",     d:"完完整整一个空壳，它叼回来时没敢咬碎"},
   {id:"gui", e:"🌼", n:"一穗桂花", d:"香得很，隔天就蔫了，它还守着"},
   {id:"ling",e:"🔔", n:"小铜铃",   d:"不是它项上那个。哪儿来的问不出来"},
+  {id:"ling2",e:"🪶", n:"一根翎毛", d:"不知谁帽子上掉的。它叼进来时头还歪着"},
+  {id:"luo", e:"🐚", n:"海螺壳",   d:"离海八百里。这东西打哪儿来的，问不出来"},
+  {id:"zhu", e:"🕯", n:"一截烛头", d:"烧剩下这么一小截，蜡泪还挂在上头"},
+  {id:"kuai",e:"🥢", n:"一双筷子", d:"整整齐齐一双，不知从哪张桌上顺来的"},
+  {id:"xiang2",e:"🌰",n:"一颗橡实", d:"硬得咬不动。它试过，牙印还在"},
+  {id:"zhen",e:"🪡", n:"引线针",   d:"你找了三天那根。线还穿着，没断"},
+  {id:"feng",e:"🍁", n:"半片枫叶", d:"红得发黑，脆得一碰就碎，它衔得极轻"},
+  {id:"hong",e:"🧧", n:"一个红封", d:"空的。里头原本装什么，它不说"},
 ];
 const CATPUR = ["它眯了眯眼。", "呼噜声起来了。", "尾巴尖动了一下。",
                 "它把头往你手里蹭。", "它翻了个身，肚皮朝上。", "它拿爪子按了按你的手。"];
@@ -3122,6 +3138,7 @@ function catSay(act){
     return act === "lie" ? `${how}，眼睛却还睁着 —— 它不困。`
                          : `${how}睡着了。戳戳看叫不叫得醒。`;
   }
+  if (act === "mad")   return `${n}被你吵毛了。耳朵压平，尾巴一下一下地抽。`;
   if (act === "zoom")  return `${n}疯了。满案子乱窜，谁也拦不住。`;
   if (act === "chase") return `那点红光一晃，${n}眼睛就直了。`;
   if (act === "play")  return `${n}盯上了${pet.n}，屁股一撅。`;
@@ -3207,7 +3224,7 @@ function catScene(){
   if (c.f < .2) P.push(`<span class="cbw" style="font-size:${px(.44)}">🥣</span>`);
   // 只有猫自己吃胖了要变大 —— 字号挂在它这一层，不挂在院子上
   P.push(`<span class="cwk" style="font-size:${catSize(c.f)}px"><span class="cem">`
-       + `<i class="cbd">🐈</i><i class="chd">${CATHEAD}</i>`
+       + `<i class="cbd">🐈</i><i class="chd">${CATHEAD}</i><i class="cmd">${CATMADFACE}</i>`
        + `<span class="cz" hidden>💤</span></span></span>`);
   if (pet.laser) P.push(`<span class="clz"></span>`);
   return `<div class="cy">${P.join("")}</div>`;
@@ -3389,6 +3406,8 @@ function catSleep(doze, brief){
 function catWake(self){
   const A = CA; if (!A) return;
   A.legs = 0; A.wake = 0;
+  // 你亲手吵醒的才记账；自己睡饱了醒的不算
+  if (!self && ++A.wakes >= A.angryAt) return catMad();
   A.el.cy.classList.remove("zz");
   A.el.z.hidden = true;
   // 先从窝里站起来（抬高归零、窝退回后头），再伸懒腰
@@ -3472,6 +3491,63 @@ function catCarry(){
     catAfter(760, catStep);
   });
 }
+/* 翻脸。吵醒太多回，它先摆一张生气脸给你看，
+   然后从窝里下来 —— 或者绕着院子跑两圈，或者拿玩具出气，
+   或者干脆一脚把玩具踢出院子（踢出去就看不见了，去玩具那一架点一下才捡得回来）。 */
+function catMad(){
+  const A = CA; if (!A) return;
+  A.wakes = 0;
+  A.angryAt = 3 + Math.floor(Math.random() * 3);   // 下回再掷一遍，你摸不准它的脾气
+  A.el.cy.classList.remove("zz");
+  A.el.z.hidden = true;
+  A.el.cy.classList.add("mad");
+  A.el.cy.classList.remove("go");
+  clearTimeout(A.timer);
+  toast(CATMAD[Math.floor(Math.random() * CATMAD.length)]);
+  catTell("mad");
+  catAfter(1600, () => {
+    if (!CA || CA !== A) return;
+    A.el.cy.classList.remove("mad");
+    catOut();                                      // 从窝里下来
+    A.el.wk.style.transitionDuration = ".3s";
+    A.el.wk.style.transform = catXf(A);
+    const r = Math.random();
+    if (A.el.toy && r < .34) return catAfter(360, catKick);
+    if (A.el.toy && r < .67) return catAfter(360, catPlay);
+    catAfter(360, () => catLaps(2));
+  });
+}
+// 绕着院子来回跑两圈出气
+function catLaps(n){
+  const A = CA; if (!A) return;
+  if (n <= 0) return catAfter(500, catStep);
+  const far = A.x < A.W / 2 ? A.W - A.cw - A.pad : A.pad;
+  catMove(far, A.yLo + Math.random() * (A.yHi - A.yLo), 150, () => catLaps(n - 1));
+}
+/* 一脚把玩具踢出院子。踢出去就看不见了 ——
+   到玩具那一架上点一下（等于重新摆一次），它才回到院子里 */
+function catKick(){
+  const A = CA; if (!A || !A.el.toy || !A.el.toyw) return catStep();
+  const fromLeft = A.x + A.cw / 2 <= A.toyX + A.toyW / 2;
+  const face = fromLeft ? -1 : 1;
+  let stand = fromLeft ? A.toyX - A.cw + A.toyW * .55 : A.toyX + A.toyW * .45;
+  if (fromLeft ? stand < A.x : stand > A.x) stand = A.x;
+  catMove(stand, A.toyY, 90, () => {
+    if (!CA || CA !== A || !A.el.toyw) return catStep();
+    catFace(face);
+    catFlash("pounce", 420);
+    const tw = A.el.toyw, nm = (PETS[G().catpet] || {}).n || "玩具";
+    tw.classList.add("kick");
+    tw.style.transitionDuration = ".55s";
+    tw.style.transform = `translate(${Math.round(fromLeft ? A.W + 110 : -(A.toyW + 110))}px,`
+                       + `${-Math.round(A.H * .55)}px) rotate(720deg)`;
+    setTimeout(() => { if (CA === A && tw) tw.hidden = true; }, 620);
+    A.kicked = 1; A.el.toy = null;                 // 行为机从此当它没有玩具
+    toast(`${catName()}一脚把${nm}踢出了案子 —— 到玩具那一架点一下，才捡得回来。`);
+    catAfter(1000, catStep);
+  }, face);
+}
+
 /* 拍一下窝，叫它回去躺着。
    真困（到了睡的点、或者今天一件没批）就睡下，要戳才醒；
    一点都不困的话它也回去躺一下 —— 但只肯眯一秒，翻身就跳出来。 */
@@ -3594,7 +3670,14 @@ function catDragStart(e, tw){
   A.drag = 1; A.moved = 0;
   tw.classList.add("drag");
   try{ A.el.y.setPointerCapture(e.pointerId); }catch(_){}
-  catTell("chase");
+  if (!A.el.cy.classList.contains("zz")) catTell("chase");   // 睡着就别惊动它
+}
+/* 玩具这会儿是不是正压在它身上 */
+function catToyOn(){
+  const A = CA; if (!A || !A.el.toyw) return false;
+  const cw = A.el.cy.classList.contains("head") ? (A.headW || A.cw) : A.cw;
+  const dy = Math.abs(A.toyY - (A.y - (A.lift || 0)));
+  return A.toyX + A.toyW > A.x && A.toyX < A.x + cw && dy < Math.max(32, A.cw * .55);
 }
 function catDragTo(cx, cy){
   const A = CA; if (!A || !A.drag || !A.el.toyw) return;
@@ -3604,6 +3687,12 @@ function catDragTo(cx, cy){
   A.toyY = catDepthOf(A, cy - r.top);
   // 拖着的时候 .drag 已经把 transition 关了，不必每帧再写一遍时长
   A.el.toyw.style.transform = `translate(${Math.round(A.toyX)}px,${Math.round(A.toyY)}px)`;
+  /* 睡着的时候你在旁边怎么晃它都不理 —— 猫就是这样。
+     非得把玩具怼到它身上，才肯睁眼 */
+  if (A.el.cy.classList.contains("zz")){
+    if (catToyOn()) catWake(false);
+    return;
+  }
   catChase(A.toyX + A.toyW / 2, A.toyY);          // 猫追着你手上那样东西
 }
 function catDragEnd(){
@@ -3615,6 +3704,8 @@ function catDragEnd(){
   }
   A.noClick = 1;                                  // 拖完手一松，那一下不算戳猫
   setTimeout(() => { if (CA === A) A.noClick = 0; }, 260);
+  // 睡着的没被吵醒，就让它接着睡，别硬把它拽起来扑
+  if (A.el.cy.classList.contains("zz")){ A.chasing = 0; return; }
   catChaseEnd(A.moved ? catPlay : catStep);       // 撂下就扑上去
 }
 /* 开场：量一遍院子，把东西摆好，行为机跑起来。
@@ -3633,7 +3724,8 @@ function catStart(){
         toyw:cy.querySelector(".ctoyw"), toy:cy.querySelector(".ctoy"),
         bowl:cy.querySelector(".cbw"), lz:cy.querySelector(".clz")},
     x:0, y:0, dir:1, lift:0, inBed:0, headW:0, bob:0, reT:0, zoom:0, legs:0, wake:0, poked:0,
-    laserOn:0, chasing:0, drag:0, moved:0, noClick:0, lzX:null, lzY:null,
+    laserOn:0, chasing:0, drag:0, moved:0, noClick:0, lzX:null, lzY:null, kicked:0,
+    wakes:0, angryAt:3 + Math.floor(Math.random() * 3),   // 吵醒三到五回它就翻脸
     timer:null, act:"walk", pad:6,
   };
   A.W = y.clientWidth || 260;
@@ -4334,7 +4426,7 @@ function paintCat(gift){
   const dp = CATTOY.find(x => x.id === c.drop);
   $("#ctBoxSay").textContent =
     dp ? `${catName()}今天叼了${dp.n}回来，撂在你案头 —— 去点一下收起来。`
-       : c.toys.length >= CATTOY.length ? "八样收齐了。它不再往外跑，就在案上看你。"
+       : c.toys.length >= CATTOY.length ? "十六样收齐了。它不再往外跑，就在案上看你。"
        : `已收 ${c.toys.length} 样，还差 ${CATTOY.length - c.toys.length} 样。它一天至多叼一样。`;
   /* 猫窝和玩具这两架就地能点：买过的点一下换上，没买的点一下就地出库
      （走的还是内务府那一套 pickWare，问一句、扣银子、记治绩，一样不少） */
@@ -5139,7 +5231,10 @@ async function pickWare(b){
   sweep();                                        // 添置、置齐、用上玉玺，各算一件治绩
   paintPurse(); paintShop(); save(true);
   if (kind === "seal") render();                  // 印章换了，每一条的印都要重画
-  if (CATKIT[kind]) paintCat(null);               // 换了窝或玩具，院子要重摆
+  /* 换了窝或玩具，院子要重摆。这儿把场子的记号清掉再画 ——
+     不清的话，点的要是「眼下已经摆着的那一样」，键没变就不重搭，
+     被踢出院子的玩具也就捡不回来了 */
+  if (CATKIT[kind]){ catKey = ""; paintCat(null); }
 }
 mask6.addEventListener("click", e => {
   const b = e.target.closest("[data-buy]"); if (b) pickWare(b);
