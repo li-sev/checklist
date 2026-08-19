@@ -1685,7 +1685,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v68" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v69" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -2483,12 +2483,15 @@ const CATMAD = ["你把它吵醒第几回了？它瞪着你，耳朵压平了。
                 "它冲你「哈」了一声。这回不是撒娇。"];
 const CATHOT = ["离炭盆远着点 —— 再蹭就成碳咪了。", "它凑近炭盆闻了闻，胡子差点燎了。",
                 "炭盆是烤火的，不是睡的。"];
+/* carry = 拍完之后叼起来换个地方撂下的概率，不写就是三成。
+   猫对不同东西的玩法本来就不一样：老鼠是猎物，要叼来叼去；
+   毛线团、绸带是拿爪子拨的；逗猫棒连着杆子，叼不走。 */
 const PETS = {
   pet_no:   {n:"不摆",   p:0,   e:"",   pv:"x-em"},
-  pet_qiu:  {n:"毛线团", p:30,  e:"🧶", pv:"x-em"},
-  pet_dai:  {n:"绸带结", p:35,  e:"🎀", pv:"x-em"},
-  pet_bang: {n:"逗猫棒", p:50,  e:"🎣", pv:"x-em"},
-  pet_shu:  {n:"木鼠",   p:60,  e:"🐭", pv:"x-em"},
+  pet_qiu:  {n:"毛线团", p:30,  e:"🧶", pv:"x-em", carry:.22},
+  pet_dai:  {n:"绸带结", p:35,  e:"🎀", pv:"x-em", carry:.3},
+  pet_bang: {n:"逗猫棒", p:50,  e:"🎣", pv:"x-em", carry:.06},
+  pet_shu:  {n:"木鼠",   p:60,  e:"🐭", pv:"x-em", carry:.8},
   // 这一样是嚼得掉的：拍三回就吃光，吃完发疯三秒。便宜，因为要回头再买
   pet_he:   {n:"猫薄荷", p:10,  e:"🌿", pv:"x-em", eat:3},
   // 这一样不摆在地上：摆上之后鼠标进了院子就成一颗红点，猫追着红点跑
@@ -3068,6 +3071,7 @@ const CATZZZ = ["它耳朵抖了一下。没醒。",
                 "它把爪子搭到脸上 —— 别吵。",
                 "它咂了咂嘴，梦见什么好东西了。",
                 "你已经戳到第六下了。它是真睡熟了，不是装的。"];
+const CATKICKP = .05;   // 平常玩耍时，一脚把玩具踢出案子的概率
 const CATPLAY = ["一爪拍飞了，自己愣了一下。", "扑空一次，第二爪按住了。",
                  "拍着拍着滚到一边去了。", "咬了两口，觉得没味道，松开了。",
                  "拍完抬头看你，像是在邀功。"];
@@ -3460,7 +3464,10 @@ function catPlay(){
         c.hb = Math.max(0, (c.hb || 0) - 1);
         if (c.hb <= 0) return catEatUp();
       }
-      if (Math.random() < .32) return catAfter(720, catCarry);
+      // 玩着玩着有一小成的概率手一重，直接踢出案子去
+      if (Math.random() < CATKICKP) return catAfter(700, catKick);
+      // 叼不叼得看是什么东西：老鼠是猎物，叼来叼去；逗猫棒连着杆，叼不走
+      if (Math.random() < (pv.carry == null ? .32 : pv.carry)) return catAfter(720, catCarry);
       toast(catName() + CATPLAY[Math.floor(Math.random() * CATPLAY.length)]);
       catAfter(950, catStep);
     };
@@ -3511,10 +3518,20 @@ function catMad(){
     catOut();                                      // 从窝里下来
     A.el.wk.style.transitionDuration = ".3s";
     A.el.wk.style.transform = catXf(A);
-    const r = Math.random();
-    if (A.el.toy && r < .34) return catAfter(360, catKick);
-    if (A.el.toy && r < .67) return catAfter(360, catPlay);
-    catAfter(360, () => catLaps(2));
+    /* 打算干嘛先说一声 —— 三条路都有交代，不然它突然窜起来没头没脑 */
+    const r = Math.random(), n = catName(), nm = (PETS[G().catpet] || {}).n || "玩具";
+    if (A.el.toy && r < .34) return catAfter(360, () => {
+      toast(`${n}谁也不理，直奔${nm}去了。这回不是玩。`);
+      catKick();
+    });
+    if (A.el.toy && r < .67) return catAfter(360, () => {
+      toast(`${n}扭头去拍${nm}，拿它出气。`);
+      catPlay();
+    });
+    catAfter(360, () => {
+      toast(`${n}绕着案子跑起来了 —— 跑两圈，消消气。`);
+      catLaps(2);
+    });
   });
 }
 // 绕着院子来回跑两圈出气
