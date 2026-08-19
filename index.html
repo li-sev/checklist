@@ -1682,7 +1682,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v66" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v67" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -3255,12 +3255,15 @@ function catFace(d){
   A.el.wk.style.transform = catXf(A);
 }
 // 走到 (tx,ty)，速度 px/秒。苹果那只猫脸朝左，往右走要 scaleX(-1) 翻过来
-function catMove(tx, ty, sp, then){
+/* face 给了就照它摆，不给才按走的方向摆。
+   去扑玩具那一路要的就是这个 —— 脸得冲着玩具，不能跟着脚走 */
+function catMove(tx, ty, sp, then, face){
   const A = CA; if (!A) return;
   tx = clamp(tx, A.pad, Math.max(A.pad, A.W - A.cw - A.pad));
   ty = clamp(ty, A.yLo, A.yHi);
   const d = Math.hypot(tx - A.x, ty - A.y), t = d < 1 ? 0 : d / sp;
-  if (Math.abs(tx - A.x) > 1) A.dir = tx > A.x ? -1 : 1;
+  if (face != null) A.dir = face;
+  else if (Math.abs(tx - A.x) > 1) A.dir = tx > A.x ? -1 : 1;
   A.x = tx; A.y = ty;
   catBob(sp > 200 ? .17 : sp > 50 ? .32 : .5);   // 疯跑 / 快走 / 溜达
   A.el.cy.classList.toggle("go", t > 0);
@@ -3404,14 +3407,20 @@ function catPlay(){
   A.legs = 0;
   catOut();
   catTell("play");
-  /* 站哪一边看它眼下在哪一边 —— 原先一律绕到玩具左边去，
-     猫在右边时就得先扭头往左走、从玩具跟前过去、再回身，
-     一路上是背对着玩具的。就近站，来的路上就一直朝着它 */
+  /* 就近站：在玩具左边就站左边（脸朝右），在右边就站右边（脸朝左）。
+     两件事要分开办 ——
+     ① 朝向不跟着脚走，整段路都锁死冲着玩具。跟着脚走的话，
+        凑得太近时站位点落在身后，它往回挪一小步，脸也跟着朝后，
+        看上去就是倒退着蹭过去的。
+     ② 站位点也不许落在「离玩具更远」的一侧：已经够近了就地不动，
+        原地转身扑，别先退一步再扑。 */
   const fromLeft = A.x + A.cw / 2 <= A.toyX + A.toyW / 2;
-  const stand = fromLeft ? A.toyX - A.cw + A.toyW * .55 : A.toyX + A.toyW * .45;
-  A.playSide = fromLeft ? -1 : 1;
+  const face = fromLeft ? -1 : 1;                 // -1 脸朝右，1 脸朝左
+  let stand = fromLeft ? A.toyX - A.cw + A.toyW * .55 : A.toyX + A.toyW * .45;
+  if (fromLeft ? stand < A.x : stand > A.x) stand = A.x;   // 够近了就别往回退
+  A.playSide = face;
   catMove(stand, A.toyY, 40, () => {              // 不慌，慢慢踱过去
-    catFace(A.playSide);                          // 站定，正对着玩具
+    catFace(A.playSide);                          // 站定，仍旧正对着玩具
     A.el.cy.classList.remove("go");
     let n = 1 + Math.floor(Math.random() * 3);
     const hit = () => {
@@ -3437,7 +3446,7 @@ function catPlay(){
       catAfter(950, catStep);
     };
     catAfter(340, hit);
-  });
+  }, face);                                       // ← 整段路锁死这个朝向
 }
 /* 叼着走两步，换个地方撂下。
    办法是把玩具整个搬进猫那个元素（.cem）里去 —— 从此它就是猫身上的一块，
