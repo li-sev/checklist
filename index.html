@@ -317,7 +317,10 @@
   .purse.bkp .bk{color:var(--accent);font-weight:700;letter-spacing:3px}
   /* ── 御猫那块牌 ── */
   .purse.ctp{margin-left:7px}
-  .purse.ctp .ct{color:var(--ink);font-weight:700;letter-spacing:3px}
+  /* 牌面在「御猫」和「御猫饿」之间换，两字三字宽度差一截 ——
+     猫一饿这格就撑开，旁边整排跟着挪。先占死三个字的宽，居中放 */
+  .purse.ctp .ct{color:var(--ink);font-weight:700;letter-spacing:3px;
+    min-width:5.3em;justify-content:center}
   .purse.ctp.hungry .ct{color:var(--accent)}   /* 饿着 */
   .purse.ctp.hungry .dot{display:block;background:var(--accent)}
   /* 加赏用金字，不铺底色 —— 铺了得另配一个前景色，深浅两套纸都不好配 */
@@ -458,6 +461,10 @@
   @keyframes cthit{0%{transform:translate(0,0) rotate(0)}
     40%{transform:translate(.62em,-1.55em) rotate(140deg)}
     100%{transform:translate(0,0) rotate(360deg)}}
+  .cb .cy .ctoy.hit.rev{animation-name:cthitl}    /* 猫从右边拍的，往左飞 */
+  @keyframes cthitl{0%{transform:translate(0,0) rotate(0)}
+    40%{transform:translate(-.62em,-1.55em) rotate(-140deg)}
+    100%{transform:translate(0,0) rotate(-360deg)}}
   /* 叼在嘴里：整个塞进猫那个元素里去，位置就再也不用对了 ——
      猫走它跟着走，猫掉头它跟着翻，一格都不会错。嘴在脑袋那头，猫脸朝左，
      所以贴着左边、压到脸下沿 */
@@ -524,12 +531,14 @@
     padding:2px 0;outline:none}
   .cb .cnm input:focus{border-bottom-color:var(--accent)}
   .cb .cnm span{font-size:12px;letter-spacing:2px;color:var(--dim)}
-  .cb .csay{margin:0 0 10px;font-size:13.5px;line-height:1.95;letter-spacing:.5px;
+  /* 这两行的字数随心气儿变（「圆得快滚了」比「偏瘦」长一截），
+     不占死行数的话，猫一胖一瘦整块面板就上下跳 */
+  .cb .csay{min-height:3.9em;margin:0 0 10px;font-size:13.5px;line-height:1.95;letter-spacing:.5px;
     color:var(--ink);text-align:center}
   .cb .cbar{height:7px;border-radius:4px;background:var(--card);
     border:1px solid var(--line);overflow:hidden}
   .cb .cbar i{display:block;height:100%;background:var(--gold);transition:width .5s ease}
-  .cb .cmeta{margin:5px 0 0;font-size:11.5px;line-height:1.8;letter-spacing:.5px;
+  .cb .cmeta{min-height:3.6em;margin:5px 0 0;font-size:11.5px;line-height:1.8;letter-spacing:.5px;
     color:var(--dim);text-align:center}
   .cb .cgift{margin:10px 0 0;padding:8px 12px;border-left:3px solid var(--gold);
     background:var(--card);font-size:12.5px;line-height:1.9;letter-spacing:.5px;color:var(--ink)}
@@ -1672,7 +1681,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v64" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v65" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -3384,16 +3393,25 @@ function catPlay(){
   A.legs = 0;
   catOut();
   catTell("play");
-  catMove(A.toyX - A.cw + A.toyW * .55, A.toyY, 40, () => {   // 不慌，慢慢踱过去
-    catFace(-1);                                  // 转过身冲着玩具
+  /* 站哪一边看它眼下在哪一边 —— 原先一律绕到玩具左边去，
+     猫在右边时就得先扭头往左走、从玩具跟前过去、再回身，
+     一路上是背对着玩具的。就近站，来的路上就一直朝着它 */
+  const fromLeft = A.x + A.cw / 2 <= A.toyX + A.toyW / 2;
+  const stand = fromLeft ? A.toyX - A.cw + A.toyW * .55 : A.toyX + A.toyW * .45;
+  A.playSide = fromLeft ? -1 : 1;
+  catMove(stand, A.toyY, 40, () => {              // 不慌，慢慢踱过去
+    catFace(A.playSide);                          // 站定，正对着玩具
     A.el.cy.classList.remove("go");
     let n = 1 + Math.floor(Math.random() * 3);
     const hit = () => {
       if (!CA || CA !== A || !A.el.toy || A.drag) return catStep();
       catFlash("pounce", 420);
       const t = A.el.toy;
-      t.classList.remove("hit"); void t.offsetWidth; t.classList.add("hit");
-      setTimeout(() => t.classList.remove("hit"), 640);
+      // 玩具往猫的反方向弹：猫在左边就往右飞，在右边就往左飞
+      t.classList.remove("hit", "rev"); void t.offsetWidth;
+      t.classList.add("hit");
+      if (A.playSide === 1) t.classList.add("rev");
+      setTimeout(() => t.classList.remove("hit", "rev"), 640);
       /* 嚼得掉的（猫薄荷）：一趟少一回，不是一爪少一回 ——
          一趟本来就要拍一到三爪，按爪算的话三回一趟就吃光了 */
       if (--n > 0) return catAfter(780, hit);
