@@ -1737,7 +1737,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v76" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v77" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -3130,9 +3130,10 @@ const CATZZZ = ["它耳朵抖了一下。没醒。",
 /* 站位一律按**身子的前沿**算，不按鼻子在身宽几成处算。
    渲图对过：emoji 那只猫的脑袋几乎顶到框边，拿「鼻子对玩具中心」去站，
    身子就整个压在玩具上 —— 老鼠只露半个，看着像从它身上穿过去。
-   CATGAP 是前沿跟玩具之间留的那点空当（占身宽的一成，至少四像素）。 */
-const CATGAP = .10;
-const catGap = A => Math.max(4, A.cw * CATGAP);
+   CATGAP 是前沿跟玩具之间留的那点空当。留两像素就够：
+   emoji 的字形本来就没顶满框，两个框挨上，看着正是脸贴上去。 */
+const CATGAP = 2;
+const catGap = () => CATGAP;
 const CATKICKP = .05;   // 平常玩耍时，一脚把玩具踢出案子的概率
 const CATPLAY = ["一爪拍飞了，自己愣了一下。", "扑空一次，第二爪按住了。",
                  "拍着拍着滚到一边去了。", "咬了两口，觉得没味道，松开了。",
@@ -3552,12 +3553,19 @@ function catToToy(sp, then, stalk, gap){
   const A = CA; if (!A || !A.el.toy) return catStep();
   const fromLeft = A.x + A.cw / 2 <= A.toyX + A.toyW / 2;
   const face = fromLeft ? -1 : 1;
-  /* 正位 = 身子的前沿停在玩具跟前，留一点空当，不压上去。
-     在左边就是右前沿贴玩具左边，在右边就是左前沿贴玩具右边 */
-  const g0 = catGap(A);
+  /* 正位 = 身子的前沿停在玩具跟前，脸正好贴上去，不压过去。
+     在左边就是右前沿贴玩具左边，在右边就是左前沿贴玩具右边。 */
+  const g0 = catGap();
   let stand = fromLeft ? A.toyX - A.cw - g0 : A.toyX + A.toyW + g0;
   if (gap) stand += fromLeft ? -gap : gap;
-  if (fromLeft ? stand < A.x : stand > A.x) stand = A.x;
+  /* 已经凑得太近（身子压在玩具上）怎么办：**面朝着玩具往后蹭一点**，
+     不许绕到另一边去。
+     原先这儿有一条「不许倒退」的规矩，站位点落在身后就干脆不挪 ——
+     结果它宁可保持压在玩具身上，或者下一轮从另一侧重算、绕过去，
+     看着就是「转个身再玩」。退半步比转个身自然得多。
+     退也只准退一点：最多大半个身位，再多就不折腾了。 */
+  const back = fromLeft ? A.x - stand : stand - A.x;
+  if (back > A.cw * .8) stand = fromLeft ? A.x - A.cw * .8 : A.x + A.cw * .8;
   A.playSide = face;
   A.el.em.classList.toggle("stalk", !!stalk);
   catMove(stand, A.toyY, sp, () => {
