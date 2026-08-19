@@ -432,6 +432,24 @@
   .cb .cy .cem.pounce{animation:catpou .42s cubic-bezier(.3,1.6,.4,1)}
   @keyframes catpou{0%{transform:translate(0,0)}
     38%{transform:translate(-16px,-14px)}100%{transform:translate(0,0)}}
+  /* 🎀 往上扑：够半空里那条带子，往上窜不往前窜 */
+  .cb .cy .cem.pounceup{animation:catpup .46s cubic-bezier(.3,1.5,.4,1)}
+  @keyframes catpup{0%{transform:translateY(0)}34%{transform:translateY(-26px) scaleY(1.08)}
+    100%{transform:translateY(0)}}
+  /* 🎀 仰头看着它飘下来：身子微微起伏，眼睛不挪窝 */
+  .cb .cy .cem.look{animation:catlook 1.1s ease-in-out infinite}
+  @keyframes catlook{0%,100%{transform:translateY(0) scaleY(1)}
+    50%{transform:translateY(-3px) scaleY(1.03)}}
+  /* 🐭 潜行：身子压低，慢慢挪 */
+  .cb .cy .cem.stalk{transform:scaleY(.9) translateY(4px);transition:transform .3s ease}
+  /* 🐭 蓄势：扑之前屁股左右晃两下 */
+  .cb .cy .cem.crouch{animation:catcro .34s ease-in-out infinite}
+  @keyframes catcro{0%,100%{transform:scaleY(.88) translate(-2px,5px)}
+    50%{transform:scaleY(.88) translate(2px,5px)}}
+  /* 🌿 打滚：在猫薄荷上左右翻，三个来回 */
+  .cb .cy .cem.roll{animation:catroll .4s ease-in-out 3}
+  @keyframes catroll{0%,100%{transform:rotate(0)}25%{transform:rotate(-28deg)}
+    75%{transform:rotate(28deg)}}
   /* 摸一把：原地蹦一下 */
   .cb .cy .cem.pet{animation:catpet .5s ease}
   @keyframes catpet{0%,100%{transform:translateY(0)}32%{transform:translateY(-13px)}}
@@ -465,6 +483,13 @@
   @keyframes cthit{0%{transform:translate(0,0) rotate(0)}
     40%{transform:translate(.62em,-1.55em) rotate(140deg)}
     100%{transform:translate(0,0) rotate(360deg)}}
+  /* 🎣 逗猫棒自己在轻轻摆 —— 就它一样这么晃 */
+  .cb .cy .ctoy.sway{animation:ctsway 1.9s ease-in-out infinite;transform-origin:50% 12%}
+  @keyframes ctsway{0%,100%{transform:rotate(-12deg)}50%{transform:rotate(12deg)}}
+  /* 扑空：玩具往旁边一闪就躲开了。这条要排在 sway 后头才盖得住它 */
+  .cb .cy .ctoy.dodge{animation:ctdodge .45s cubic-bezier(.3,1.4,.4,1)}
+  @keyframes ctdodge{0%{transform:rotate(0)}35%{transform:rotate(-30deg) translateX(-7px)}
+    70%{transform:rotate(22deg) translateX(5px)}100%{transform:rotate(0)}}
   .cb .cy .ctoy.hit.rev{animation-name:cthitl}    /* 猫从右边拍的，往左飞 */
   @keyframes cthitl{0%{transform:translate(0,0) rotate(0)}
     40%{transform:translate(-.62em,-1.55em) rotate(-140deg)}
@@ -482,6 +507,11 @@
     box-shadow:0 0 9px 3px rgba(224,43,18,.5);pointer-events:none;
     transform:translate(-50%,-50%);opacity:0;transition:opacity .15s}
   .cb .cy .clz.on{opacity:1;animation:clzq 1.1s ease-in-out infinite}
+  /* 猫按上来了：闪一下就没 —— 这东西本来就抓不到 */
+  .cb .cy .clz.on.dodge{animation:clzgo .3s ease-out}
+  @keyframes clzgo{0%{opacity:1;transform:translate(-50%,-50%) scale(1)}
+    45%{opacity:0;transform:translate(-50%,-50%) scale(2.1)}
+    100%{opacity:1;transform:translate(-50%,-50%) scale(1)}}
   @keyframes clzq{0%,100%{box-shadow:0 0 9px 3px rgba(224,43,18,.5)}
     50%{box-shadow:0 0 13px 5px rgba(224,43,18,.72)}}
   /* 鱼干那一行。点一下喂一条，按住连着倒 */
@@ -1685,7 +1715,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v69" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v70" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -2483,17 +2513,21 @@ const CATMAD = ["你把它吵醒第几回了？它瞪着你，耳朵压平了。
                 "它冲你「哈」了一声。这回不是撒娇。"];
 const CATHOT = ["离炭盆远着点 —— 再蹭就成碳咪了。", "它凑近炭盆闻了闻，胡子差点燎了。",
                 "炭盆是烤火的，不是睡的。"];
-/* carry = 拍完之后叼起来换个地方撂下的概率，不写就是三成。
+/* play = 这一样怎么玩。六样各走各的路子（见下头那一串 catPlay*）：
+     roll  球会滚，拍一下追一段      float 带子会飘，仰头看着它落
+     swing 棒子会躲，扑空多          hunt  潜行、蓄势、突袭、叼回窝
+     herb  先打滚再嚼                不写的走 bat（老路子）
+   carry = 拍完叼起来换个地方撂下的概率，不写就是三成。
    猫对不同东西的玩法本来就不一样：老鼠是猎物，要叼来叼去；
    毛线团、绸带是拿爪子拨的；逗猫棒连着杆子，叼不走。 */
 const PETS = {
   pet_no:   {n:"不摆",   p:0,   e:"",   pv:"x-em"},
-  pet_qiu:  {n:"毛线团", p:30,  e:"🧶", pv:"x-em", carry:.22},
-  pet_dai:  {n:"绸带结", p:35,  e:"🎀", pv:"x-em", carry:.3},
-  pet_bang: {n:"逗猫棒", p:50,  e:"🎣", pv:"x-em", carry:.06},
-  pet_shu:  {n:"木鼠",   p:60,  e:"🐭", pv:"x-em", carry:.8},
-  // 这一样是嚼得掉的：拍三回就吃光，吃完发疯三秒。便宜，因为要回头再买
-  pet_he:   {n:"猫薄荷", p:10,  e:"🌿", pv:"x-em", eat:3},
+  pet_qiu:  {n:"毛线团", p:30,  e:"🧶", pv:"x-em", carry:.22, play:"roll"},
+  pet_dai:  {n:"绸带结", p:35,  e:"🎀", pv:"x-em", carry:.3,  play:"float"},
+  pet_bang: {n:"逗猫棒", p:50,  e:"🎣", pv:"x-em", carry:.06, play:"swing"},
+  pet_shu:  {n:"木鼠",   p:60,  e:"🐭", pv:"x-em", carry:.8,  play:"hunt"},
+  // 这一样是嚼得掉的：滚一身、嚼三回就吃光，吃完发疯三秒。便宜，因为要回头再买
+  pet_he:   {n:"猫薄荷", p:10,  e:"🌿", pv:"x-em", eat:3,     play:"herb"},
   // 这一样不摆在地上：摆上之后鼠标进了院子就成一颗红点，猫追着红点跑
   pet_laser:{n:"激光笔", p:160, e:"🔦", pv:"x-em", laser:true},
 };
@@ -3075,6 +3109,29 @@ const CATKICKP = .05;   // 平常玩耍时，一脚把玩具踢出案子的概�
 const CATPLAY = ["一爪拍飞了，自己愣了一下。", "扑空一次，第二爪按住了。",
                  "拍着拍着滚到一边去了。", "咬了两口，觉得没味道，松开了。",
                  "拍完抬头看你，像是在邀功。"];
+/* 六样玩具各说各的，玩完那一趟报一句 */
+const CATSAYS = {
+  roll: ["它把线头咬住了，球滚不动，这才罢休。",
+         "球滚进案角，它扒拉半天扒拉不出来。",
+         "追得太急，自己打了个滑。"],
+  float:["带子飘下来盖在它脸上了。它没动，就那么坐着。",
+         "它仰着头看带子落，眼睛都不眨。",
+         "带子挨地那一下，它才想起来该扑。"],
+  swing:["扑空了。棒子在它鼻子尖上晃。",
+         "这一爪总算按住了 —— 按住半秒，又滑开。",
+         "它盯着棒子不动，尾巴尖一下一下地抽。"],
+  hunt: ["扑住了。叼起来，回窝里去。",
+         "撂下老鼠，走开两步，装作没看见。",
+         "这一扑差了半寸。它趴回去，重来。"],
+  herb: ["它在猫薄荷上滚了两个来回，眼神已经不对了。",
+         "嚼了两口，趴下不动，尾巴还在扫。",
+         "滚完一身草味，蹭到你手上了。"],
+};
+// 激光永远抓不到。抓空那一下轮着说
+const CATLZ = ["按住了 —— 抬起爪子，什么都没有。",
+               "红点从它爪缝里溜了。",
+               "它扑了个空，回头瞪你一眼。",
+               "又没抓着。它开始怀疑这东西是不是真的。"];
 const dayNo = s => Math.round(new Date(s + "T00:00:00").getTime() / 864e5);
 /* 取猫的状态，顺手把「这些天没来」的膘一次结清。
    懒结算：不挂在开机流程上，谁读它谁结 —— 免得漏掉一条路进来就少扣一天。 */
@@ -3145,7 +3202,15 @@ function catSay(act){
   if (act === "mad")   return `${n}被你吵毛了。耳朵压平，尾巴一下一下地抽。`;
   if (act === "zoom")  return `${n}疯了。满案子乱窜，谁也拦不住。`;
   if (act === "chase") return `那点红光一晃，${n}眼睛就直了。`;
-  if (act === "play")  return `${n}盯上了${pet.n}，屁股一撅。`;
+  if (act === "herb")  return `${n}整个滚在猫薄荷上，四脚朝天。`;
+  if (act === "play"){
+    const m = pet.play;
+    if (m === "roll")  return `${n}一爪把${pet.n}拍出去，撒腿就追。`;
+    if (m === "float") return `${n}往上一扑，${pet.n}飘起来了。`;
+    if (m === "swing") return `${pet.n}自己在晃，${n}扑一下空一下。`;
+    if (m === "hunt")  return `${n}压低身子，眼睛盯死了${pet.n}。`;
+    return `${n}盯上了${pet.n}，屁股一撅。`;
+  }
   if (act === "rest")  return `${n}走累了，坐下来舔爪子。`;
   if (p === "perk") return `${n}吃饱了，在案上来回撒欢，尾巴翘得老高。`;
   if (p === "nap")  return `${n}困得睁不开眼，走两步就要趴下。`;
@@ -3224,7 +3289,8 @@ function catScene(){
   // 玩具的字号写在 .ctoy 自己身上：叼进嘴里的时候它会换个爹（挪进 .cem），
   // 写成 em 就会跟着猫的字号变一次大小
   if (pet.e && !pet.laser)
-    P.push(`<span class="ctoyw"><span class="ctoy" style="font-size:${px(.40)}">${pet.e}</span></span>`);
+    P.push(`<span class="ctoyw"><span class="ctoy${pet.play === "swing" ? " sway" : ""}"`
+         + ` style="font-size:${px(.40)}">${pet.e}</span></span>`);
   if (c.f < .2) P.push(`<span class="cbw" style="font-size:${px(.44)}">🥣</span>`);
   // 只有猫自己吃胖了要变大 —— 字号挂在它这一层，不挂在院子上
   P.push(`<span class="cwk" style="font-size:${catSize(c.f)}px"><span class="cem">`
@@ -3316,10 +3382,16 @@ function catOut(){
   catDepth();
 }
 /* 一步走完了，下一步干什么。心气儿（catPose）定倾向，这儿掷骰子 */
+// 玩到一半被打断（睡了、追激光去了、你把它拖走了），脸上那些记号得摘干净
+function catCalmFace(){
+  const A = CA; if (!A) return;
+  A.el.em.classList.remove("stalk", "crouch", "roll", "look");
+}
 function catStep(){
   const A = CA; if (!A || A.chasing || A.drag) return;
   A.el.cy.classList.remove("zz");
   A.el.z.hidden = true;
+  catCalmFace();
   catOut();
   const mood = catPose();
   if (mood === "wait") return catGuardBowl();
@@ -3423,79 +3495,260 @@ function catWake(self){
   catTell("walk");
   catAfter(850, catStep);
 }
-/* 去扑玩具。真的走过去站定、真的拍 —— 玩具会翻着跟头弹开。
-   拍完三成的时候会叼起来换个地方撂下 */
+/* ── 玩耍 ──────────────────────────────────────────────────
+   六样玩具各有各的玩法（PETS.play）。共用的只有三件小事：
+   走到跟前站定、扑一爪、把玩具送到某处。下头那一串各调各的。 */
+
+/* 走到玩具跟前站定，脸冲着它。
+   就近站：在玩具左边就站左边（脸朝右），在右边就站右边（脸朝左）。
+   两件事要分开办 ——
+   ① 朝向不跟着脚走，整段路都锁死冲着玩具。跟着脚走的话，凑得太近时
+      站位点落在身后，它往回挪一小步，脸也跟着朝后，看上去就是倒退着蹭过去。
+   ② 站位点也不许落在「离玩具更远」的一侧：已经够近了就地不动，
+      原地转身扑，别先退一步再扑。
+   stalk = 潜行：压低身子、慢慢挪、不迈那一颠的步子。 */
+function catToToy(sp, then, stalk){
+  const A = CA; if (!A || !A.el.toy) return catStep();
+  const fromLeft = A.x + A.cw / 2 <= A.toyX + A.toyW / 2;
+  const face = fromLeft ? -1 : 1;
+  let stand = fromLeft ? A.toyX - A.cw + A.toyW * .55 : A.toyX + A.toyW * .45;
+  if (fromLeft ? stand < A.x : stand > A.x) stand = A.x;
+  A.playSide = face;
+  A.el.em.classList.toggle("stalk", !!stalk);
+  catMove(stand, A.toyY, sp, () => {
+    if (!CA || CA !== A) return;
+    catFace(face);
+    if (stalk) A.el.cy.classList.remove("go");
+    then();
+  }, face);
+  if (stalk) A.el.cy.classList.remove("go");      // 潜行不颠步子
+}
+/* 扑一爪。hit=真拍到（玩具翻跟头），hit=false 是扑空（玩具往旁边一闪）。
+   up=往上扑，够带子那种飘在半空的东西 */
+function catWhack(hit, up){
+  const A = CA; if (!A) return;
+  catFlash(up ? "pounceup" : "pounce", 460);
+  const t = A.el.toy; if (!t) return;
+  t.classList.remove("hit", "rev", "dodge"); void t.offsetWidth;
+  if (hit){
+    t.classList.add("hit");
+    if (A.playSide === 1) t.classList.add("rev");
+    setTimeout(() => t.classList.remove("hit", "rev"), 640);
+  } else {
+    t.classList.add("dodge");
+    setTimeout(() => t.classList.remove("dodge"), 460);
+  }
+}
+/* 把玩具送到院子里某处。滚、飘、被踢共用这一件。
+   spin 是路上转多少度，dur 毫秒，ease 自己给 */
+function catToyTo(x, y, dur, spin, ease){
+  const A = CA; if (!A || !A.el.toyw) return;
+  A.toyX = clamp(x, A.pad, Math.max(A.pad, A.W - A.toyW - A.pad));
+  A.toyY = clamp(y, A.yLo, A.yHi);
+  const tw = A.el.toyw;
+  tw.style.transitionTimingFunction = ease || "cubic-bezier(.15,.7,.3,1)";
+  tw.style.transitionDuration = (dur / 1000) + "s";
+  tw.style.transform = `translate(${Math.round(A.toyX)}px,${Math.round(A.toyY)}px)`
+                     + (spin ? ` rotate(${Math.round(spin)}deg)` : "");
+}
+const petPlay = () => (PETS[G().catpet] || {}).play || "bat";
+const petSay  = k => { const a = CATSAYS[k]; return a ? a[Math.floor(Math.random() * a.length)] : ""; };
+/* 一趟玩完了怎么收尾：嚼得掉的扣一回，然后按概率踢飞 / 叼走 / 罢休 */
+function catPlayEnd(sayKey){
+  const A = CA; if (!A) return catStep();
+  const pv = PETS[G().catpet] || {};
+  if (pv.eat){
+    const c = catState();
+    c.hb = Math.max(0, (c.hb || 0) - 1);
+    if (c.hb <= 0) return catEatUp();
+  }
+  if (Math.random() < CATKICKP) return catAfter(700, catKick);   // 手一重，踢出案子
+  if (Math.random() < (pv.carry == null ? .32 : pv.carry)) return catAfter(720, catCarry);
+  toast(catName() + (petSay(sayKey) || CATPLAY[Math.floor(Math.random() * CATPLAY.length)]));
+  catAfter(950, catStep);
+}
+/* 岔口：这一样该怎么玩 */
 function catPlay(){
   const A = CA; if (!A || !A.el.toy || A.drag) return catStep();
   A.legs = 0;
   catOut();
   catTell("play");
-  /* 就近站：在玩具左边就站左边（脸朝右），在右边就站右边（脸朝左）。
-     两件事要分开办 ——
-     ① 朝向不跟着脚走，整段路都锁死冲着玩具。跟着脚走的话，
-        凑得太近时站位点落在身后，它往回挪一小步，脸也跟着朝后，
-        看上去就是倒退着蹭过去的。
-     ② 站位点也不许落在「离玩具更远」的一侧：已经够近了就地不动，
-        原地转身扑，别先退一步再扑。 */
-  const fromLeft = A.x + A.cw / 2 <= A.toyX + A.toyW / 2;
-  const face = fromLeft ? -1 : 1;                 // -1 脸朝右，1 脸朝左
-  let stand = fromLeft ? A.toyX - A.cw + A.toyW * .55 : A.toyX + A.toyW * .45;
-  if (fromLeft ? stand < A.x : stand > A.x) stand = A.x;   // 够近了就别往回退
-  A.playSide = face;
-  catMove(stand, A.toyY, 40, () => {              // 不慌，慢慢踱过去
-    catFace(A.playSide);                          // 站定，仍旧正对着玩具
-    A.el.cy.classList.remove("go");
+  const m = petPlay();
+  if (m === "roll")  return catPlayRoll(2 + Math.floor(Math.random() * 3));
+  if (m === "float") return catPlayFloat(2 + Math.floor(Math.random() * 2));
+  if (m === "swing") return catPlaySwing(0, 0);
+  if (m === "hunt")  return catPlayHunt();
+  if (m === "herb")  return catPlayHerb();
+  catPlayBat();
+}
+/* bat：老路子。走过去拍一到三爪 */
+function catPlayBat(){
+  const A = CA; if (!A) return catStep();
+  catToToy(40, () => {
     let n = 1 + Math.floor(Math.random() * 3);
     const hit = () => {
       if (!CA || CA !== A || !A.el.toy || A.drag) return catStep();
-      catFlash("pounce", 420);
-      const t = A.el.toy;
-      // 玩具往猫的反方向弹：猫在左边就往右飞，在右边就往左飞
-      t.classList.remove("hit", "rev"); void t.offsetWidth;
-      t.classList.add("hit");
-      if (A.playSide === 1) t.classList.add("rev");
-      setTimeout(() => t.classList.remove("hit", "rev"), 640);
-      /* 嚼得掉的（猫薄荷）：一趟少一回，不是一爪少一回 ——
-         一趟本来就要拍一到三爪，按爪算的话三回一趟就吃光了 */
+      catWhack(true);
       if (--n > 0) return catAfter(780, hit);
-      const pv = PETS[G().catpet] || {};
-      if (pv.eat){
-        const c = catState();
-        c.hb = Math.max(0, (c.hb || 0) - 1);
-        if (c.hb <= 0) return catEatUp();
-      }
-      // 玩着玩着有一小成的概率手一重，直接踢出案子去
-      if (Math.random() < CATKICKP) return catAfter(700, catKick);
-      // 叼不叼得看是什么东西：老鼠是猎物，叼来叼去；逗猫棒连着杆，叼不走
-      if (Math.random() < (pv.carry == null ? .32 : pv.carry)) return catAfter(720, catCarry);
-      toast(catName() + CATPLAY[Math.floor(Math.random() * CATPLAY.length)]);
-      catAfter(950, catStep);
+      catPlayEnd(null);
     };
     catAfter(340, hit);
-  }, face);                                       // ← 整段路锁死这个朝向
+  });
 }
+/* 🧶 roll：拍一下球滚一段，追上去再拍。撞了院子边就反弹回来 */
+function catPlayRoll(n){
+  const A = CA; if (!A || !A.el.toy || A.drag) return catStep();
+  if (n <= 0) return catPlayEnd("roll");
+  catToToy(70, () => {
+    if (!CA || CA !== A || !A.el.toy) return catStep();
+    catWhack(true);
+    // 往猫的反方向滚。playSide -1 是脸朝右，球就往右滚
+    let dir = A.playSide === -1 ? 1 : -1;
+    let far = 60 + Math.random() * 60;
+    let tx = A.toyX + dir * far;
+    const lo = A.pad, hi = A.W - A.toyW - A.pad;
+    // 撞边反弹：方向取反、劲儿减半，从边上弹回来
+    if (tx < lo || tx > hi){
+      const edge = tx < lo ? lo : hi;
+      tx = edge - dir * far * .5;
+      dir = -dir;
+      A.rollBounce = (A.rollBounce || 0) + 1;
+    }
+    catAfter(120, () => {
+      if (!CA || CA !== A) return;
+      catToyTo(tx, A.toyY, 550, dir * 720, "cubic-bezier(.1,.6,.3,1)");
+      catAfter(700, () => catPlayRoll(n - 1));    // 追上去再拍
+    });
+  });
+}
+/* 🎀 float：往上拍，带子飞起来慢慢飘落，猫仰头看着 */
+function catPlayFloat(n){
+  const A = CA; if (!A || !A.el.toy || A.drag) return catStep();
+  if (n <= 0) return catPlayEnd("float");
+  catToToy(45, () => {
+    if (!CA || CA !== A || !A.el.toy) return catStep();
+    catWhack(true, true);                          // 往上扑
+    const side = A.playSide === -1 ? 1 : -1;
+    const upX = A.toyX + side * (10 + Math.random() * 26);
+    // ① 抛起：三百五十毫秒窜到半空
+    catAfter(110, () => {
+      if (!CA || CA !== A) return;
+      A.el.toyw.style.transitionTimingFunction = "cubic-bezier(.2,.9,.4,1)";
+      A.el.toyw.style.transitionDuration = ".35s";
+      A.el.toyw.style.transform =
+        `translate(${Math.round(clamp(upX, A.pad, A.W - A.toyW - A.pad))}px,`
+        + `${Math.round(A.toyY - A.H * .42)}px) rotate(${side * 200}deg)`;
+      A.toyX = clamp(upX, A.pad, A.W - A.toyW - A.pad);
+      A.el.em.classList.add("look");               // 仰头看着
+      // ② 飘落：一秒四，慢慢晃下来
+      catAfter(360, () => {
+        if (!CA || CA !== A) return;
+        catToyTo(A.toyX + side * (14 + Math.random() * 30), A.toyY,
+                 1400, side * 380, "cubic-bezier(.42,0,.58,1)");
+        catAfter(1450, () => {
+          if (!CA || CA !== A) return;
+          A.el.em.classList.remove("look");
+          catPlayFloat(n - 1);
+        });
+      });
+    });
+  });
+}
+/* 🎣 swing：棒子自己在摆，一半概率扑空。连空三次就坐下来盯着它 */
+function catPlaySwing(done, miss){
+  const A = CA; if (!A || !A.el.toy || A.drag) return catStep();
+  if (done >= 4) return catPlayEnd("swing");
+  catToToy(52, () => {
+    if (!CA || CA !== A || !A.el.toy) return catStep();
+    const hit = Math.random() < .5;
+    catWhack(hit);
+    if (!hit){
+      const m = miss + 1;
+      if (m >= 3){                                 // 连空三次，坐下来生闷气
+        toast(`${catName()}扑空了三回，索性坐下来盯着它，尾巴尖一下一下地抽。`);
+        A.el.cy.classList.remove("go");
+        return catAfter(1500, () => catPlaySwing(done + 1, 0));
+      }
+      return catAfter(700, () => catPlaySwing(done + 1, m));
+    }
+    catAfter(760, () => catPlaySwing(done + 1, 0));
+  });
+}
+/* 🐭 hunt：潜行 → 蓄势 → 突袭 → 叼回窝 → 假装不理 → 再来一轮 */
+function catPlayHunt(round){
+  const A = CA; if (!A || !A.el.toy || A.drag) return catStep();
+  round = round || 0;
+  if (round >= 2) return catPlayEnd("hunt");
+  if (!round) toast(`${catName()}压低身子，一寸一寸挪过去 —— 捉老鼠是有讲究的。`);
+  catToToy(24, () => {                             // 一、潜行：慢到平常的六成，一寸一寸挪
+    if (!CA || CA !== A || !A.el.toy) return catStep();
+    A.el.em.classList.add("crouch");               // 二、蓄势：屁股左右晃
+    catAfter(700, () => {
+      if (!CA || CA !== A || !A.el.toy) return catStep();
+      A.el.em.classList.remove("crouch", "stalk");
+      const to = A.playSide === -1 ? A.x + A.cw * .3 : A.x - A.cw * .3;
+      catMove(to, A.toyY, 220, () => {             // 三、突袭：冲刺半个身位
+        if (!CA || CA !== A || !A.el.toy) return catStep();
+        catWhack(true);
+        // 四、叼回窝。没窝就随便撂
+        catAfter(520, () => {
+          if (!CA || CA !== A) return;
+          if (Math.random() < .8)
+            return catCarry(A.el.bed ? A.bedX : null, () => {
+              // 五、撂下之后走开两步，装作没看见 —— 隔两到四秒突然回头
+              toast(`${catName()}撂下老鼠，走开两步，装作没看见。`);
+              catMove(A.pad + Math.random() * Math.max(1, A.W - A.cw - A.pad * 2),
+                      A.yLo + Math.random() * (A.yHi - A.yLo), 46,
+                      () => catAfter(2000 + Math.random() * 2000, () => catPlayHunt(round + 1)));
+            });
+          catAfter(300, () => catPlayHunt(round + 1));
+        });
+      }, A.playSide);
+    });
+  }, true);
+}
+/* 🌿 herb：先在上头滚一身，滚完才嚼。回数扣在 catPlayEnd 里 */
+function catPlayHerb(){
+  const A = CA; if (!A || !A.el.toy || A.drag) return catStep();
+  catToToy(42, () => {
+    if (!CA || CA !== A || !A.el.toy) return catStep();
+    A.el.em.classList.add("roll");                 // 打滚一秒二
+    catTell("herb");
+    catAfter(1250, () => {
+      if (!CA || CA !== A) return;
+      A.el.em.classList.remove("roll");
+      catWhack(true);
+      catAfter(560, () => catPlayEnd("herb"));
+    });
+  });
+}
+
 /* 叼着走两步，换个地方撂下。
    办法是把玩具整个搬进猫那个元素（.cem）里去 —— 从此它就是猫身上的一块，
    猫走它跟着走、猫掉头它跟着翻，不用拿两条 transition 去对齐（对不齐的，
    一层是位移一层是跟随，差半帧就飘）。撂下时再搬回院子，给它一个新的落点。 */
-function catCarry(){
+function catCarry(toX, then){
   const A = CA; if (!A || !A.el.toy || !A.el.toyw) return catStep();
   const t = A.el.toy, nm = (PETS[G().catpet] || {}).n || "玩具";
   t.classList.remove("hit");
   t.classList.add("held");
   A.el.em.appendChild(t);                        // 叼起来：进嘴
-  toast(`${catName()}叼起${nm}，换了个地方撂下。`);
-  catMove(A.pad + Math.random() * Math.max(1, A.W - A.cw - A.pad * 2),
-          A.yLo + Math.random() * (A.yHi - A.yLo), 44, () => {
+  // 给了落点就往那儿叼（木鼠是猎物，要叼回窝里去），没给就随便找个地方
+  toast(toX == null ? `${catName()}叼起${nm}，换了个地方撂下。`
+                    : `${catName()}叼着${nm}，一路回窝里去。`);
+  catMove(toX == null ? A.pad + Math.random() * Math.max(1, A.W - A.cw - A.pad * 2)
+                      : clamp(toX, A.pad, Math.max(A.pad, A.W - A.cw - A.pad)),
+          toX == null ? A.yLo + Math.random() * (A.yHi - A.yLo) : A.bedY, 44, () => {
     if (!CA || CA !== A) return;
     // 撂在脚边：猫脸朝哪边，就撂在哪边
     A.toyX = clamp(A.x + (A.dir < 0 ? A.cw - A.toyW : 0), A.pad, Math.max(A.pad, A.W - A.toyW - A.pad));
     A.toyY = A.y;
     t.classList.remove("held");
     A.el.toyw.appendChild(t);                    // 放下：回院子
+    A.el.toyw.style.transitionTimingFunction = "";   // 滚球那条缓动曲线别留着
     A.el.toyw.style.transitionDuration = "0s";
     A.el.toyw.style.transform = `translate(${Math.round(A.toyX)}px,${Math.round(A.toyY)}px)`;
-    catAfter(760, catStep);
+    catAfter(760, then || catStep);
   });
 }
 /* 翻脸。吵醒太多回，它先摆一张生气脸给你看，
@@ -3670,13 +3923,32 @@ function catLaserAt(cx, cy){
   A.el.lz.classList.add("on");
   if (!A.laserOn){ A.laserOn = 1; catTell("chase"); }
   // 挪够十几个像素才重新给目标，免得每动一下都重排
+  /* 追上了就扑一下 —— 然后红点闪一下溜走。这东西是抓不到的，永远。
+     隔一秒四才准再扑一次，不然手一抖它就一直在扑 */
+  if (Math.abs(A.x + A.cw / 2 - x) < A.cw * .45 && Date.now() - (A.lzHit || 0) > 1400){
+    A.lzHit = Date.now();
+    catFlash("pounce", 440);
+    A.el.lz.classList.remove("dodge"); void A.el.lz.offsetWidth;
+    A.el.lz.classList.add("dodge");
+    setTimeout(() => { if (CA === A && A.el.lz) A.el.lz.classList.remove("dodge"); }, 330);
+    toast(CATLZ[Math.floor(Math.random() * CATLZ.length)]);
+  }
+  // 追满八秒得歇口气：坐下来盯着，两秒之后接着追
+  if (!A.lzT0) A.lzT0 = Date.now();
+  if (!A.lzRest && Date.now() - A.lzT0 > 8000){
+    A.lzRest = 1;
+    A.el.cy.classList.remove("go");
+    toast(`${catName()}追不动了，坐下来喘气 —— 眼睛还盯着那点红。`);
+    setTimeout(() => { if (CA === A){ A.lzRest = 0; A.lzT0 = Date.now(); } }, 2000);
+  }
+  if (A.lzRest) return;                           // 歇着的时候只挪红点，猫不动
   if (Math.hypot(x - (A.lzX == null ? -9e9 : A.lzX), y - (A.lzY || 0)) < 14) return;
   A.lzX = x; A.lzY = y;
   catChase(x, catDepthOf(A, y));
 }
 function catLaserOff(){
   const A = CA; if (!A || !A.laserOn) return;
-  A.laserOn = 0; A.lzX = A.lzY = null;
+  A.laserOn = 0; A.lzX = A.lzY = null; A.lzT0 = 0; A.lzRest = 0;
   if (A.el.lz) A.el.lz.classList.remove("on");
   catChaseEnd();
 }
@@ -3742,6 +4014,7 @@ function catStart(){
         bowl:cy.querySelector(".cbw"), lz:cy.querySelector(".clz")},
     x:0, y:0, dir:1, lift:0, inBed:0, headW:0, bob:0, reT:0, zoom:0, legs:0, wake:0, poked:0,
     laserOn:0, chasing:0, drag:0, moved:0, noClick:0, lzX:null, lzY:null, kicked:0,
+    lzHit:0, lzT0:0, lzRest:0, playSide:-1, rollBounce:0,
     wakes:0, angryAt:3 + Math.floor(Math.random() * 3),   // 吵醒三到五回它就翻脸
     timer:null, act:"walk", pad:6,
   };
@@ -3753,7 +4026,8 @@ function catStart(){
      鼠标／手指的纵坐标怎么换算成这个进深，见 catDepthOf */
   A.yLo = -34; A.yHi = 6;
   A.bedY = 0; A.toyY = 0;
-  const put = (el, x, yy) => { if (el){ el.style.transitionDuration = "0s";
+  const put = (el, x, yy) => { if (el){ el.style.transitionTimingFunction = "";
+    el.style.transitionDuration = "0s";
     el.style.transform = `translate(${Math.round(x)}px,${Math.round(yy || 0)}px)`; } };
   A.bedW = A.el.bed ? (A.el.bed.offsetWidth || A.cw * .62) : 0;
   A.bedH = A.el.bed ? (A.el.bed.offsetHeight || A.bedW) : 0;   // 钻进去抬多高按它算
