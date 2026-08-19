@@ -1737,7 +1737,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v78" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v79" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -3552,23 +3552,49 @@ function catWake(self){
       原地转身扑，别先退一步再扑。
    stalk = 潜行：压低身子、慢慢挪、不迈那一颠的步子。
    gap   = 停在正位再往外让开这么多。潜行要用 —— 贴上去就没得扑了。 */
+/* 该站到哪儿去。纯算几何，不动 DOM，所以能整片扫过去验。
+   要紧的是：**落点先夹进院子，夹完还得成立**。
+   原先只按「猫在哪边」算一个落点，算完交给 catMove 去夹 ——
+   院子只有三百来宽、猫自己就占九十，玩具又摆在右端（239–282）时，
+   站它右边得伸到 358，一夹就夹到 203，正好夹在玩具身上；
+   猫于是从玩具身上穿过去再扑。夹取是静默的，公式再怎么改都盖不住。
+   现在两边各算一个，逐个验「看得见的两块压没压上」，压上了按这个次序退让：
+     本来那边（带潜行距离）→ 本来那边（不留距离）
+     → 另一边（带距离）    → 另一边（不留距离）
+   四个都压得上（院子实在挤不下），就取压得最少的那个。 */
+function catStand(gap){
+  const A = CA;
+  const lo = A.pad, hi = Math.max(A.pad, A.W - A.cw - A.pad);
+  const inkL = toyInkL(A), inkR = toyInkR(A);
+  const at = (fl, g) => clamp((fl ? inkL - A.cw * (1 - CATINK) : inkR - A.cw * CATINK)
+                              + (fl ? -g : g), lo, hi);
+  // 站在 x、朝 fl 那边，看得见的两块压进去多少（≤0 就是没压）
+  const over = (x, fl) => fl ? (x + A.cw * (1 - CATINK)) - inkL
+                             : inkR - (x + A.cw * CATINK);
+  const near = A.x + A.cw / 2 <= A.toyX + A.toyW / 2;
+  let best = null;
+  for (const [fl, g] of [[near, gap || 0], [near, 0], [!near, gap || 0], [!near, 0]]){
+    const x = at(fl, g), ov = over(x, fl);
+    if (ov <= 1.5) return {x, fl, face: fl ? -1 : 1, ov};
+    if (!best || ov < best.ov) best = {x, fl, face: fl ? -1 : 1, ov};
+  }
+  return best;
+}
 function catToToy(sp, then, stalk, gap){
   const A = CA; if (!A || !A.el.toy) return catStep();
-  const fromLeft = A.x + A.cw / 2 <= A.toyX + A.toyW / 2;
-  const face = fromLeft ? -1 : 1;
-  /* 正位 = 让猫**看得见的那一侧**正好挨上玩具看得见的那一边。
-     在左边就是猫的右脸挨玩具左沿，在右边就是猫的左脸挨玩具右沿。 */
-  let stand = fromLeft ? toyInkL(A) - A.cw * (1 - CATINK)
-                       : toyInkR(A) - A.cw * CATINK;
-  if (gap) stand += fromLeft ? -gap : gap;
+  const st = catStand(gap);
+  let stand = st.x;
+  const face = st.face;
   /* 已经凑得太近（身子压在玩具上）怎么办：**面朝着玩具往后蹭一点**，
-     不许绕到另一边去。
-     原先这儿有一条「不许倒退」的规矩，站位点落在身后就干脆不挪 ——
-     结果它宁可保持压在玩具身上，或者下一轮从另一侧重算、绕过去，
-     看着就是「转个身再玩」。退半步比转个身自然得多。
-     退也只准退一点：最多大半个身位，再多就不折腾了。 */
-  const back = fromLeft ? A.x - stand : stand - A.x;
-  if (back > A.cw * .8) stand = fromLeft ? A.x - A.cw * .8 : A.x + A.cw * .8;
+     不许绕到另一边去。退也只准退一点：最多大半个身位。
+     但少退那一点要是又压上了，就老老实实退到位 —— 不压是硬规矩 */
+  const back = st.fl ? A.x - stand : stand - A.x;
+  if (back > A.cw * .8){
+    const capped = st.fl ? A.x - A.cw * .8 : A.x + A.cw * .8;
+    const ovc = st.fl ? (capped + A.cw * (1 - CATINK)) - toyInkL(A)
+                      : toyInkR(A) - (capped + A.cw * CATINK);
+    if (ovc <= 1.5) stand = capped;
+  }
   A.playSide = face;
   A.el.em.classList.toggle("stalk", !!stalk);
   catMove(stand, A.toyY, sp, () => {
@@ -3778,7 +3804,7 @@ function catPlayHunt(round){
         });
       });
     });
-  }, true, A.cw * 1.05);      // 停在整整一个身位开外，别贴上去
+  }, true, A.cw * .7);        // 停在大半个身位开外，别贴上去（留太多院子放不下）
 }
 /* 🌿 herb：先在上头滚一身，滚完才嚼。回数扣在 catPlayEnd 里 */
 function catPlayHerb(){
