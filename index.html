@@ -1737,7 +1737,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v74" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v75" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -3690,20 +3690,19 @@ function catPlayFloat(n){
     catWhack(true, true);                          // 往上扑
     const side = A.playSide === -1 ? 1 : -1;
     const upX = A.toyX + side * (10 + Math.random() * 26);
-    // ① 抛起：三百五十毫秒窜到半空
+    const y0 = A.toyY;                             // 记住地面在哪儿，一会儿要落回来
+    /* ① 抛起。这一段一定要走 catToyTo，不能自己拼 transform 直接写 DOM ——
+       直接写的话，模型还以为带子在地上转零度，实际它在半空转两百度。
+       从那一刻起两边就对不上了：你一拖它、或者下一段动画按模型写回去，
+       带子会「啪」地从半空跳到模型以为的地方（拖着的时候就是跳到鼠标底下）。 */
     catAfter(110, () => {
       if (!CA || CA !== A) return;
-      A.el.toyw.style.transitionTimingFunction = "cubic-bezier(.2,.9,.4,1)";
-      A.el.toyw.style.transitionDuration = ".35s";
-      A.el.toyw.style.transform =
-        `translate(${Math.round(clamp(upX, A.pad, A.W - A.toyW - A.pad))}px,`
-        + `${Math.round(A.toyY - A.H * .42)}px) rotate(${side * 200}deg)`;
-      A.toyX = clamp(upX, A.pad, A.W - A.toyW - A.pad);
+      catToyTo(upX, y0 - A.H * .42, 350, side * 200, "cubic-bezier(.2,.9,.4,1)");
       A.el.em.classList.add("look");               // 仰头看着
-      // ② 飘落：一秒四，慢慢晃下来
+      // ② 飘落：一秒四，慢慢晃回地面
       catAfter(360, () => {
         if (!CA || CA !== A) return;
-        catToyTo(A.toyX + side * (14 + Math.random() * 30), A.toyY,
+        catToyTo(A.toyX + side * (14 + Math.random() * 30), y0,
                  1400, side * 380, "cubic-bezier(.42,0,.58,1)");
         catAfter(1450, () => {
           if (!CA || CA !== A) return;
