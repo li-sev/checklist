@@ -452,8 +452,9 @@
   .cb .cy .cem.roll{animation:catroll .44s ease-in-out 2}
   @keyframes catroll{0%,100%{transform:rotate(0)}25%{transform:rotate(-28deg)}
     75%{transform:rotate(28deg)}}
-  /* 🌿 滚完索性躺过去，四脚朝天 */
-  .cb .cy .cem.belly{transform:rotate(178deg);transition:transform .42s cubic-bezier(.3,1.5,.4,1)}
+  /* 🌿 滚完索性整个翻过去，四脚朝天。!important 是防颠步那个动画抢回去 */
+  .cb .cy .cem.belly{transform:rotate(180deg) !important;animation:none !important;
+    transition:transform .42s cubic-bezier(.3,1.5,.4,1)}
   /* 摸一把：原地蹦一下 */
   .cb .cy .cem.pet{animation:catpet .5s ease}
   @keyframes catpet{0%,100%{transform:translateY(0)}32%{transform:translateY(-13px)}}
@@ -1720,7 +1721,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v71" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v72" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -2503,7 +2504,7 @@ const BEDS = {
   bed_yu:   {n:"浴桶",   p:90,  e:"🛁", pv:"x-em", in:{bw:1.30, front:1, sit:.68}},
   bed_weng: {n:"木桶",   p:100, e:"🪣", pv:"x-em", in:{bw:1.10, front:1, sit:.68}},
   bed_pen:  {n:"炭盆",   p:120, e:"🔥", pv:"x-em", in:{bw:.70,  front:0, lift:0, hot:1}},
-  bed_ta:   {n:"锦榻",   p:140, e:"🛏", pv:"x-em", in:{bw:1.35, front:0, lift:.20}},
+  bed_ta:   {n:"锦榻",   p:140, e:"🛏", pv:"x-em", in:{bw:1.8,  front:0, lift:.24}},
 };
 const bedIn = b => (b && b.in) || {bw:.62, front:0, lift:0};
 /* 钻得进去的窝，睡着时整只猫收成一个脑袋，下巴搭在窝沿上。
@@ -3110,6 +3111,11 @@ const CATZZZ = ["它耳朵抖了一下。没醒。",
                 "它把爪子搭到脸上 —— 别吵。",
                 "它咂了咂嘴，梦见什么好东西了。",
                 "你已经戳到第六下了。它是真睡熟了，不是装的。"];
+/* 脑袋落在身宽的百分之几处（脸朝右、也就是翻过面的时候算）。
+   苹果那只 🐈 脸朝左，脑袋大约在左边两成的位置；翻过面就是八成。
+   凑玩具、追激光都按这个对齐 —— 拿身子边缘去对，脑袋会差出小半个身子，
+   看着就是「隔着一段够玩具」。 */
+const CATNOSE = .82;
 const CATKICKP = .05;   // 平常玩耍时，一脚把玩具踢出案子的概率
 const CATPLAY = ["一爪拍飞了，自己愣了一下。", "扑空一次，第二爪按住了。",
                  "拍着拍着滚到一边去了。", "咬了两口，觉得没味道，松开了。",
@@ -3527,9 +3533,12 @@ function catToToy(sp, then, stalk, gap){
   const A = CA; if (!A || !A.el.toy) return catStep();
   const fromLeft = A.x + A.cw / 2 <= A.toyX + A.toyW / 2;
   const face = fromLeft ? -1 : 1;
-  /* 正位：脑袋刚好搭在玩具上。往前多走一步，玩具就跑到肚子底下、
-     甚至屁股后头去了 —— 抓老鼠那一下原先就是这么歪的 */
-  let stand = fromLeft ? A.toyX - A.cw + A.toyW * .55 : A.toyX + A.toyW * .45;
+  /* 正位 = 让**脑袋**落在玩具中心上。
+     原先拿的是身子的边缘去对，可 emoji 那只猫脑袋并不在边缘上 ——
+     脸朝右时脑袋在身宽的八成处，脸朝左时在两成处，
+     拿边缘对，脑袋就差出小半个身子，看着是隔着一段够玩具。 */
+  const mid = A.toyX + A.toyW / 2;
+  let stand = mid - (fromLeft ? CATNOSE : 1 - CATNOSE) * A.cw;
   if (gap) stand += fromLeft ? -gap : gap;
   if (fromLeft ? stand < A.x : stand > A.x) stand = A.x;
   A.playSide = face;
@@ -3537,10 +3546,13 @@ function catToToy(sp, then, stalk, gap){
   catMove(stand, A.toyY, sp, () => {
     if (!CA || CA !== A) return;
     catFace(face);
-    if (stalk) A.el.cy.classList.remove("go");
+    /* 到地方就把颠步子那个动画停掉。CSS 里 animation 永远压过普通的 transform ——
+       颠步子还开着的话，打滚、躺平、压低身子这些写在 transform 上的姿势
+       一个都出不来（猫薄荷「躺平却没转多少」就是这么来的） */
+    A.el.cy.classList.remove("go");
     then();
   }, face);
-  if (stalk) A.el.cy.classList.remove("go");      // 潜行不颠步子
+  if (stalk) A.el.cy.classList.remove("go");      // 潜行一路都不颠
 }
 /* 扑一爪。hit=真拍到（玩具翻跟头），hit=false 是扑空（玩具往旁边一闪）。
    up=往上扑，够带子那种飘在半空的东西 */
@@ -3912,7 +3924,11 @@ function catChase(px, py, force){
     catOut();
   }
   clearTimeout(A.timer);
-  const tx = clamp(px - A.cw / 2, A.pad, Math.max(A.pad, A.W - A.cw - A.pad));
+  /* 也拿脑袋去够，不是拿肚子去压 —— 拿身子中心对的话，
+     东西会停在它肚皮底下，看着像没够着 */
+  const goRight = px > A.x + A.cw / 2;
+  const tx = clamp(px - (goRight ? CATNOSE : 1 - CATNOSE) * A.cw,
+                   A.pad, Math.max(A.pad, A.W - A.cw - A.pad));
   const ty = clamp(py, A.yLo, A.yHi);
   /* 这儿要限的是「多久才准重新起一段」，不是「挪了多远才算数」。
      原先写的是「挪不够八像素 且 没到九十毫秒」才跳过 —— 手指一快，
@@ -3923,7 +3939,8 @@ function catChase(px, py, force){
   const now = Date.now(), d = Math.hypot(tx - A.x, ty - A.y);
   if (!force && now - (A.reT || 0) < 240 && d < 70) return;
   A.reT = now;
-  if (Math.abs(tx - A.x) > 2) A.dir = tx > A.x ? -1 : 1;
+  // 朝向按「东西在哪边」定，不按「落脚点在哪边」—— 脑袋对齐之后这两者会差开
+  A.dir = goRight ? -1 : 1;
   A.x = tx; A.y = ty;
   catBob(.34);
   A.el.cy.classList.add("go");
