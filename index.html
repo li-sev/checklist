@@ -666,6 +666,32 @@
   .cb .nown span{font-size:11.5px;letter-spacing:2px;color:var(--dim)}
   .cb .nlog{margin:4px 0 0;font-size:12.5px;line-height:2.1;letter-spacing:.5px;color:var(--ink)}
   .cb .nlog b{color:var(--gold);font-family:ui-monospace,Consolas,monospace;font-weight:700}
+  /* 摊开：铺满整块屏，院子撑到最大，底下那些收起来。
+     .dlg 是 flex column 而 .cpane 是块，中间断一层，院子的 flex:1 传不下去 ——
+     摊开时把当前那一页也变成 flex 才撑得满 */
+  .mask.wide{padding:0;align-items:stretch}
+  .mask.wide .dlg{max-width:none;max-height:none;width:100%;border-radius:0;border-top:0;
+    display:flex;flex-direction:column;padding:14px}
+  .mask.wide .cpane.on{display:flex;flex-direction:column;flex:1;min-height:0;
+    justify-content:center;animation:none}
+  /* 院子里的东西都贴着地（bottom:12%），竖屏一撑满就是上头一大片空 ——
+     竖着的时候封个顶，剩下的空间上下分掉；横过来才让它占满 */
+  .mask.wide .cst{height:auto;flex:1;min-height:150px;max-height:46vh}
+  /* 摊开是为了看猫，架子、长注、名字这些先收起来。喂食那条和状态句留着 */
+  .mask.wide .ctabs,.mask.wide .ctl,.mask.wide .ctoys.pick,.mask.wide .cnote,
+  .mask.wide .cnm,.mask.wide .cgift,.mask.wide .cmeta,.mask.wide .nown{display:none}
+  .mask.wide .csay{min-height:0;margin:6px 0}
+  .mask.wide .nrow{margin:8px 0 0}
+  /* 横过来屏幕矮，底下再收一收，把高度全让给院子 */
+  @media (orientation:landscape){
+    .mask.wide .dlg{padding:10px}
+    .mask.wide .cst{max-height:none}            /* 横过来就占满，院子越宽猫跑得越开 */
+    .mask.wide .csay{margin:4px 0;font-size:12.5px;line-height:1.6}
+    .mask.wide .cfd,.mask.wide .cbar{display:none}
+    .mask.wide .btns{margin-top:8px}
+    .mask.wide .btns .btn{min-height:38px}
+    .mask.wide .ntime{font-size:23px}
+  }
   /* 院子里那盏灯。搁在右上角高处 —— 地上那一排（窝、玩具、碗）各有各的落点，
      玩具默认就撂在右下角，灯跟它们挤在一层必被压住。
      .cy>span 本来是 bottom:12%、left:0 由 JS 逐个给横坐标，这一盏两头都改掉，
@@ -677,7 +703,7 @@
      光心落在灯那一头，不是正中 */
   .cb .cst{transition:background .9s ease}
   .cb .cst.lit{background:radial-gradient(ellipse 66% 82% at 82% 16%,
-    rgba(96,54,12,.24) 0%, rgba(28,16,5,.38) 60%, rgba(16,9,3,.46) 100%)}
+    rgba(124,68,14,.26) 0%, rgba(52,28,7,.40) 58%, rgba(26,14,4,.48) 100%)}
 
   /* ── 问卜：两条路的岔口 ── */
   .bkb .bkc{display:block;width:100%;text-align:left;cursor:pointer;margin-bottom:10px;
@@ -1754,6 +1780,7 @@
       连批的天数照旧要靠批折子攒。</p>
   </div>
   <div class="btns">
+    <button class="btn" id="ctWide">摊开</button>
     <button class="btn pri" id="ctClose">摸够了</button>
   </div>
 </div></div>
@@ -1849,7 +1876,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v87" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v88" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -5376,7 +5403,63 @@ function openCat(){
   paintCat(gift);
   save(true);
 }
-function shutCat(){ catLaserOff(); catHalt(); mask12.classList.remove("on"); }
+function shutCat(){ catLaserOff(); catHalt(); catWide(false); mask12.classList.remove("on"); }
+/* 院子换了尺寸（摊开、收起、转屏、地址栏收放）就重量一遍。
+   catStart 只在开门那一下量 A.W/A.H，此后一概不管 —— 院子一变宽变窄，
+   猫就被夹在旧边界里，或者一路走到新院子外头去。原先只有「关门再开」
+   能纠正它，摊开会把这毛病放得很大，所以这儿单开一条重量的路。 */
+function catRemeasure(){
+  const A = CA; if (!A || !A.el.y) return;
+  const W = A.el.y.clientWidth, H = A.el.y.clientHeight;
+  if (!W || !H || (W === A.W && H === A.H)) return;
+  A.W = W; A.H = H;
+  A.tyLo = -Math.round(H * .42);                 // 玩具能举多高，跟着院子走
+  A.cw = A.el.em.offsetWidth || A.cw;
+  A.bedW = A.el.bed ? (A.el.bed.offsetWidth || A.bedW) : 0;
+  A.bedH = A.el.bed ? (A.el.bed.offsetHeight || A.bedH) : 0;
+  A.toyW = A.el.toyw ? (A.el.toyw.offsetWidth || A.toyW) : 0;
+  A.bowlW = A.el.bowl ? (A.el.bowl.offsetWidth || A.bowlW) : 0;
+  A.bedX = A.pad + Math.max(0, (A.cw - A.bedW) / 2);
+  A.bowlX = Math.max(A.pad, A.W * .3);
+  A.x    = clamp(A.x,    A.pad, Math.max(A.pad, A.W - A.cw - A.pad));
+  A.toyX = clamp(A.toyX, A.pad, Math.max(A.pad, A.W - A.toyW - A.pad));
+  A.toyY = clamp(A.toyY, A.tyLo, A.yHi);
+  const put = (el, x, y) => { if (el){ el.style.transitionDuration = "0s";
+    el.style.transform = `translate(${Math.round(x)}px,${Math.round(y || 0)}px)`; } };
+  put(A.el.bed, A.bedX, A.bedY); put(A.el.toyw, A.toyX, A.toyY); put(A.el.bowl, A.bowlX, 0);
+  // 猫那一层的 transform 里还有抬高、进深，得走 catXf，不能照上头那样拼
+  if (A.el.wk){ A.el.wk.style.transitionDuration = "0s"; A.el.wk.style.transform = catXf(A); }
+  catDepth();
+}
+/* 摊开：院子撑满整块屏。顺手要一次真全屏 —— iPad 要得到，iPhone 要不到
+   （那边至今只有 video 能全屏），要不到就只是铺满浏览器那一块。
+   两个 API 都返回 Promise，要不到是 reject 不是抛错，try/catch 接不住，得挂 .catch */
+function catWide(on){
+  if (!mask12.classList.contains("wide") === !on) { if (!on) return; }
+  mask12.classList.toggle("wide", !!on);
+  const w = $("#ctWide"); if (w) w.textContent = on ? "收起" : "摊开";
+  const hush = r => { r && r.catch && r.catch(() => {}); };
+  const el = $(".cb");
+  if (on && el){
+    const req = el.requestFullscreen || el.webkitRequestFullscreen;
+    try { req && hush(req.call(el)); } catch(e){}
+  } else if (!on && (document.fullscreenElement || document.webkitFullscreenElement)){
+    const ex = document.exitFullscreen || document.webkitExitFullscreen;
+    try { ex && hush(ex.call(document)); } catch(e){}
+  }
+  setTimeout(catRemeasure, 60);                  // 等这一版排完再量
+}
+$("#ctWide").onclick = () => catWide(!mask12.classList.contains("wide"));
+// 从系统那个全屏退出来（比如按了 Esc），按钮上的字得跟着退回去
+document.addEventListener("fullscreenchange", () => {
+  if (!document.fullscreenElement && mask12.classList.contains("wide")) catWide(false);
+});
+/* 转屏、拖窗口、手机地址栏一收一放，院子的宽高都会变。防抖照 save 那边的路子 */
+let catReszT = null;
+addEventListener("resize", () => {
+  clearTimeout(catReszT);
+  catReszT = setTimeout(catRemeasure, 260);
+});
 $(".cb .ctabs").addEventListener("click", e => {
   const b = e.target.closest(".ctb"); if (!b || b.classList.contains("on")) return;
   $$(".cb .ctb").forEach(x => x.classList.toggle("on", x === b));
