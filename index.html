@@ -1953,7 +1953,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v84" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v85" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -5790,6 +5790,12 @@ function shutNight(){
   nkWide(false);
   paintNightChip();
 }
+/* 夜课 / 课簿两页对切。照猫窝那边的写法，配对键是 data-np */
+$(".nb .ntabs").addEventListener("click", e => {
+  const b = e.target.closest(".ntb"); if (!b || b.classList.contains("on")) return;
+  $$(".nb .ntb").forEach(x => x.classList.toggle("on", x === b));
+  $$(".nb .npane").forEach(x => x.classList.toggle("on", x.dataset.np === b.dataset.np));
+});
 $("#nbBtn").onclick = openNight;
 $("#nbClose").onclick = shutNight;
 $("#nbGo").onclick = () => { punch($("#nbGo")); NB.on ? nkOut("off") : nkLight(); };
