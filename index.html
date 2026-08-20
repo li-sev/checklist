@@ -634,135 +634,53 @@
   .cb .cnote{margin:10px 0 0;font-size:11.5px;line-height:1.8;color:var(--dim);letter-spacing:.5px}
 
   /* ── 夜课：一盏灯 ── */
-  /* 通篇照猫窝那一套（.cb .*）抄，改成 .nb .*。灯亮着的时候案头暗下来，
-     暗是拿一层黑遮罩做的，不是换底色 —— 底下压着十张纸色，换底色配不过来 */
-  .nb .nst{position:relative;height:170px;overflow:hidden;border-radius:6px;
-    display:flex;align-items:flex-end;justify-content:center;gap:14px;
-    padding:0 12px 16px;user-select:none;-webkit-user-select:none;
-    -webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
-  /* 一层黑压上去混出来的是灰，不像夜。改成从灯那一点往外散的暖光：
-     中间透出点火色，四边压到近乎全黑 —— 一盏灯照亮案头一小片，就是这个样子 */
-  .nb .nst::before{content:"";position:absolute;inset:0;pointer-events:none;
-    background:radial-gradient(ellipse 52% 66% at 50% 66%,
-      rgba(74,38,8,.62) 0%, rgba(24,12,3,.93) 62%, #080502 100%);
-    opacity:0;transition:opacity .9s ease}
-  .nb .nst.lit::before{opacity:.9}
-  /* 灯灭的时候是一盏冷的：抽掉颜色压暗。点着了才还它本色，外头罩一圈光 */
-  .nb .nlamp,.nb .ncat{position:relative;z-index:2;line-height:1;
-    transition:filter .9s ease}
-  .nb .nlamp{font-size:52px;filter:grayscale(.75) brightness(.72)}
-  /* 压扁一点点，看着像卧着而不是站着 —— 这层只摆姿势，不动画；
-     呼吸那条动画在里层的 i 上，两下不打架 */
-  .nb .ncat{font-size:38px;filter:grayscale(.5) brightness(.78);
-    transform:scaleY(.84) translateY(6%);transform-origin:50% 100%}
-  .nb .nst.lit .nlamp,.nb .nst.lit .ncat{filter:none}
-  /* 光晕照激光红点那条（clzq）的路子写：只动 shadow，不碰 transform */
-  .nb .nst.lit .nlamp{animation:nbglow 2.7s ease-in-out infinite}
-  @keyframes nbglow{0%,100%{text-shadow:0 0 13px rgba(255,176,80,.55)}
-    50%{text-shadow:0 0 26px rgba(255,201,116,.9)}}
-  /* 猫身上这两条动画是猫窝那边现成的：catbr 本来就是它睡着时的呼吸，
-     catyaw 本来就是打哈欠伸懒腰。套在里层的 i 上动，外层不碰 */
-  .nb .ncat i{display:inline-block;font-style:normal}
-  .nb .nst.lit .ncat i{animation:catbr 3.4s ease-in-out infinite}
-  .nb .ncat i.yawn{animation:catyaw .8s ease}
-  .nb .ntime{position:absolute;left:0;right:0;top:26px;z-index:2;text-align:center;
-    font:34px/1 ui-monospace,Consolas,monospace;font-variant-numeric:tabular-nums;
-    letter-spacing:2px;color:var(--dim);transition:color .9s ease}
-  .nb .nst.lit .ntime{color:#f2e2c4}
-  .nb .ntime small{display:block;margin-top:7px;font:11.5px/1 inherit;letter-spacing:3px;
-    font-family:inherit;opacity:.7}
-  /* 底下这些跟猫窝那边一一对应，值也照抄，免得两个面板看着不像一家 */
-  .nb .ntabs{display:flex;margin:0 0 12px;border:1px solid var(--line);
-    border-radius:6px;overflow:hidden}
-  .nb .ntb{flex:1;min-height:38px;border:0;background:var(--card);font-size:15px;
-    letter-spacing:3px;color:var(--dim);padding:0 2px;white-space:nowrap}
-  .nb .ntb+.ntb{border-left:1px solid var(--line)}
-  .nb .ntb.on{background:var(--accent);color:var(--onacc);font-weight:700}
-  .nb .ntb i{font-style:normal;font-size:10.5px;letter-spacing:0;opacity:.72;margin-left:4px;
-    font-family:ui-monospace,Consolas,monospace}
-  .nb .npane{display:none}
-  .nb .npane.on{display:block;animation:panein .16s ease-out}
-  .nb .nsay{min-height:3.9em;margin:0 0 10px;font-size:13.5px;line-height:1.95;
-    letter-spacing:.5px;color:var(--ink);text-align:center}
-  .nb .nbar{height:7px;border-radius:4px;background:var(--card);
-    border:1px solid var(--line);overflow:hidden}
-  .nb .nbar i{display:block;height:100%;width:0;background:var(--gold);transition:width .9s linear}
-  .nb .nmeta{min-height:3.6em;margin:5px 0 0;font-size:11.5px;line-height:1.8;
-    letter-spacing:.5px;color:var(--dim);text-align:center}
-  .nb .nfd{display:flex;align-items:center;justify-content:center;gap:9px;
-    margin:10px 0 6px;padding:9px 10px;border:1px dashed var(--line);border-radius:6px;
-    background:var(--card);cursor:pointer;user-select:none;-webkit-user-select:none;
-    touch-action:manipulation;transition:background .15s}
-  .nb .nfd:active{background:var(--soft)}
-  .nb .nfd b{font-size:19px;line-height:1;font-weight:400}
-  .nb .nfd .n{font-size:15px;letter-spacing:2px;color:var(--ink);font-weight:700}
-  .nb .nfd .t{font-size:11.5px;letter-spacing:1px;color:var(--dim)}
-  .nb .ntoys{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-  .nb .ntoys .ty{border:1px solid var(--line);border-radius:4px;padding:5px 9px;
-    font-size:11.5px;letter-spacing:1px;color:var(--ink);background:var(--card);
-    cursor:pointer;transition:border-color .15s,color .15s}
-  .nb .ntoys .ty.on{border-color:var(--accent);color:var(--accent);font-weight:700;
-    background:var(--soft)}
-  .nb .ntoys .ty:active{border-color:var(--accent)}
-  .nb .ntoys .ty.no{opacity:.5;cursor:default}      /* 灯亮着不让改时长 */
+  /* 夜课不另开面板，就摆在猫窝那一页、院子正底下 —— 灯点着的时候
+     你看的是院子里那只猫，表在这一条上自己走。
+     时长牌、进度条直接借猫窝现成的 .ctoys / .cbar，不另写一套 */
+  .cb .nrow{margin:8px 0 2px}
+  .cb .nline{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+  .cb .nlp{font-size:19px;line-height:1;font-weight:400;
+    filter:grayscale(.8) brightness(.75);transition:filter .8s ease}
+  .cb .nrow.lit .nlp{filter:none;animation:nbglow 2.7s ease-in-out infinite}
+  /* 光晕照激光红点那条（clzq）的路子：只动 shadow，不碰 transform */
+  @keyframes nbglow{0%,100%{text-shadow:0 0 7px rgba(255,176,80,.5)}
+    50%{text-shadow:0 0 15px rgba(255,201,116,.85)}}
+  /* 等宽 + tabular-nums，不然每跳一秒整行都在抖 */
+  .cb .ntime{font:19px/1 ui-monospace,Consolas,monospace;font-variant-numeric:tabular-nums;
+    letter-spacing:1px;color:var(--dim);transition:color .8s ease}
+  .cb .nrow.lit .ntime{color:var(--ink);font-weight:700}
+  .cb .nrow.pause .ntime{color:var(--dim)}
+  .cb .nsub{font-size:11px;letter-spacing:1px;color:var(--dim);white-space:nowrap}
+  .cb .nbtns{margin-left:auto;display:flex;gap:6px}
+  .cb .nbtn{border:1px solid var(--line);border-radius:5px;background:var(--card);
+    padding:6px 12px;font-size:12.5px;letter-spacing:2px;color:var(--ink);
+    touch-action:manipulation;transition:border-color .15s,background .15s}
+  .cb .nbtn:active{background:var(--soft)}
+  .cb .nbtn.go{border-color:var(--accent);color:var(--accent);font-weight:700}
+  .cb .nrow .cbar{height:5px}
+  .cb .nrow .ctoys{margin-top:8px}
   /* 自己填几分钟。照改名那个框的样子，写成一条下划线，不像个输入框 */
-  .nb .nown{display:none;align-items:baseline;justify-content:center;gap:7px;margin-top:9px}
-  .nb .nown.on{display:flex}
-  .nb .nown input{width:4em;text-align:center;font:inherit;font-size:17px;letter-spacing:2px;
+  .cb .nown{display:none;align-items:baseline;gap:7px;margin-top:8px}
+  .cb .nown.on{display:flex}
+  .cb .nown input{width:4em;text-align:center;font:inherit;font-size:16px;letter-spacing:2px;
     color:var(--accent);background:transparent;border:0;border-bottom:1px dashed var(--line);
     padding:2px 0;outline:none;font-family:ui-monospace,Consolas,monospace}
-  .nb .nown input:focus{border-bottom-color:var(--accent)}
-  .nb .nown span{font-size:12px;letter-spacing:2px;color:var(--dim)}
-  .nb .ntl{display:block;margin:12px 0 4px;font-size:11.5px;letter-spacing:2px;color:var(--dim)}
-  .nb .ntl small{margin-left:6px;letter-spacing:.5px;opacity:.8}
-  .nb .nnote{margin:10px 0 0;font-size:11.5px;line-height:1.8;color:var(--dim);letter-spacing:.5px}
-  .nb .nlog{margin:4px 0 0;font-size:12.5px;line-height:2.1;letter-spacing:.5px;color:var(--ink)}
-  .nb .nlog b{color:var(--gold);font-family:ui-monospace,Consolas,monospace;font-weight:700}
-  /* 摊开：铺满整块屏，把说明、时长、页签全收起来，只剩灯和数字。
-     iPad 上还会顺手要一次真全屏；iPhone 要不到，就是铺满浏览器那一块 */
-  .mask.wide{padding:0;align-items:stretch}
-  .mask.wide .dlg{max-width:none;max-height:none;width:100%;border-radius:0;border-top:0;
-    display:flex;flex-direction:column;justify-content:center;padding:20px}
-  .mask.wide .ntabs,.mask.wide .ntl,.mask.wide .ntoys,.mask.wide .nown,
-  .mask.wide .nnote,.mask.wide .nmeta,.mask.wide .nbar{display:none}
-  /* .dlg 是 flex column，可 .npane 是块 —— 中间断了一层，舞台的 flex:1 传不下去。
-     摊开时把当前那一页也变成 flex，舞台才撑得满 */
-  .mask.wide .npane.on{display:flex;flex-direction:column;flex:1;min-height:0;animation:none}
-  .mask.wide .nst{height:auto;flex:1;min-height:140px;padding:0 12px;
-    align-items:center;flex-wrap:wrap;align-content:center;gap:2vh 4vw}
-  /* 舞台本来是横着排的一行。竖屏摊开要数字独占一行、灯跟猫并排在下头 ——
-     给数字占满一整行，后面的自然折下去 */
-  .mask.wide .ntime{position:static;width:100%;padding:0;margin:0;font-size:11vh}
-  .mask.wide .ntime small{font-size:2.2vh;margin-top:1.4vh}
-  .mask.wide .nlamp{font-size:15vh}
-  .mask.wide .ncat{font-size:11vh}
-  .mask.wide .nsay{min-height:0;margin:0 0 14px}
-  /* 摊开又点着灯：整块屏一起暗下去。只亮半块、下半截还是白纸，看着是割裂的。
-     这儿的几个颜色是写死的 —— 底下压着十张纸色，var(--ink) 那些在暗底上看不见。
-     只在「摊开 + 点着」这一种情形下生效，收起来就还回纸色那一套 */
-  .mask.wide.lit .dlg{background-color:#0c0803;background-image:none}
-  .mask.wide.lit .nst{border-radius:0}
-  .mask.wide.lit .nsay{color:#e6d5b6}
-  .mask.wide.lit .nfd{background:rgba(255,236,205,.06);border-color:rgba(232,213,178,.3)}
-  .mask.wide.lit .nfd .n{color:#f0dfc0}
-  .mask.wide.lit .nfd .t{color:#a89376}
-  .mask.wide.lit .btn{background:rgba(255,236,205,.07);border-color:rgba(232,213,178,.26);
-    color:#e6d5b6}
-  .mask.wide.lit .btn.pri{background:var(--accent);color:var(--onacc);border-color:transparent}
-  /* 横过来：屏幕矮，灯跟数字并排，别上下堆。
-     下头那几条也一并收窄 —— 横屏统共就四百来高，让灯多占一点 */
-  @media (orientation:landscape){
-    .mask.wide .dlg{padding:12px}
-    .mask.wide .nst{flex-wrap:nowrap;gap:3vw}
-    .mask.wide .ntime{width:auto;margin:0 2vw 0 0;font-size:20vh}   /* 横屏就并排，不折行 */
-    .mask.wide .ntime small{font-size:2.6vh;margin-top:1vh}
-    .mask.wide .nlamp{font-size:27vh}
-    .mask.wide .ncat{font-size:18vh}
-    .mask.wide .nsay{margin:0 0 6px;font-size:12.5px;line-height:1.7}
-    .mask.wide .nfd{margin:6px 0 0;padding:6px 10px}
-    .mask.wide .btns{margin-top:8px}
-    .mask.wide .btns .btn{min-height:38px}
-  }
+  .cb .nown input:focus{border-bottom-color:var(--accent)}
+  .cb .nown span{font-size:11.5px;letter-spacing:2px;color:var(--dim)}
+  .cb .nlog{margin:4px 0 0;font-size:12.5px;line-height:2.1;letter-spacing:.5px;color:var(--ink)}
+  .cb .nlog b{color:var(--gold);font-family:ui-monospace,Consolas,monospace;font-weight:700}
+  /* 院子里那盏灯。搁在右上角高处 —— 地上那一排（窝、玩具、碗）各有各的落点，
+     玩具默认就撂在右下角，灯跟它们挤在一层必被压住。
+     .cy>span 本来是 bottom:12%、left:0 由 JS 逐个给横坐标，这一盏两头都改掉，
+     钉死在角上，不进 A.* 那套排位 —— 猫和玩具怎么走都不必管它 */
+  .cb .cy .clamp{left:auto;right:9px;bottom:auto;top:9px;z-index:1;font-size:27px;
+    filter:grayscale(.8) brightness(.72);transition:filter .9s ease}
+  .cb .cst.lit .clamp{filter:none;animation:nbglow 2.7s ease-in-out infinite}
+  /* 灯点着，院子稍微暗一点 —— 暗的是底，猫和东西照旧亮着，还看得清清楚楚。
+     光心落在灯那一头，不是正中 */
+  .cb .cst{transition:background .9s ease}
+  .cb .cst.lit{background:radial-gradient(ellipse 66% 82% at 82% 16%,
+    rgba(96,54,12,.24) 0%, rgba(28,16,5,.38) 60%, rgba(16,9,3,.46) 100%)}
 
   /* ── 问卜：两条路的岔口 ── */
   .bkb .bkc{display:block;width:100%;text-align:left;cursor:pointer;margin-bottom:10px;
@@ -954,7 +872,8 @@
     /* 这两条一直漏在外头：逗猫棒自个儿摆、激光红点脉动，关了动效照样在动 */
     .cb .cy .ctoy.sway,.cb .cy .clz.on{animation:none}
     /* 夜课：灯不闪，猫不起伏。灯亮时案头照样暗下来，那是底色不是动效 */
-    .nb .nst.lit .nlamp,.nb .nst.lit .ncat i,.nb .ncat i.yawn{animation:none}
+    /* 夜课：灯不闪。院子暗下来那一层是底色不是动效，留着 */
+    .cb .nrow.lit .nlp,.cb .cst.lit .clamp{animation:none}
   }
 
   /* 内务府 */
@@ -1786,9 +1705,25 @@
   <div class="ctabs">
     <button class="ctb on" data-cp="yard">猫窝</button>
     <button class="ctb" data-cp="box">什物匣<i id="ctBoxN"></i></button>
+    <button class="ctb" data-cp="night">课簿<i id="nbLogN"></i></button>
   </div>
   <div class="cpane on" data-cp="yard">
   <div class="cst" id="ctArt" title="摸一把它；拍一下窝，叫它回去躺着"></div>
+  <!-- 夜课就摆在院子底下：灯点着的时候人看着猫，表在这一条上走 -->
+  <div class="nrow" id="ctNight">
+    <div class="nline">
+      <b class="nlp">🪔</b>
+      <span class="ntime" id="nbTime">25:00</span>
+      <span class="nsub" id="nbSub"></span>
+      <span class="nbtns" id="nbBtns"></span>
+    </div>
+    <div class="cbar"><i id="nbBar"></i></div>
+    <div class="ctoys pick" id="nbLen"></div>
+    <div class="nown" id="nbOwn">
+      <input id="nbMin" type="number" inputmode="numeric" min="1" max="600" step="1">
+      <span>分钟</span>
+    </div>
+  </div>
   <div class="cnm">
     <input id="ctName" maxlength="6" placeholder="雪奴" spellcheck="false"><span>·御猫</span>
   </div>
@@ -1814,54 +1749,21 @@
       匣里的东西点一下，它告诉你这是打哪儿来的。二十样收齐，它就不出门了。<br>
       这些买不着，只能等它自己带回来。</p>
   </div>
+  <div class="cpane" data-cp="night">
+    <p class="csay" id="nbLogSay"></p>
+    <div class="nlog" id="nbLogBox"></div>
+    <p class="cnote">点着灯就一直走 —— 你切去别处、屏幕黑了，表照旧。
+      要停只有两条：按「暂停」，或者把这一页关掉。<br>
+      每坐满五分钟一两银子，满十五分钟一条鱼干；一盏灯当中一回没暂停过、
+      又坐够二十五分钟，收灯时另有一笔。<br>
+      这本账跟折子那本各记各的 —— 点灯不算「今日批过折子」，
+      连批的天数照旧要靠批折子攒。</p>
+  </div>
   <div class="btns">
     <button class="btn pri" id="ctClose">摸够了</button>
   </div>
 </div></div>
 
-<!-- 夜课：点一盏灯，坐着不动它就自己往上长 -->
-<div class="mask" id="mask13"><div class="dlg sheet nb">
-  <div class="ntabs">
-    <button class="ntb on" data-np="lamp">夜课</button>
-    <button class="ntb" data-np="log">课簿<i id="nbLogN"></i></button>
-  </div>
-  <div class="npane on" data-np="lamp">
-  <div class="nst" id="nbArt">
-    <div class="ntime" id="nbTime">--:--<small id="nbSub">还没点</small></div>
-    <div class="nlamp">🪔</div>
-    <div class="ncat" id="nbCat"><i>🐈</i></div>
-  </div>
-  <p class="nsay" id="nbSay"></p>
-  <div class="nbar"><i id="nbBar"></i></div>
-  <p class="nmeta" id="nbMeta"></p>
-  <!-- 点灯 / 收灯。灯亮着的时候这一条是收灯 -->
-  <div class="nfd" id="nbGo"></div>
-  <label class="ntl">坐多久 <small>灯点着的时候改不了</small></label>
-  <div class="ntoys" id="nbLen"></div>
-  <div class="nown" id="nbOwn">
-    <input id="nbMin" type="number" inputmode="numeric" min="1" max="600" step="1">
-    <span>分钟</span>
-  </div>
-  <p class="nnote">点着灯，人得留在这一页上，银子和鱼干才往上走 ——
-    切去别处、屏幕锁了，表就停在那儿，回来接着走，已经挣的不退。<br>
-    每坐满五分钟一两银子，满十五分钟一条鱼干；一盏灯中间一次没走开、又坐够
-    二十五分钟，收灯时另有一笔。<br>
-    合上这一页不算灭灯，灯还亮着 —— 要结束按那条「收灯」。
-    「摊开」是把它铺满整块屏；想在手机上连地址栏都不见，把这页添到主屏，
-    从主屏那个图标进来就是了。</p>
-  </div>
-  <div class="npane" data-np="log">
-    <p class="nsay" id="nbLogSay"></p>
-    <div class="nlog" id="nbLogBox"></div>
-    <p class="nnote">夜课只认你人在这一页上的工夫。切走的那几分钟不算数，
-      也不会倒扣。<br>
-      这本账跟折子那本各记各的 —— 点灯不算「今日批过折子」，连批的天数照旧要靠批折子攒。</p>
-  </div>
-  <div class="btns">
-    <button class="btn" id="nbWide">摊开</button>
-    <button class="btn pri" id="nbClose">合上</button>
-  </div>
-</div></div>
 
 <!-- 御猫叼回来撂在案头的那一样。点一下收进什物匣 -->
 <button id="ctDrop" hidden></button>
@@ -1953,7 +1855,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v85" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v86" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -2958,9 +2860,11 @@ const catDef = () => ({f:.45, d:"", g:0, gd:"", toys:[], nm:"", food:0, hb:0, dr
 /* 夜课的账。只落「已经成了事实」的数目字 ——
    眼下这一盏走到哪儿了（起点、累计毫秒）搁在内存的 NB 里，不写盘：
    save() 每回是把整个 D 全量 stringify，秒级写太贵；页面被杀那一下 t0 也是脏的 */
-const nkDef = () => ({day:"", dm:0, tot:0, best:0, ses:0, len:25});
+const nkDef = () => ({day:"", dm:0, tot:0, best:0, ses:0, len:25, own:0});
 //  day 今天是哪天 · dm 今天坐了几分钟 · tot 累计分钟 · best 单盏最长 · ses 点过几盏
 //  len 上回挑的时长（分钟，0 = 不限时）
+//  own 是不是「自定」那一档。得单记一个 —— 光看 len 认不出来：
+//      你自定填 25，跟按了 25 分钟那块牌，len 一模一样，输入框却该只在前者露面
 const GDEF = () => ({ag: DEMO ? 99999 : 0, owe:0, tot:0, cnt:0, nc:0, day:"", tn:0, run:0, best:0, sfx:1,
                      own: DEMO ? Object.keys(ALLWARES) : Object.values(ALLKIT).map(r => r.d), med:[],
                      seal:"zhun", paper:"xuan", font:"song", mount:"sumian", grain:"jiehang", fx:"fxno",
@@ -3568,6 +3472,9 @@ function catScene(){
     P.push(`<span class="ctoyw"><span class="ctoy${pet.play === "swing" ? " sway" : ""}"`
          + ` style="font-size:${px(.40)}">${pet.e}</span></span>`);
   if (c.f < .2) P.push(`<span class="cbw" style="font-size:${px(.44)}">🥣</span>`);
+  /* 夜课那盏灯。一直摆在院子右下角，灭的时候是冷的、点着了才亮。
+     位置靠 CSS 钉死（right），不进 A.* 那套排位 —— 猫和玩具怎么走都不必管它 */
+  P.push(`<span class="clamp">🪔</span>`);
   // 只有猫自己吃胖了要变大 —— 字号挂在它这一层，不挂在院子上
   /* 三层，各管各的：.cwk 管走到哪、.cfl 管脸朝哪、.cem 管扑打滚这些动作。
      朝向原先跟位移写在同一个 transform 里 —— 走一段两秒的路，那个翻面
@@ -5463,6 +5370,7 @@ function paintCat(gift){
       }).join("");
   }
   paintCatChip();
+  paintNight();                                    // 院子底下那条表，跟着一起画
 }
 function openCat(){
   const gift = catGift();          // 多半在开机时就结过了，这儿是兜底
@@ -5578,35 +5486,41 @@ $("#ctName").oninput = e => {
 };
 
 /* ══════════ 夜课：一盏灯 ══════════
-   点着灯坐在这一页上，银子和鱼干自己往上长；人一走开就停。
+   不另开面板 —— 就在猫窝这一页，院子正底下加一条表。灯点着的时候
+   你看的是院子里那只真猫：它照样溜达、扑玩具、钻窝睡觉，
+   表在底下自己走。陪着你的是它，不是一张静止的画。
 
-   计时不数拍子，记时刻算差 —— 页面切到后台，setTimeout 会被浏览器节流到
-   分钟级，拿 tick 累加必然少算。所以只记「这一段是什么时候开始看得见的」，
-   到不可见那一刻把这一段结进 acc。这套写法同时也就是「人在画面里才算」本身。 */
+   走表这件事：只记时刻，不数拍子（页面切到后台 setTimeout 会被节流到
+   分钟级，拿 tick 累加必然少算）。切 App、锁屏一概照走 ——
+   要停只有两条路：你按暂停，或者把这一页关掉（NB 活在内存里，关了就没了）。 */
 const NKPAY = 5, NKFISH = 15;                  // 每满五分钟一两，每满十五分钟一条鱼干
-const NKFULL = 25;                             // 一次没走开又坐满这些分钟，收灯另有一笔
+const NKFULL = 25;                             // 一回没暂停又坐满这些分钟，收灯另有一笔
 const NKLENS = [15, 25, 45, 60, 90, 0];        // 0 = 不限时
 /* 这一盏灯的运行态。全在内存里，不写盘 —— 见 nkDef 那一段的说明 */
-let NB = {on:0, t0:0, acc:0, target:0, breaks:0, paid:0, fed:0, tick:null, wl:null, done:0};
+let NB = {on:0, t0:0, acc:0, target:0, stops:0, paid:0, fed:0, tick:null, wl:null};
 const nkMs   = () => NB.acc + (NB.t0 ? Date.now() - NB.t0 : 0);   // 这一盏到眼下坐了多少
 const nkMin  = () => Math.floor(nkMs() / 60000);
 const nkLeft = () => NB.target ? Math.max(0, NB.target - nkMs()) : 0;
+const nkRun  = () => !!(NB.on && NB.t0);       // 亮着而且正在走（没按暂停）
 /* 毫秒 → 分:秒。超过一个钟头就写成 时:分:秒 */
 function nkClock(ms){
   const s = Math.max(0, Math.round(ms / 1000)), p = n => String(n).padStart(2, "0");
   return s >= 3600 ? Math.floor(s / 3600) + ":" + p(Math.floor(s % 3600 / 60)) + ":" + p(s % 60)
                    : p(Math.floor(s / 60)) + ":" + p(s % 60);
 }
-/* 屏幕别自己锁上 —— 手机放着不动，一锁屏就等于人走开了，表当场停。
-   iOS 要 16.4 以上才有这个，没有就悄悄算了，不报错也不拦着点灯。
-   页面一隐藏系统会自己把锁放掉，所以回到前台得重新要一次。 */
+/* 屏幕别自己黑 —— 表虽然照走，可你是来看猫的，黑了就看不着了。
+   iOS 要 16.4 以上才有这个，没有就悄悄算了。页面一隐藏系统会自己把锁放掉，
+   所以回到前台得重新要一次（底下那个 visibilitychange 只干这一件事，不碰表） */
 async function nkLock(){
-  if (NB.wl) return;
-  try { NB.wl = await navigator.wakeLock.request("screen"); NB.wl.addEventListener("release",
-        () => { NB.wl = null; }); }
+  if (NB.wl || !nkRun()) return;
+  try { NB.wl = await navigator.wakeLock.request("screen");
+        NB.wl.addEventListener("release", () => { NB.wl = null; }); }
   catch(e){ NB.wl = null; }
 }
 function nkUnlock(){ try { NB.wl && NB.wl.release(); } catch(e){} NB.wl = null; }
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) nkLock();               // 只是把屏幕常亮要回来，表一直没停过
+});
 
 /* 今天翻篇了就把「今日几分钟」清掉。照连批那边的老规矩：存个日子串，比对今天 */
 function nkDay(){
@@ -5614,34 +5528,38 @@ function nkDay(){
   if (g.nk.day !== t){ g.nk.day = t; g.nk.dm = 0; }
   return g.nk;
 }
-/* 坐满一格就发一格。银子和鱼干各有各的格子，各发各的，
-   发到第几格记在 NB.paid / NB.fed 上，所以补发多少次都不会重 */
+/* 坐满一格就发一格。银子和鱼干各有各的格子，发到第几格记在 NB.paid / NB.fed 上，
+   所以补发多少次都不会重 */
 function nkPay(){
   const m = nkMin();
   const due = Math.floor(m / NKPAY) - NB.paid;
   if (due > 0){
     NB.paid += due;
-    earn(due, $("#nbBtn"));                                  // 抵亏空、飘银子、刷牌子都在里头
-    histLog(ymd(Date.now()), 0, due, null);                  // 不记流水，邸报跟国库就对不上
+    earn(due, $("#ctBtn"));                                  // 抵亏空、飘银子、刷牌子都在里头
+    histLog(ymd(Date.now()), 0, due, null);                  // 不记流水，邸报跟国库对不上
   }
   const fish = Math.floor(m / NKFISH) - NB.fed;
-  if (fish > 0){ NB.fed += fish; catState().food += fish; paintCatChip(); }
+  if (fish > 0){ NB.fed += fish; catState().food += fish; paintCatBits(); }
   if (due > 0 || fish > 0) save();
 }
 /* 点灯 */
 function nkLight(){
   const n = nkDay();
   if (NB.on) return;
-  NB = {on:1, t0: document.hidden ? 0 : Date.now(), acc:0, target: n.len * 60000,
-        breaks:0, paid:0, fed:0, tick:null, wl:null, done:0};
+  NB = {on:1, t0:Date.now(), acc:0, target:n.len * 60000,
+        stops:0, paid:0, fed:0, tick:null, wl:null};
   n.ses++;
   medal("nk1");
-  nkLock();
-  nkTickOn();
-  paintNight();
-  save(true);
+  nkLock(); nkTickOn(); paintNight(); save(true);
 }
-/* 收灯。to 是收灯的由头："done" 坐到点了 · "off" 你自己按的 · "boot" 开机兜底 */
+/* 按一下暂停 / 再按一下接着走。这是唯一能让表停下的手动开关 */
+function nkPause(){
+  if (!NB.on) return;
+  if (NB.t0){ NB.acc += Date.now() - NB.t0; NB.t0 = 0; NB.stops++; nkPay(); nkUnlock(); }
+  else { NB.t0 = Date.now(); nkLock(); }
+  paintNight(); save(true);
+}
+/* 收灯。why："done" 坐到点了 · "off" 你自己按的 */
 function nkOut(why){
   if (!NB.on) return;
   /* 坐到点了就按点上算。每秒查一回，实际总要超出零点几秒；
@@ -5650,39 +5568,38 @@ function nkOut(why){
   nkPay();                                                   // 把最后那几格结掉
   const n = nkDay(), m = nkMin();
   n.dm += m; n.tot += m; n.best = Math.max(n.best || 0, m);
-  /* 圆满：一盏灯当中一次没走开，又坐够了 —— 才有这一笔 */
+  /* 圆满：一盏灯当中一回没按过暂停，又坐够了 —— 才有这一笔 */
   let full = 0;
-  if (!NB.breaks && m >= NKFULL){
+  if (!NB.stops && m >= NKFULL){
     full = Math.round(m / 10);
-    earn(full, $("#nbBtn"));
+    earn(full, $("#ctBtn"));
     histLog(ymd(Date.now()), 0, full, null);
     if (m >= 90) medal("nkb");
   }
-  const got = NB.paid + full, fish = NB.fed, br = NB.breaks;
+  const got = NB.paid + full, fish = NB.fed, st = NB.stops;
   nkTickOff(); nkUnlock();
-  NB.on = 0; NB.t0 = 0; NB.done = why === "done" ? 1 : 0;
+  NB.on = 0; NB.t0 = 0;
   sweep();                                                   // 累计够了的功名在这儿判
   save(true);
-  if (why === "boot") return;                                // 开机兜底：不出声、不报账
-  // 到点这一下：灯自己灭，猫起身伸个懒腰。不响，也不弹要你点的窗
-  if (why === "done") nkYawn();
   paintNight();
+  if (why === "done") catYawn();                             // 到点了，猫起身伸个懒腰
   toast(m < 1 ? "这一盏没坐够一分钟，算了。"
               : `坐了 ${m} 分钟，${got ? "得 " + got + " 两" : "没够五分钟，没银子"}`
                 + (fish ? "、鱼干 " + fish + " 条" : "")
-                + (br ? `。中间走开 ${br} 回` : "。一回没走开"));
+                + (st ? `。当中停过 ${st} 回` : "。一回没停"));
 }
-/* 猫伸个懒腰。catyaw 是猫窝那边现成的打哈欠，正好是这一下 */
-function nkYawn(){
-  const i = $("#nbCat i"); if (!i) return;
-  i.classList.remove("yawn"); void i.offsetWidth; i.classList.add("yawn");
-  setTimeout(() => i && i.classList.remove("yawn"), 900);
+/* 猫伸个懒腰。catyaw 是猫窝那边现成的打哈欠，正好是这一下；
+   关了动效的人没有 CA，那就不必伸了 */
+function catYawn(){
+  const A = CA; if (!A || !A.el.em) return;
+  catFlash("yawn", 800);
 }
-/* 每秒只改数目字，不重画。面板关着就不必跳了，但表还走着 —— 牌子上那个还得动 */
+/* 每秒只改数目字，不重画 */
 function nkTickOn(){
   nkTickOff();
   NB.tick = setInterval(() => {
     if (!NB.on) return nkTickOff();
+    if (!NB.t0) return;                                      // 按着暂停呢
     nkPay();
     if (NB.target && nkLeft() <= 0) return nkOut("done");
     paintNightBits();
@@ -5690,21 +5607,7 @@ function nkTickOn(){
 }
 function nkTickOff(){ clearInterval(NB.tick); NB.tick = null; }
 
-/* 人在不在这一页上。切走、锁屏、切 App 都走这儿 ——
-   驿传和换版检查各自也挂了一个，互不相干，这是第三个 */
-document.addEventListener("visibilitychange", () => {
-  if (!NB.on) return;
-  if (document.hidden){
-    if (NB.t0){ NB.acc += Date.now() - NB.t0; NB.t0 = 0; NB.breaks++; }
-    nkPay(); nkTickOff(); nkUnlock(); save(true);
-  } else {
-    NB.t0 = Date.now();
-    nkLock();                                                // 隐藏时系统把锁放掉了，重新要
-    nkTickOn(); paintNight();
-  }
-});
-
-/* ── 画。照猫窝那边分三层：牌子 / 每秒只动的数目字 / 整块重画 ── */
+/* ── 画。三层：抬头那块牌 / 每秒只动的数目字 / 整条重画 ── */
 function paintNightChip(){
   const b = $("#nbBtn"), c = $("#nbChip"); if (!b) return;
   b.classList.toggle("lit", !!NB.on);
@@ -5713,135 +5616,83 @@ function paintNightChip(){
     : "夜课";
 }
 function paintNightBits(){
-  if (!$("#nbTime")) return;
-  const on = !!NB.on, ms = nkMs(), left = nkLeft();
-  $("#nbTime").firstChild.nodeValue = on ? nkClock(NB.target ? left : ms) : "--:--";
-  $("#nbSub").textContent = !on ? "还没点"
-    : NB.target ? "还剩" : "已坐 " + nkClock(ms);
+  const t = $("#nbTime"); if (!t) return;
+  const on = !!NB.on, ms = nkMs();
+  t.textContent = on ? nkClock(NB.target ? nkLeft() : ms)
+                     : (G().nk.len ? nkClock(G().nk.len * 60000) : "00:00");
+  $("#nbSub").textContent = !on ? (G().nk.len ? "" : "不限时")
+    : !NB.t0 ? "停着"
+    : NB.target ? "还剩 · 已得 " + NB.paid + " 两" : "已坐 · 得 " + NB.paid + " 两";
   // 不限时的没有终点，进度条就一直空着
   $("#nbBar").style.width = (on && NB.target ? Math.min(100, ms / NB.target * 100) : 0) + "%";
-  const n = G().nk, m = Math.floor(ms / 60000);
-  $("#nbMeta").innerHTML = on
-    ? `这一盏 ${m} 分钟 · 已得 ${NB.paid} 两`
-      + (NB.fed ? " · 鱼干 " + NB.fed + " 条" : "")
-      + (NB.breaks ? ` · 走开过 ${NB.breaks} 回` : " · 一回没走开")
-      + `<br>今日 ${n.dm + m} 分钟 · 累计 ${n.tot + m} 分钟`
-    : `今日 ${n.dm} 分钟 · 累计 ${n.tot} 分钟 · 点过 ${n.ses} 盏`
-      + (n.best ? `<br>坐得最久的一盏 ${n.best} 分钟` : "");
   paintNightChip();
 }
-/* 整块重画。开门、点灯、收灯、换时长才走这条 */
+/* 整条重画。开门、点灯、暂停、收灯、换时长才走这条 */
 function paintNight(){
-  const n = nkDay(), on = !!NB.on;
-  $("#nbArt").classList.toggle("lit", on);
-  mask13.classList.toggle("lit", on);              // 摊开的时候整块屏跟着暗，见 .mask.wide.lit
-  $("#nbSay").textContent = nkSay();
-  $("#nbGo").innerHTML = on
-    ? '<b>🌬</b><span class="n">收灯</span><span class="t">这一盏就到这儿</span>'
-    : '<b>🪔</b><span class="n">点灯</span><span class="t">'
-      + (n.len ? "坐 " + n.len + " 分钟" : "不限时，想停就停") + "</span>";
+  const n = nkDay(), on = !!NB.on, run = nkRun();
+  const row = $("#ctNight"); if (!row) return;
+  row.classList.toggle("lit", run);
+  row.classList.toggle("pause", on && !run);
+  $("#ctArt").classList.toggle("lit", run);        // 院子跟着暗下来一点
+  $("#nbBtns").innerHTML = on
+    ? `<button class="nbtn${run ? "" : " go"}" data-nb="pause">${run ? "暂停" : "接着坐"}</button>`
+      + '<button class="nbtn" data-nb="out">收灯</button>'
+    : '<button class="nbtn go" data-nb="light">点灯</button>';
   // 时长牌。灯亮着不让改 —— 改了这一盏该按哪个算说不清
-  $("#nbLen").innerHTML = NKLENS.map(v =>
-    `<span class="ty${v === n.len ? " on" : ""}${on ? " no" : ""}" data-len="${v}">`
-    + (v ? v + " 分钟" : "不限时") + "</span>").join("")
-    + `<span class="ty${NKLENS.includes(n.len) ? "" : " on"}${on ? " no" : ""}" data-len="own">自定</span>`;
-  const own = !NKLENS.includes(n.len);
+  $("#nbLen").innerHTML = on ? "" : NKLENS.map(v =>
+      `<span class="ty${!n.own && v === n.len ? " on" : ""}" data-len="${v}">`
+      + (v ? v + " 分钟" : "不限时") + "</span>").join("")
+    + `<span class="ty${n.own ? " on" : ""}" data-len="own">自定</span>`;
+  const own = !!n.own;
   $("#nbOwn").classList.toggle("on", own && !on);
   // 正在这个框里打字的时候别去动它的值，光标会被顶到末尾
   if (own && document.activeElement !== $("#nbMin")) $("#nbMin").value = n.len;
   paintNightBits();
   paintNightLog();
 }
-/* 一句白话。跟猫那边一样占死高度，长短不一才不会把整块面板顶得上下跳 */
-function nkSay(){
-  const n = G().nk;
-  if (!NB.on) return n.ses === 0
-    ? "灯还没点。挑个时辰，按一下点灯 —— 人留在这一页上，坐着就有进项。"
-    : n.dm ? `今日已坐 ${n.dm} 分钟。灯是灭的。`
-           : "灯是灭的。要坐就点上。";
-  if (document.hidden) return "灯还亮着，可你人不在这儿 —— 表停着呢。";
-  const m = nkMin();
-  if (NB.breaks) return `灯亮着。中间走开过 ${NB.breaks} 回，圆满那一笔今晚是没了 —— 接着坐还是照算。`;
-  if (m < 5) return "灯点上了。头五分钟还没满，坐住。";
-  if (NB.target && nkLeft() < 120000) return "快到了。";
-  return `坐了 ${m} 分钟，一回没走开。`;
-}
 function paintNightLog(){
   const n = G().nk;
   $("#nbLogN").textContent = n.tot ? n.tot + "′" : "";
   $("#nbLogSay").textContent = n.ses
     ? `点过 ${n.ses} 盏灯，拢共坐了 ${n.tot} 分钟。`
-    : "还没点过灯。";
+    : "还没点过灯。挑个时辰，在猫窝那一页按「点灯」。";
   $("#nbLogBox").innerHTML =
       `今日 <b>${n.dm}</b> 分钟<br>累计 <b>${n.tot}</b> 分钟`
     + `<br>坐得最久的一盏 <b>${n.best}</b> 分钟`
     + `<br>点过 <b>${n.ses}</b> 盏`;
 }
-
-/* ── 开门关门。合上这一页不算灭灯：灯还亮着，表照走（人不在画面里照样不涨） ── */
-function openNight(){
-  mask13.classList.add("on");                     // 先开门，display:none 的时候量不出东西
-  $$(".nb .ntb").forEach((x, i) => x.classList.toggle("on", i === 0));
-  $$(".nb .npane").forEach((x, i) => x.classList.toggle("on", i === 0));
-  paintNight();
-}
-function shutNight(){
-  mask13.classList.remove("on");
-  nkWide(false);
-  paintNightChip();
-}
-/* 夜课 / 课簿两页对切。照猫窝那边的写法，配对键是 data-np */
-$(".nb .ntabs").addEventListener("click", e => {
-  const b = e.target.closest(".ntb"); if (!b || b.classList.contains("on")) return;
-  $$(".nb .ntb").forEach(x => x.classList.toggle("on", x === b));
-  $$(".nb .npane").forEach(x => x.classList.toggle("on", x.dataset.np === b.dataset.np));
-});
-$("#nbBtn").onclick = openNight;
-$("#nbClose").onclick = shutNight;
-$("#nbGo").onclick = () => { punch($("#nbGo")); NB.on ? nkOut("off") : nkLight(); };
-mask13.addEventListener("click", e => {
+/* 抬头那块牌：直接开猫窝 —— 灯本来就在那儿点 */
+$("#nbBtn").onclick = () => { openCat(); };
+/* 院子底下这一条上的手。挑时长的牌也从这儿过 */
+$("#ctNight").addEventListener("click", e => {
+  const b = e.target.closest("[data-nb]");
+  if (b){
+    punch(b);
+    const k = b.dataset.nb;
+    if (k === "light") nkLight();
+    else if (k === "pause") nkPause();
+    else nkOut("off");
+    return;
+  }
   const t = e.target.closest("[data-len]");
   if (t){
     if (NB.on) return toast("灯还亮着，改不了时辰。要换先收灯。");
     const g = G(), v = t.dataset.len;
-    if (v === "own"){ g.nk.len = clampLen(+$("#nbMin").value || 25); }
-    else g.nk.len = clampLen(+v);
+    if (v === "own"){ g.nk.own = 1; g.nk.len = clampLen(+$("#nbMin").value || 30); }
+    else { g.nk.own = 0; g.nk.len = clampLen(+v); }
     paintNight(); save(true);
-    return;
   }
-  if (e.target === mask13) shutNight();
 });
 $("#nbMin").oninput = e => {
   const v = Math.round(+e.target.value);
   if (!(v >= 1 && v <= 600)) return;              // 空着、超范围就先不认，等它填完
-  G().nk.len = v;
-  /* 这儿不能整块重画 —— paintNight 会把这个框的 value 重写一遍，
-     正打着字光标就被顶到末尾去了。只改按钮上那行小字和牌子的选中态 */
-  const t = $("#nbGo .t"); if (t) t.textContent = "坐 " + v + " 分钟";
+  const g = G(); g.nk.len = v; g.nk.own = 1;
+  /* 这儿不能整条重画 —— paintNight 会把这个框的 value 重写一遍，
+     正打着字光标就被顶到末尾去了。只改数字和牌子的选中态 */
+  paintNightBits();
   $$("#nbLen .ty").forEach(x => x.classList.toggle("on", x.dataset.len === "own"));
   save();
 };
-/* 摊开：铺满整块屏。iPad 上顺手要一次真全屏，iPhone 要不到就算了 ——
-   那边只有 video 能全屏，元素全屏至今没有。想连地址栏都不见，得把这页添到主屏 */
-function nkWide(on){
-  mask13.classList.toggle("wide", on);
-  $("#nbWide").textContent = on ? "收起" : "摊开";
-  /* 这两个都返回 Promise，要不到的时候是 reject 不是抛错 —— try/catch 接不住，
-     得挂个 .catch，不然控制台里一片没人管的报错 */
-  const hush = r => { r && r.catch && r.catch(() => {}); };
-  if (on){
-    const el = $(".nb"), req = el.requestFullscreen || el.webkitRequestFullscreen;
-    try { req && hush(req.call(el)); } catch(e){}
-  } else if (document.fullscreenElement || document.webkitFullscreenElement){
-    const ex = document.exitFullscreen || document.webkitExitFullscreen;
-    try { ex && hush(ex.call(document)); } catch(e){}
-  }
-}
-$("#nbWide").onclick = () => nkWide(!mask13.classList.contains("wide"));
-// 从系统那个全屏退出来（比如按了 Esc），牌子上的字得跟着退回去
-document.addEventListener("fullscreenchange", () => {
-  if (!document.fullscreenElement && mask13.classList.contains("wide")) nkWide(false);
-});
 
 /* ── 起卦：三枚铜钱掷六回 ──
    背作三、字作二。三枚一掷：六是老阴（要变阳）、七少阳、八少阴、九是老阳（要变阴）。
