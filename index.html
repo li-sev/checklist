@@ -482,25 +482,28 @@
     animation:catz 2.8s ease-in-out infinite}
   @keyframes catz{0%{transform:translate(0,0) scale(.8);opacity:0}
     30%{opacity:.85}100%{transform:translate(16px,-34px) scale(1.2);opacity:0}}
-  /* 窝、玩具、空碗。院子里这几层按前后关系排，不写死：
-       0 玩具（撂在窝后头的） · 1 窝、空碗 · 2 玩具 · 3 猫 · 5 窝（盖住猫的）
-       6 玩具（正拖着） · 7 玩具（踢飞那一下）
-     底下留出 0 这一档，是为了让玩具能真的落到窝后面去 ——
-     整排都比原先抬高一档，就不必给谁写负的 z-index（负的会掉到院子背景后头） */
+  /* 窝、玩具、空碗。院子里这几层：
+       1 窝、空碗 · 2 玩具 · 3 猫 · 5 窝（提到前头挡猫的时候）
+       6 玩具（窝提上去了，它跟着让一档） · 7 玩具（正拖着） · 8 玩具（踢飞那一下）
+     玩具永远在窝上头 —— 这一条是定死的，不按前后关系排。
+     窝会因为猫躺进去、或者猫绕到它后面而提到 5 去挡猫，
+     玩具就得跟着提到 6，不然那一下会被窝连着一起盖掉（v81 就是这么吞玩具的）。
+     整排比原先抬高一档，是为了不必给谁写负的 z-index —— .cst 不成 stacking context，
+     负的会掉到院子背景后头去。 */
   /* 窝默认在猫后头。猫躺进去、或者绕到窝后面（y 更靠里）时，
-     才把窝提到前头来挡住它 —— 这一层是真按前后关系排的，不是写死的 */
+     才把窝提到前头来挡住它 —— 窝跟猫这一层是真按前后关系排的，不是写死的 */
   .cb .cy .cbed{z-index:1;transition:transform .3s ease;cursor:pointer}
   .cb .cy .cbed.front{z-index:5}
   /* 玩具也是两层：.ctoyw 管它摆在哪（inline 的 translateX），
      .ctoy 管它挨打时怎么翻。搁一层上的话，拍飞那个 keyframe 会连位移一起盖掉 ——
      玩具当场归零，飞到院子最左边去 */
   .cb .cy .ctoyw{z-index:2;transition:transform .3s ease;cursor:grab;touch-action:none}
-  /* 撂在窝后头：窝得挡住它。判在 catDepth 里，跟猫绕到窝后面同一套回差。
-     要排在 .drag 前头 —— 正拖着的那一下不论落点在哪，都该在最上面 */
-  .cb .cy .ctoyw.back{z-index:0}
-  .cb .cy .ctoyw.drag{cursor:grabbing;transition:none;z-index:6;
+  /* 窝提上去挡猫的那一下，玩具跟着往上让一档，始终露在窝外头。
+     这三条要排在 .ctoyw 后头，一条压一条：让位 < 拖着 < 踢飞 */
+  .cb .cy .ctoyw.up{z-index:6}
+  .cb .cy .ctoyw.drag{cursor:grabbing;transition:none;z-index:7;
     filter:drop-shadow(0 6px 5px rgba(0,0,0,.28))}
-  .cb .cy .ctoyw.kick{z-index:7}                  /* 踢飞的那一下压在最上头 */
+  .cb .cy .ctoyw.kick{z-index:8}                  /* 踢飞的那一下压在最上头 */
   .cb .cy .ctoyw.drag .ctoy{animation:none;transform:scale(1.22)}
   .cb .cy .cbw{opacity:.9;z-index:1}
   .cb .cy .cwk{z-index:3}
@@ -3479,27 +3482,19 @@ function catBob(v){
    窝就得盖住猫。箱、筐、瓮才装得进去，榻和炭盆不遮 */
 function catDepth(){
   const A = CA; if (!A) return;
+  let front = false;
   if (A.el.bed){
     const ins = bedIn(BEDS[G().catbed]);
     /* 前后翻面留一道回差：往里过了 12 才盖上，往外退回 2 才让开。
        只用一条线的话，猫在那条线上晃一晃，窝就一盖一让，看着像在闪 */
     const on = A.el.bed.classList.contains("front");
     const back = A.y < A.bedY - (on ? 2 : 12);
-    A.el.bed.classList.toggle("front", !!((A.inBed && ins.front) || back));
+    front = !!((A.inBed && ins.front) || back);
+    A.el.bed.classList.toggle("front", front);
   }
-  catToyDepth();
-}
-/* 玩具跟窝的前后，照猫那一套办：撂在窝更里头，窝就得挡住它。
-   只有落在地上的才算 —— 举到半空的那个是你手上提着的（toyY 已经越过
-   猫能走的那条最里线 yLo），不论它飘在窝的哪一块上头，都该看得见。
-   回差跟窝那边一样，12 进 2 出，免得在那条线上一挡一让地闪 */
-function catToyDepth(){
-  const A = CA; if (!A) return;
-  const tw = A.el.toyw; if (!tw) return;
-  if (!A.el.bed) return tw.classList.remove("back");
-  const on = tw.classList.contains("back");
-  const grounded = A.toyY >= A.yLo;             // 还在猫走得到的那条地面带里
-  tw.classList.toggle("back", grounded && A.toyY < A.bedY - (on ? 2 : 12));
+  /* 窝提上去挡猫的那一下，玩具跟着让一档 —— 玩具始终在窝上头，
+     不跟着让的话，窝一提就把玩具连着盖掉了 */
+  if (A.el.toyw) A.el.toyw.classList.toggle("up", front);
 }
 function catFace(d){
   const A = CA; if (!A) return;
@@ -3767,7 +3762,6 @@ function catToyTo(x, y, dur, spin, ease){
   tw.style.transitionTimingFunction = ease || "cubic-bezier(.15,.7,.3,1)";
   tw.style.transitionDuration = (dur / 1000) + "s";
   tw.style.transform = toyXf(A);
-  catToyDepth();                                  // 挪了地方，跟窝的前后要重排
 }
 const petPlay = () => (PETS[G().catpet] || {}).play || "bat";
 const petSay  = k => { const a = CATSAYS[k]; return a ? a[Math.floor(Math.random() * a.length)] : ""; };
@@ -3985,7 +3979,6 @@ function catCarry(toX, then){
     A.el.toyw.style.transitionTimingFunction = "";   // 滚球那条缓动曲线别留着
     A.el.toyw.style.transitionDuration = "0s";
     A.el.toyw.style.transform = toyXf(A);            // 转过多少度得留着，不然放下时会转回去
-    catToyDepth();                                   // 撂在猫脚边，前后跟着这个落点重排
     catAfter(760, then || catStep);
   });
 }
@@ -4241,7 +4234,6 @@ function catDragEnd(){
   if (A.el.toyw){
     A.el.toyw.classList.remove("drag");
     A.el.toyw.style.transitionDuration = ".3s";
-    catToyDepth();                                // 撂下了：这个落点是在窝前头还是后头
   }
   A.noClick = 1;                                  // 拖完手一松，那一下不算戳猫
   setTimeout(() => { if (CA === A) A.noClick = 0; }, 260);
@@ -5299,22 +5291,12 @@ $("#ctArt").onclick = e => {
   catFlash("pet", 500);
   toast(CATPUR[Math.floor(Math.random() * CATPUR.length)]);
 };
-/* 撂到窝后头去的玩具压在窝下面（z-index 比窝低），窝那一大块就把它盖住了 ——
-   手按下去，e.target 是窝，不是玩具，拿它当拍窝处理，玩具就再也抓不起来。
-   所以再按坐标补判一次：落在玩具那一小块框里的，一律算抓玩具。
-   玩具的框比窝小得多，窝剩下的地方照样拍得着。 */
-function toyAt(x, y){
-  const A = CA, tw = A && A.el.toyw;
-  if (!tw || tw.hidden) return null;
-  const r = tw.getBoundingClientRect();
-  return (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) ? tw : null;
-}
 /* 院子里的手：按在玩具上是拖（猫跟着你的手跑，撂下就扑）；
    摆了激光笔的时候，鼠标／手指在哪儿就是那颗红点在哪儿，横竖都追。
    两件事互不打架 —— 摆激光笔的时候地上本来就没有玩具。 */
 $("#ctArt").addEventListener("pointerdown", e => {
   if (!CA) return;
-  const tw = e.target.closest(".ctoyw") || toyAt(e.clientX, e.clientY);
+  const tw = e.target.closest(".ctoyw");
   if (tw){ e.preventDefault(); return catDragStart(e, tw); }
   if (catLaserOn()) catLaserAt(e.clientX, e.clientY);
 });
