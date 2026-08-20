@@ -1882,7 +1882,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v89" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v90" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -4405,6 +4405,12 @@ function catHalt(){
   }
   CA = null;
 }
+/* 玩具能举到的最高处：举到院子顶边刚好不出去为止。
+   零点是 translateY(0) 时它的落点（.88H 减半个身位，见 catDragTo），
+   再减掉自己一个身位就是顶边。
+   原先写死院子高的 42% —— 常态院子才一百七十来高，那时看着够用；
+   摊开之后院子高一大截，42% 只到半腰，逗猫棒举不上去了 */
+const toyTop = A => -Math.round(A.H * .88 - (A.toyW || A.cw * .4));
 /* 开场那一下别转：先把 transition 关掉摆正，下一帧再放开 */
 const catFlipInit = A => { if (!A.el.fl) return;
   A.el.fl.style.transition = "none";
@@ -4433,7 +4439,6 @@ function catStart(){
      往里三十四、往外六，够看出前后，又不至于飞起来。
      鼠标／手指的纵坐标怎么换算成这个进深，见 catDepthOf */
   A.yLo = -34; A.yHi = 6;
-  A.tyLo = -Math.round(A.H * .42);                // 玩具能举到的最高处，比猫高得多
   A.toySpin = 0;
   A.bedY = 0; A.toyY = 0;
   const put = (el, x, yy) => { if (el){ el.style.transitionTimingFunction = "";
@@ -4443,6 +4448,7 @@ function catStart(){
   A.bedH = A.el.bed ? (A.el.bed.offsetHeight || A.bedW) : 0;   // 钻进去抬多高按它算
   A.toyW = A.el.toyw ? (A.el.toyw.offsetWidth || A.cw * .4) : 0;
   A.bowlW = A.el.bowl ? (A.el.bowl.offsetWidth || A.cw * .44) : 0;
+  A.tyLo = toyTop(A);                             // 举多高得等玩具量出来才算得出
   /* 窝往里挪半个身位：贴着院子边摆的话，猫趴上去要被挤出院外，
      只能歪在窝沿上。挪进来它才睡得进去 */
   A.bedX = A.pad + Math.max(0, (A.cw - A.bedW) / 2);
@@ -5419,12 +5425,12 @@ function catRemeasure(){
   const W = A.el.y.clientWidth, H = A.el.y.clientHeight;
   if (!W || !H || (W === A.W && H === A.H)) return;
   A.W = W; A.H = H;
-  A.tyLo = -Math.round(H * .42);                 // 玩具能举多高，跟着院子走
   A.cw = A.el.em.offsetWidth || A.cw;
   A.bedW = A.el.bed ? (A.el.bed.offsetWidth || A.bedW) : 0;
   A.bedH = A.el.bed ? (A.el.bed.offsetHeight || A.bedH) : 0;
   A.toyW = A.el.toyw ? (A.el.toyw.offsetWidth || A.toyW) : 0;
   A.bowlW = A.el.bowl ? (A.el.bowl.offsetWidth || A.bowlW) : 0;
+  A.tyLo = toyTop(A);                            // 院子高了，能举的高度跟着长
   A.bedX = A.pad + Math.max(0, (A.cw - A.bedW) / 2);
   A.bowlX = Math.max(A.pad, A.W * .3);
   A.x    = clamp(A.x,    A.pad, Math.max(A.pad, A.W - A.cw - A.pad));
