@@ -440,9 +440,12 @@
   .cb .cy .cem.pounce{animation:catpou .42s cubic-bezier(.3,1.6,.4,1)}
   @keyframes catpou{0%{transform:translate(0,0)}
     38%{transform:translate(-16px,-14px)}100%{transform:translate(0,0)}}
-  /* 🎀 往上扑：够半空里那条带子，往上窜不往前窜 */
+  /* 🎀 往上扑：够半空里那条带子，往上窜不往前窜。
+     窜多高不写死 —— 你把玩具举多高，它就使多大劲（--cjump 由 catWhack 现算），
+     封顶两个多身位，再高就是真够不着了 */
   .cb .cy .cem.pounceup{animation:catpup .46s cubic-bezier(.3,1.5,.4,1)}
-  @keyframes catpup{0%{transform:translateY(0)}34%{transform:translateY(-26px) scaleY(1.08)}
+  @keyframes catpup{0%{transform:translateY(0)}
+    34%{transform:translateY(var(--cjump,-26px)) scaleY(1.08)}
     100%{transform:translateY(0)}}
   /* 🎀 仰头看着它飘下来：身子微微起伏，眼睛不挪窝 */
   .cb .cy .cem.look{animation:catlook 1.1s ease-in-out infinite}
@@ -1882,7 +1885,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v90" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v91" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -3880,6 +3883,7 @@ function catWhack(hit, up){
   const A = CA; if (!A) return;
   // 玩具举得比它够得着的还高，就得往上扑，不能还平着拍
   if (A.toyY < A.yLo - 6) up = true;
+  if (up) catJump();
   catFlash(up ? "pounceup" : "pounce", 460);
   const t = A.el.toy; if (!t) return;
   t.classList.remove("hit", "rev", "dodge"); void t.offsetWidth;
@@ -4405,6 +4409,19 @@ function catHalt(){
   }
   CA = null;
 }
+/* 猫能往里退多深。院子一百七十来高的时候就是原先那三十四 ——
+   那个数是照这个高度定的，多退一点就显得飘。
+   摊开之后高出来的那一截，八成让给它走：不然四百多高的院子里，
+   猫还困在底下四十像素那一条带子上，看着像贴着框底爬。
+   玩具举到半空，它就是这么一路走上去的 —— 走到够得着了才跳，不是原地干扑 */
+const catDeep = A => -Math.round(34 + Math.max(0, A.H - 170) * .8);
+/* 往上扑那一下窜多高：按还差多少算，封顶一个半身位。
+   剩下的路靠它自己走上去，不能一跳四百像素 */
+function catJump(){
+  const A = CA; if (!A || !A.el.em) return;
+  const gap = Math.max(0, (A.y - (A.lift || 0)) - A.toyY);
+  A.el.em.style.setProperty("--cjump", -Math.round(clamp(gap * .7, 26, A.cw * 1.5)) + "px");
+}
 /* 玩具能举到的最高处：举到院子顶边刚好不出去为止。
    零点是 translateY(0) 时它的落点（.88H 减半个身位，见 catDragTo），
    再减掉自己一个身位就是顶边。
@@ -4435,10 +4452,11 @@ function catStart(){
   A.W = y.clientWidth || 260;
   A.H = y.clientHeight || 170;
   A.cw = A.el.em.offsetWidth || parseFloat(cy.style.fontSize) || 70;
-  /* 进深。院子只有一百七十来高，猫自己就占七十，能退的余地不多 ——
+  /* 进深。常态院子只有一百七十来高，猫自己就占七十，能退的余地不多 ——
      往里三十四、往外六，够看出前后，又不至于飞起来。
+     院子摊开了就按 catDeep 放开，让它走得上去。
      鼠标／手指的纵坐标怎么换算成这个进深，见 catDepthOf */
-  A.yLo = -34; A.yHi = 6;
+  A.yHi = 6; A.yLo = catDeep(A);
   A.toySpin = 0;
   A.bedY = 0; A.toyY = 0;
   const put = (el, x, yy) => { if (el){ el.style.transitionTimingFunction = "";
@@ -5431,6 +5449,8 @@ function catRemeasure(){
   A.toyW = A.el.toyw ? (A.el.toyw.offsetWidth || A.toyW) : 0;
   A.bowlW = A.el.bowl ? (A.el.bowl.offsetWidth || A.bowlW) : 0;
   A.tyLo = toyTop(A);                            // 院子高了，能举的高度跟着长
+  A.yLo = catDeep(A);                            // 猫能走的进深也跟着长
+  A.y = clamp(A.y, A.yLo, A.yHi);
   A.bedX = A.pad + Math.max(0, (A.cw - A.bedW) / 2);
   A.bowlX = Math.max(A.pad, A.W * .3);
   A.x    = clamp(A.x,    A.pad, Math.max(A.pad, A.W - A.cw - A.pad));
