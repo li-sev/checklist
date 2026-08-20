@@ -323,16 +323,13 @@
     min-width:5.3em;justify-content:center}
   .purse.ctp.hungry .ct{color:var(--accent)}   /* 饿着 */
   .purse.ctp.hungry .dot{display:block;background:var(--accent)}
-  /* ── 夜课那块牌 ── */
-  /* 牌面在「夜课」和「夜课 24:59」之间换，宽度差一大截，同样占死再居中。
-     数字用等宽，不然每跳一秒整块牌都在抖 */
-  .purse.nkp{margin-left:7px}
-  .purse.nkp .nt{color:var(--ink);font-weight:700;letter-spacing:3px;
-    min-width:7.4em;justify-content:center}
-  .purse.nkp .nt b{font:14px/1 ui-monospace,Consolas,monospace;font-weight:700;
-    font-variant-numeric:tabular-nums;letter-spacing:1px;margin-left:5px}
-  .purse.nkp.lit .nt{color:var(--accent)}       /* 灯还亮着 */
-  .purse.nkp.lit .dot{display:block;background:var(--accent)}
+  /* 夜课的表就挂在御猫这块牌上，另占一格 —— 不去撑「御猫」那一格的宽，
+     那一格是按最长态占死了的，撑开会把整排推着挪。
+     数字等宽，不然每跳一秒整块牌都在抖 */
+  .purse.ctp .nk{color:var(--gold);font-weight:700;
+    font-family:ui-monospace,Consolas,monospace;font-variant-numeric:tabular-nums;
+    border-left:1px solid var(--line)}
+  .purse.ctp.lit .nk{color:var(--accent)}
   /* 加赏用金字，不铺底色 —— 铺了得另配一个前景色，深浅两套纸都不好配 */
   .purse.hlp .jx{color:var(--gold);font-weight:700;letter-spacing:1px;
     border-left:1px solid var(--line)}
@@ -1350,13 +1347,10 @@
   <button class="purse bkp" id="bkBtn" title="问卜：求签、起卦">
     <span class="bk">问卜</span>
   </button>
-  <!-- 御猫：饿了牌子上点一颗灯，不点开也知道它在等 -->
+  <!-- 御猫：饿了牌子上点一颗灯，不点开也知道它在等。
+       夜课的表也挂在这块牌上 —— 灯就在猫窝里点，不必再单开一块牌 -->
   <button class="purse ctp" id="ctBtn" title="御猫">
-    <span class="ct" id="ctChip">御猫</span><i class="dot"></i>
-  </button>
-  <!-- 夜课：灯亮着的时候牌面上就是那个走着的钟，不点开也看得见还剩多久 -->
-  <button class="purse nkp" id="nbBtn" title="夜课：一盏灯">
-    <span class="nt" id="nbChip">夜课</span><i class="dot"></i>
+    <span class="ct" id="ctChip">御猫</span><span class="nk" id="nbChip" hidden></span><i class="dot"></i>
   </button>
 </div>
 <div class="app">
@@ -1855,7 +1849,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v86" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v87" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -5609,11 +5603,10 @@ function nkTickOff(){ clearInterval(NB.tick); NB.tick = null; }
 
 /* ── 画。三层：抬头那块牌 / 每秒只动的数目字 / 整条重画 ── */
 function paintNightChip(){
-  const b = $("#nbBtn"), c = $("#nbChip"); if (!b) return;
+  const b = $("#ctBtn"), c = $("#nbChip"); if (!b || !c) return;
   b.classList.toggle("lit", !!NB.on);
-  c.innerHTML = NB.on
-    ? "夜课<b>" + esc(nkClock(NB.target ? nkLeft() : nkMs())) + "</b>"
-    : "夜课";
+  c.hidden = !NB.on;                               // 灯不点着就不占那一格
+  if (NB.on) c.textContent = nkClock(NB.target ? nkLeft() : nkMs());
 }
 function paintNightBits(){
   const t = $("#nbTime"); if (!t) return;
@@ -5661,8 +5654,6 @@ function paintNightLog(){
     + `<br>坐得最久的一盏 <b>${n.best}</b> 分钟`
     + `<br>点过 <b>${n.ses}</b> 盏`;
 }
-/* 抬头那块牌：直接开猫窝 —— 灯本来就在那儿点 */
-$("#nbBtn").onclick = () => { openCat(); };
 /* 院子底下这一条上的手。挑时长的牌也从这儿过 */
 $("#ctNight").addEventListener("click", e => {
   const b = e.target.closest("[data-nb]");
