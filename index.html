@@ -705,6 +705,23 @@
      玩具默认就撂在右下角，灯跟它们挤在一层必被压住。
      .cy>span 本来是 bottom:12%、left:0 由 JS 逐个给横坐标，这一盏两头都改掉，
      钉死在角上，不进 A.* 那套排位 —— 猫和玩具怎么走都不必管它 */
+  /* 院子里的绿。压在最底下一层，猫和玩具都从它们前头过；
+     摆得越靠里（bottom 越大）就越小越淡，看着才像退在后头。
+     一律 pointer-events:none —— 拖玩具、晃激光的时候别让它们截了手 */
+  .cb .cy .cgrn{display:none;pointer-events:none;z-index:0;line-height:1;
+    filter:saturate(.75);transition:filter .9s ease}
+  .mask.wide .cy .cgrn{display:block}
+  /* 近处大而实，远处小而淡。左边八分之一是窝的地盘，别往那儿栽 */
+  .cb .cy .g1{left:auto;right:13%;bottom:9%;font-size:34px;opacity:.62}
+  .cb .cy .g2{left:26%;bottom:8%;font-size:27px;opacity:.56}
+  .cb .cy .g3{left:auto;right:34%;bottom:23%;font-size:31px;opacity:.34}
+  .cb .cy .g4{left:23%;bottom:31%;font-size:19px;opacity:.26}
+  .cb .cy .g5{left:auto;right:6%;bottom:34%;font-size:17px;opacity:.24}
+  /* 再往里两株。猫现在走得到院子上半截，那儿不该是一片空白 */
+  .cb .cy .g6{left:11%;bottom:52%;font-size:15px;opacity:.18}
+  .cb .cy .g7{left:auto;right:24%;bottom:46%;font-size:13px;opacity:.16}
+  /* 灯一点，这些也跟着沉到夜色里去，别比猫还扎眼 */
+  .cb .cst.lit .cgrn{filter:saturate(.4) brightness(.5)}
   .cb .cy .clamp{left:auto;right:9px;bottom:auto;top:9px;z-index:1;font-size:27px;
     filter:grayscale(.8) brightness(.72);transition:filter .9s ease}
   .cb .cst.lit .clamp{filter:none;animation:nbglow 2.7s ease-in-out infinite}
@@ -1885,7 +1902,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v91" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v92" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -3505,6 +3522,14 @@ function catScene(){
   /* 夜课那盏灯。一直摆在院子右下角，灭的时候是冷的、点着了才亮。
      位置靠 CSS 钉死（right），不进 A.* 那套排位 —— 猫和玩具怎么走都不必管它 */
   P.push(`<span class="clamp">🪔</span>`);
+  /* 摊开之后院子空得慌，摆几样绿的当背景。常态院子才一百七十来高，塞不下，
+     所以只在摊开时露面。全在最底下一层，猫和玩具从它们前头过。
+     挑的都是老字号 emoji —— 🌿🌳🍃 是 Emoji 1.0、🪴 是 13.0（2020），
+     iOS 上都有。🪻 得 iOS 16.4 以上、🪷 要 15.4，机器旧一点就是豆腐块，不用 */
+  P.push(`<span class="cgrn g1">🪴</span><span class="cgrn g2">🌿</span>`
+       + `<span class="cgrn g3">🌳</span><span class="cgrn g4">🍃</span>`
+       + `<span class="cgrn g5">🌿</span><span class="cgrn g6">🌳</span>`
+       + `<span class="cgrn g7">🍃</span>`);
   // 只有猫自己吃胖了要变大 —— 字号挂在它这一层，不挂在院子上
   /* 三层，各管各的：.cwk 管走到哪、.cfl 管脸朝哪、.cem 管扑打滚这些动作。
      朝向原先跟位移写在同一个 transform 里 —— 走一段两秒的路，那个翻面
