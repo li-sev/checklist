@@ -711,15 +711,29 @@
   .cb .cy .cgrn{display:none;pointer-events:none;z-index:0;line-height:1;
     filter:saturate(.75);transition:filter .9s ease}
   .mask.wide .cy .cgrn{display:block}
-  /* 近处大而实，远处小而淡。左边八分之一是窝的地盘，别往那儿栽 */
-  .cb .cy .g1{left:auto;right:13%;bottom:9%;font-size:34px;opacity:.62}
-  .cb .cy .g2{left:26%;bottom:8%;font-size:27px;opacity:.56}
-  .cb .cy .g3{left:auto;right:34%;bottom:23%;font-size:31px;opacity:.34}
-  .cb .cy .g4{left:23%;bottom:31%;font-size:19px;opacity:.26}
-  .cb .cy .g5{left:auto;right:6%;bottom:34%;font-size:17px;opacity:.24}
-  /* 再往里两株。猫现在走得到院子上半截，那儿不该是一片空白 */
-  .cb .cy .g6{left:11%;bottom:52%;font-size:15px;opacity:.18}
-  .cb .cy .g7{left:auto;right:24%;bottom:46%;font-size:13px;opacity:.16}
+  /* 大小一律跟着猫走，不写死像素 —— 猫吃胖了会变大，院子摊开还会变高。
+     --cat 是猫的身宽、--yard 是院子高，两个都由 catRemeasure 现量现给。
+     emoji 渲出来的宽约是字号的 1.17 倍，所以「跟猫一般大」是 cat×0.85。
+     树封个顶（院子高的六成），不然横屏那种矮院子里一棵树顶到天 */
+  .cb .cy .g1{left:auto;right:13%;bottom:8%;opacity:.66;
+    font-size:calc(var(--cat,70px) * .73)}                        /* 盆栽：跟猫一般宽 */
+  .cb .cy .g2{left:27%;bottom:7%;opacity:.6;
+    font-size:calc(var(--cat,70px) * .7)}                         /* 草：跟猫差不多 */
+  /* 树：猫的两三倍宽。三道封顶都得有 —— 光按猫算，摊开的窄院子里一棵树横着捅出去；
+     emoji 渲出来的宽是字号的一点四倍上下，别按一比一估 */
+  .cb .cy .g3{left:auto;right:34%;bottom:20%;opacity:.4;
+    font-size:min(calc(var(--cat,70px) * 2.7), calc(var(--yard,170px) * .6),
+                  calc(var(--yardw,260px) * .38))}
+  .cb .cy .g4{left:22%;bottom:30%;opacity:.3;
+    font-size:calc(var(--cat,70px) * .42)}
+  .cb .cy .g5{left:auto;right:5%;bottom:33%;opacity:.28;
+    font-size:calc(var(--cat,70px) * .55)}
+  /* 再往里两株。猫现在走得到院子上半截，那儿不该是一片空白 —— 远了就小 */
+  .cb .cy .g6{left:10%;bottom:50%;opacity:.2;
+    font-size:min(calc(var(--cat,70px) * 1.3), calc(var(--yard,170px) * .3),
+                  calc(var(--yardw,260px) * .2))}
+  .cb .cy .g7{left:auto;right:26%;bottom:45%;opacity:.18;
+    font-size:calc(var(--cat,70px) * .3)}
   /* 灯一点，这些也跟着沉到夜色里去，别比猫还扎眼 */
   .cb .cst.lit .cgrn{filter:saturate(.4) brightness(.5)}
   .cb .cy .clamp{left:auto;right:9px;bottom:auto;top:9px;z-index:1;font-size:27px;
@@ -1902,7 +1916,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v92" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v93" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -4147,6 +4161,11 @@ function catCarry(toX, then){
                       : clamp(toX, A.pad, Math.max(A.pad, A.W - A.cw - A.pad)),
           toX == null ? A.yLo + Math.random() * (A.yHi - A.yLo) : A.bedY, 44, () => {
     if (!CA || CA !== A) return;
+    /* 这一路上你可能把玩具换了。换的那一下 catRefit 会把叼在嘴里的这个删掉、
+       摆上新的一样 —— 可这个回调手里还攥着旧的那个节点，照原样 appendChild
+       回去，院子里就成了两样：旧的看得见，判定却全按新的走。
+       所以落地前认一认：手里这个还是不是眼下摆着的那样 */
+    if (t !== A.el.toy){ t.remove(); return catStep(); }
     // 撂在脚边：猫脸朝哪边，就撂在哪边
     A.toyX = clamp(A.x + (A.dir < 0 ? A.cw - A.toyW : 0), A.pad, Math.max(A.pad, A.W - A.toyW - A.pad));
     A.toyY = A.y;
@@ -4434,6 +4453,14 @@ function catHalt(){
   }
   CA = null;
 }
+/* 院子里那几株绿有多大，跟着猫和院子走 —— 猫吃胖了会变大，院子摊开还会变高。
+   写死像素的话，猫一胖树反倒显得矮了。两个数交给 CSS 去算（见 .cgrn 那一段） */
+function catGreenSize(A){
+  if (!A || !A.el.y) return;
+  A.el.y.style.setProperty("--cat", Math.round(A.cw || 70) + "px");
+  A.el.y.style.setProperty("--yard", Math.round(A.H || 170) + "px");
+  A.el.y.style.setProperty("--yardw", Math.round(A.W || 260) + "px");
+}
 /* 猫能往里退多深。院子一百七十来高的时候就是原先那三十四 ——
    那个数是照这个高度定的，多退一点就显得飘。
    摊开之后高出来的那一截，八成让给它走：不然四百多高的院子里，
@@ -4505,6 +4532,7 @@ function catStart(){
   A.x = (A.W - A.cw) / 2;
   put(A.el.wk, A.x, 0);
   catFlipInit(A);
+  catGreenSize(A);
   CA = A;
   catDepth();
   catAfter(420, catStep);
@@ -5476,6 +5504,7 @@ function catRemeasure(){
   A.tyLo = toyTop(A);                            // 院子高了，能举的高度跟着长
   A.yLo = catDeep(A);                            // 猫能走的进深也跟着长
   A.y = clamp(A.y, A.yLo, A.yHi);
+  catGreenSize(A);
   A.bedX = A.pad + Math.max(0, (A.cw - A.bedW) / 2);
   A.bowlX = Math.max(A.pad, A.W * .3);
   A.x    = clamp(A.x,    A.pad, Math.max(A.pad, A.W - A.cw - A.pad));
