@@ -647,11 +647,15 @@
     letter-spacing:1px;color:var(--dim);transition:color .8s ease}
   .cb .nrow.lit .ntime{color:var(--ink);font-weight:700}
   .cb .nrow.pause .ntime{color:var(--dim)}
-  .cb .nsub{font-size:11px;letter-spacing:1px;color:var(--dim);white-space:nowrap}
-  .cb .nbtns{margin-left:auto;display:flex;gap:6px}
+  /* 一行里三颗按钮 + 时间 + 小字，窄屏挤得慌 ——
+     小字排最后一位，挤不下就先省它，别把按钮顶出去 */
+  .cb .nsub{font-size:11px;letter-spacing:1px;color:var(--dim);white-space:nowrap;
+    overflow:hidden;text-overflow:ellipsis;min-width:0}
+  .cb .nbtns{margin-left:auto;display:flex;gap:6px;flex:none}
   .cb .nbtn{border:1px solid var(--line);border-radius:5px;background:var(--card);
-    padding:6px 12px;font-size:12.5px;letter-spacing:2px;color:var(--ink);
+    padding:6px 11px;font-size:12.5px;letter-spacing:2px;color:var(--ink);white-space:nowrap;
     touch-action:manipulation;transition:border-color .15s,background .15s}
+  .cb .nbtn.wd{flex:none;margin-left:6px;color:var(--dim);letter-spacing:1px}
   .cb .nbtn:active{background:var(--soft)}
   .cb .nbtn.go{border-color:var(--accent);color:var(--accent);font-weight:700}
   .cb .nrow .cbar{height:5px}
@@ -687,7 +691,9 @@
     .mask.wide .dlg{padding:10px}
     .mask.wide .cst{max-height:none}            /* 横过来就占满，院子越宽猫跑得越开 */
     .mask.wide .csay{margin:4px 0;font-size:12.5px;line-height:1.6}
-    .mask.wide .cfd,.mask.wide .cbar{display:none}
+    /* 收的是喂食那条和膘条（.cpane 的直接子元素）——
+       夜课那条进度条也叫 .cbar，可它在 .nrow 里头，别一起收掉 */
+    .mask.wide .cfd,.mask.wide .cpane>.cbar{display:none}
     .mask.wide .btns{margin-top:8px}
     .mask.wide .btns .btn{min-height:38px}
     .mask.wide .ntime{font-size:23px}
@@ -1736,6 +1742,7 @@
       <span class="ntime" id="nbTime">25:00</span>
       <span class="nsub" id="nbSub"></span>
       <span class="nbtns" id="nbBtns"></span>
+      <button class="nbtn wd" id="ctWide" title="铺满整块屏">摊开</button>
     </div>
     <div class="cbar"><i id="nbBar"></i></div>
     <div class="ctoys pick" id="nbLen"></div>
@@ -1780,7 +1787,6 @@
       连批的天数照旧要靠批折子攒。</p>
   </div>
   <div class="btns">
-    <button class="btn" id="ctWide">摊开</button>
     <button class="btn pri" id="ctClose">摸够了</button>
   </div>
 </div></div>
@@ -1876,7 +1882,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v88" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v89" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
