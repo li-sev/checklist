@@ -709,31 +709,41 @@
      摆得越靠里（bottom 越大）就越小越淡，看着才像退在后头。
      一律 pointer-events:none —— 拖玩具、晃激光的时候别让它们截了手 */
   .cb .cy .cgrn{display:none;pointer-events:none;z-index:0;line-height:1;
-    filter:saturate(.75);transition:filter .9s ease}
+    transition:filter .9s ease,opacity .5s ease}
   .mask.wide .cy .cgrn{display:block}
+  /* 被猫啃掉的那一丛。.mask.wide 那条 display:block 压得过 UA 的 [hidden]，得补一条 */
+  .mask.wide .cy .cgrn[hidden]{display:none}
+  /* 草平时一动不动 —— 猫凑到跟前才晃两下。摇的是自己这一层，
+     位置在 left/bottom 上，不在 transform 上，两下不打架 */
+  .cb .cy .cgrn.sway{animation:grsway 1.6s ease-in-out;transform-origin:50% 100%}
+  @keyframes grsway{0%,100%{transform:rotate(0)}
+    18%{transform:rotate(-7deg)}42%{transform:rotate(5deg)}
+    66%{transform:rotate(-3deg)}84%{transform:rotate(2deg)}}
   /* 大小一律跟着猫走，不写死像素 —— 猫吃胖了会变大，院子摊开还会变高。
      --cat 是猫的身宽、--yard 是院子高，两个都由 catRemeasure 现量现给。
      emoji 渲出来的宽约是字号的 1.17 倍，所以「跟猫一般大」是 cat×0.85。
      树封个顶（院子高的六成），不然横屏那种矮院子里一棵树顶到天 */
-  .cb .cy .g1{left:auto;right:13%;bottom:8%;opacity:.66;
+  /* 盆栽和草跟猫挂钩（--cat 是猫的身宽）—— 它们是「案头那一号」的东西，
+     猫多大它们多大才配得上。树不跟猫走：真院子里的树不会因为猫胖了就显矮，
+     它只认院子（--yard 高 / --yardw 宽） */
+  .cb .cy .g1{left:auto;right:12%;bottom:7%;
     font-size:calc(var(--cat,70px) * .73)}                        /* 盆栽：跟猫一般宽 */
-  .cb .cy .g2{left:27%;bottom:7%;opacity:.6;
-    font-size:calc(var(--cat,70px) * .7)}                         /* 草：跟猫差不多 */
-  /* 树：猫的两三倍宽。三道封顶都得有 —— 光按猫算，摊开的窄院子里一棵树横着捅出去；
-     emoji 渲出来的宽是字号的一点四倍上下，别按一比一估 */
-  .cb .cy .g3{left:auto;right:34%;bottom:20%;opacity:.4;
-    font-size:min(calc(var(--cat,70px) * 2.7), calc(var(--yard,170px) * .6),
-                  calc(var(--yardw,260px) * .38))}
-  .cb .cy .g4{left:22%;bottom:30%;opacity:.3;
+  .cb .cy .g2{left:28%;bottom:6%;
+    font-size:calc(var(--cat,70px) * .72)}                        /* 草：跟猫差不多 */
+  /* 树。要像真院子里那一棵 —— 占掉大半个院子的高。两道封顶按院子算，
+     emoji 渲出来的宽是字号的一点四倍上下，宽这一道不设就横着捅出去 */
+  .cb .cy .g3{left:auto;right:20%;bottom:16%;
+    font-size:min(calc(var(--yard,170px) * .58), calc(var(--yardw,260px) * .55))}
+  .cb .cy .g4{left:20%;bottom:30%;opacity:.85;
     font-size:calc(var(--cat,70px) * .42)}
-  .cb .cy .g5{left:auto;right:5%;bottom:33%;opacity:.28;
-    font-size:calc(var(--cat,70px) * .55)}
-  /* 再往里两株。猫现在走得到院子上半截，那儿不该是一片空白 —— 远了就小 */
-  .cb .cy .g6{left:10%;bottom:50%;opacity:.2;
-    font-size:min(calc(var(--cat,70px) * 1.3), calc(var(--yard,170px) * .3),
-                  calc(var(--yardw,260px) * .2))}
-  .cb .cy .g7{left:auto;right:26%;bottom:45%;opacity:.18;
-    font-size:calc(var(--cat,70px) * .3)}
+  .cb .cy .g5{left:auto;right:4%;bottom:31%;opacity:.9;
+    font-size:calc(var(--cat,70px) * .58)}
+  /* 再往里两株。猫现在走得到院子上半截，那儿不该是一片空白。
+     远近靠大小分，不靠透明 —— 淡成一团影子反倒像脏东西 */
+  .cb .cy .g6{left:8%;bottom:48%;opacity:.8;
+    font-size:min(calc(var(--yard,170px) * .26), calc(var(--yardw,260px) * .24))}
+  .cb .cy .g7{left:auto;right:22%;bottom:44%;opacity:.75;
+    font-size:calc(var(--cat,70px) * .32)}
   /* 灯一点，这些也跟着沉到夜色里去，别比猫还扎眼 */
   .cb .cst.lit .cgrn{filter:saturate(.4) brightness(.5)}
   .cb .cy .clamp{left:auto;right:9px;bottom:auto;top:9px;z-index:1;font-size:27px;
@@ -937,6 +947,7 @@
     /* 夜课：灯不闪，猫不起伏。灯亮时案头照样暗下来，那是底色不是动效 */
     /* 夜课：灯不闪。院子暗下来那一层是底色不是动效，留着 */
     .cb .nrow.lit .nlp,.cb .cst.lit .clamp{animation:none}
+    .cb .cy .cgrn.sway{animation:none}          /* 草也别晃 */
   }
 
   /* 内务府 */
@@ -1916,7 +1927,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v93" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v94" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -2922,6 +2933,8 @@ const catDef = () => ({f:.45, d:"", g:0, gd:"", toys:[], nm:"", food:0, hb:0, dr
    眼下这一盏走到哪儿了（起点、累计毫秒）搁在内存的 NB 里，不写盘：
    save() 每回是把整个 D 全量 stringify，秒级写太贵；页面被杀那一下 t0 也是脏的 */
 const nkDef = () => ({day:"", dm:0, tot:0, best:0, ses:0, len:25, own:0});
+/* 哪几丛草被猫啃了、哪天啃的。隔一天自己长回来，所以只记日子。
+   不进驿传合并 —— 这台机器上啃没啃，跟另一台没关系，隔天也就长回来了 */
 //  day 今天是哪天 · dm 今天坐了几分钟 · tot 累计分钟 · best 单盏最长 · ses 点过几盏
 //  len 上回挑的时长（分钟，0 = 不限时）
 //  own 是不是「自定」那一档。得单记一个 —— 光看 len 认不出来：
@@ -2931,7 +2944,7 @@ const GDEF = () => ({ag: DEMO ? 99999 : 0, owe:0, tot:0, cnt:0, nc:0, day:"", tn
                      seal:"zhun", paper:"xuan", font:"song", mount:"sumian", grain:"jiehang", fx:"fxno",
                      catbed:"bed_cao", catpet:"pet_no",
                      mi:miDef(), mday:"", jq:[], jxd:"", qd:"", qn:-1, hist:{}, cat:catDef(),
-                     nk:nkDef()});
+                     nk:nkDef(), grn:{}});
 function G(){
   if (!D.g || typeof D.g !== "object") D.g = GDEF();
   const d = GDEF();
@@ -2955,6 +2968,7 @@ function G(){
       if (typeof s.sd !== "string") s.sd = "";
     }
   }
+  if (!D.g.grn || typeof D.g.grn !== "object") D.g.grn = {};
   /* 夜课那本账。老存档整个没有，或者有一半 —— 照六部那样逐格补 */
   if (!D.g.nk || typeof D.g.nk !== "object") D.g.nk = nkDef();
   else { const n = D.g.nk, dn = nkDef();
@@ -3451,6 +3465,8 @@ function catSay(act){
     return `${n}盯上了${pet.n}，屁股一撅。`;
   }
   if (act === "rest")  return `${n}走累了，坐下来舔爪子。`;
+  if (act === "climb") return `${n}盯上了那棵树，绕着树根打转。`;
+  if (act === "sniff") return `${n}凑到草跟前，鼻子一动一动地闻。`;
   if (p === "perk") return `${n}吃饱了，在案上来回撒欢，尾巴翘得老高。`;
   if (p === "nap")  return `${n}困得睁不开眼，走两步就要趴下。`;
   return `${n}在案上慢慢溜达，走两步回头看你一眼。`;
@@ -3749,6 +3765,13 @@ function catStep(){
   const fast = mood === "perk";
   // 有玩具就常去扑；撒欢的时候更黏它
   if (A.el.toy && Math.random() < (fast ? .42 : .26)) return catPlay();
+  /* 摊开的院子里才有那几株绿。爬树、凑过去闻草，各给一成上下的机会 ——
+     比扑玩具低，不然玩具就没人理了 */
+  /* 爬树、闻草各给一小成机会。别给高了 —— 这两样一趟下来都是好几秒，
+     概率一高，猫就整天绕着草木转，玩具和窝反倒没人理 */
+  if (greenAt("g3") && Math.random() < (fast ? .11 : .07)) return catClimb();
+  const gr = pickGrass();
+  if (gr && Math.random() < (fast ? .12 : .08)) return catSniff(gr);
   if (A.legs >= (fast ? 4 : 3)){
     A.legs = 0;
     // 走累了坐下歇；不撒欢的时候有三成就地打个盹（这盹会自己醒）
@@ -4453,6 +4476,94 @@ function catHalt(){
   }
   CA = null;
 }
+/* ── 院子里那几株绿，猫跟它们的来往 ──
+   位置全在 CSS 里按百分比写死，JS 不排它们的位置 —— 要用的时候现量。
+   量不到（常态院子里它们 display:none）就当没有这回事 */
+function greenAt(cls){
+  const A = CA; if (!A || !A.el.y) return null;
+  const e = A.el.y.querySelector("." + cls);
+  if (!e || e.hidden || getComputedStyle(e).display === "none") return null;
+  const y = A.el.y.getBoundingClientRect(), r = e.getBoundingClientRect();
+  if (!r.width) return null;
+  return {el:e, cls, x:r.left - y.left, w:r.width, h:r.height, mid:r.left - y.left + r.width / 2};
+}
+/* 能闻的草：近处那两丛。远处那些太小，猫走不到那么里头 */
+const GRASS = ["g2", "g5"];
+function pickGrass(){
+  const live = GRASS.map(greenAt).filter(Boolean);
+  return live.length ? live[Math.floor(Math.random() * live.length)] : null;
+}
+/* 爬树。走到树底下，再抬上去 —— 抬高走的是 lift 那一层（躺窝里也是它），
+   所以横坐标、朝向、前后关系一概照旧，只是人在半空 */
+function catClimb(){
+  const A = CA, t = greenAt("g3"); if (!A || !t) return catStep();
+  catTell("climb");
+  A.legs = 0;
+  const tx = clamp(t.mid - A.cw / 2, A.pad, Math.max(A.pad, A.W - A.cw - A.pad));
+  catMove(tx, A.yLo + 4, 34, () => {
+    if (!CA || CA !== A) return;
+    A.el.cy.classList.remove("go");
+    A.lift = Math.round(t.h * .46);                 // 蹲到树冠那一带
+    A.el.wk.style.transitionDuration = ".75s";
+    A.el.wk.style.transform = catXf(A);
+    toast(`${catName()}三两下窜上了树，蹲在杈上不下来。`);
+    catAfter(2600 + Math.random() * 3000, () => {          // 蹲一会儿就下来
+      if (!CA || CA !== A) return;
+      A.lift = 0;                                   // 跳下来
+      A.el.wk.style.transitionDuration = ".32s";
+      A.el.wk.style.transform = catXf(A);
+      catFlash("pounce", 420);
+      catAfter(760, catStep);
+    });
+  });
+}
+/* 凑过去闻草。草平时一动不动，猫到跟前了才晃两下。
+   小概率一口啃掉 —— 啃了就空一块，第二天自己长回来 */
+function catSniff(gr){
+  const A = CA; if (!A || !gr) return catStep();
+  catTell("sniff");
+  A.legs = 0;
+  const tx = clamp(gr.mid - A.cw / 2, A.pad, Math.max(A.pad, A.W - A.cw - A.pad));
+  catMove(tx, A.yLo + Math.random() * 10, 30, () => {
+    if (!CA || CA !== A) return;
+    A.el.cy.classList.remove("go");
+    catFace(gr.mid < A.x + A.cw / 2 ? 1 : -1);       // 脸冲着那丛草
+    const el = greenAt(gr.cls) && gr.el;
+    if (el){ el.classList.remove("sway"); void el.offsetWidth; el.classList.add("sway");
+             setTimeout(() => el.classList.remove("sway"), 1700); }
+    A.el.cy.classList.add("look");
+    catAfter(1500 + Math.random() * 1200, () => {
+      if (!CA || CA !== A) return;
+      A.el.cy.classList.remove("look");
+      if (Math.random() < .12){                      // 一成二：连叶带茎啃了
+        catEatGrass(gr.cls);
+        catFlash("pet", 420);
+      }
+      catAfter(600, catStep);
+    });
+  });
+}
+/* 啃掉一丛。记在存档里（哪天啃的），跨一天自己长回来 */
+function catEatGrass(cls){
+  const g = G();
+  if (!g.grn || typeof g.grn !== "object") g.grn = {};
+  g.grn[cls] = ymd(Date.now());
+  toast(`${catName()}低头把那丛草连叶带茎啃了，嚼两下又吐出来。`);
+  catGreenShow();
+  save(true);
+}
+/* 啃掉的今天不长，隔了一天就回来。开门、摊开、每回重画都走一趟 */
+function catGreenShow(){
+  const A = CA; if (!A || !A.el.y) return;
+  const g = G(), t = ymd(Date.now()), eat = g.grn || {};
+  let back = false;
+  for (const cls of GRASS){
+    const e = A.el.y.querySelector("." + cls); if (!e) continue;
+    if (eat[cls] && eat[cls] !== t){ delete eat[cls]; back = true; }   // 隔天长回来
+    e.hidden = !!eat[cls];
+  }
+  if (back) save();
+}
 /* 院子里那几株绿有多大，跟着猫和院子走 —— 猫吃胖了会变大，院子摊开还会变高。
    写死像素的话，猫一胖树反倒显得矮了。两个数交给 CSS 去算（见 .cgrn 那一段） */
 function catGreenSize(A){
@@ -4460,6 +4571,10 @@ function catGreenSize(A){
   A.el.y.style.setProperty("--cat", Math.round(A.cw || 70) + "px");
   A.el.y.style.setProperty("--yard", Math.round(A.H || 170) + "px");
   A.el.y.style.setProperty("--yardw", Math.round(A.W || 260) + "px");
+}
+/* catStart 里 CA 还没赋值，catGreenShow 拿不到 —— 给它一个带参数的入口 */
+function catGreenShowFor(A){
+  const save0 = CA; CA = A; try { catGreenShow(); } finally { CA = save0; }
 }
 /* 猫能往里退多深。院子一百七十来高的时候就是原先那三十四 ——
    那个数是照这个高度定的，多退一点就显得飘。
@@ -4533,6 +4648,7 @@ function catStart(){
   put(A.el.wk, A.x, 0);
   catFlipInit(A);
   catGreenSize(A);
+  catGreenShowFor(A);
   CA = A;
   catDepth();
   catAfter(420, catStep);
@@ -5494,7 +5610,12 @@ function shutCat(){ catLaserOff(); catHalt(); catWide(false); mask12.classList.r
 function catRemeasure(){
   const A = CA; if (!A || !A.el.y) return;
   const W = A.el.y.clientWidth, H = A.el.y.clientHeight;
-  if (!W || !H || (W === A.W && H === A.H)) return;
+  if (!W || !H) return;
+  /* 草木那几个尺寸变量每回都重设一遍 —— 它便宜，而且不能跟着下面这道
+     「没变化就不算了」一起被短路掉：开门那会儿量的是常态院子（一百七十来高），
+     摊开之后要是这一趟没轮上，树就一直按老数算，小得像株苗 */
+  catGreenSize(A);
+  if (W === A.W && H === A.H) return;
   A.W = W; A.H = H;
   A.cw = A.el.em.offsetWidth || A.cw;
   A.bedW = A.el.bed ? (A.el.bed.offsetWidth || A.bedW) : 0;
@@ -5504,7 +5625,7 @@ function catRemeasure(){
   A.tyLo = toyTop(A);                            // 院子高了，能举的高度跟着长
   A.yLo = catDeep(A);                            // 猫能走的进深也跟着长
   A.y = clamp(A.y, A.yLo, A.yHi);
-  catGreenSize(A);
+  catGreenSize(A);                               // 尺寸变了，草木也跟着重算一遍
   A.bedX = A.pad + Math.max(0, (A.cw - A.bedW) / 2);
   A.bowlX = Math.max(A.pad, A.W * .3);
   A.x    = clamp(A.x,    A.pad, Math.max(A.pad, A.W - A.cw - A.pad));
@@ -5533,7 +5654,10 @@ function catWide(on){
     const ex = document.exitFullscreen || document.webkitExitFullscreen;
     try { ex && hush(ex.call(document)); } catch(e){}
   }
-  setTimeout(catRemeasure, 60);                  // 等这一版排完再量
+  /* 量两回：CSS 那一版排完是一回事，真全屏批下来（iPad 上）又会再排一次，
+     只量一回赶上早的那一次，量到的还是旧尺寸 */
+  setTimeout(catRemeasure, 60);
+  setTimeout(catRemeasure, 420);
 }
 $("#ctWide").onclick = () => catWide(!mask12.classList.contains("wide"));
 // 从系统那个全屏退出来（比如按了 Esc），按钮上的字得跟着退回去
