@@ -743,7 +743,8 @@
     78%{transform:rotate(var(--rot,0deg)) scale(.96)}
     100%{transform:rotate(var(--rot,0deg)) scale(1)}}
   /* 这十八株的大小：每一株记的是它在「摆院子」那块 1160×664 的院子上该有多少像素，
-     再乘一个总的缩放数 --gs（catGreenSize 现算：两个方向的缩放开方取中）。
+     再乘一个总的缩放数 --gs（catScale 现算：两个方向的缩放开方取中）。
+     猫、窝、玩具、碗、灯乘的是同一个数 —— 整幅画一起缩，不是只缩草木。
      为什么不各自跟院子高／宽挂钩：手机上院子只有 362×388，光按高算会横着挤成一团，
      光按宽算又缩成一撮草。开方取中两头都顾得上，摆样那块屏上则原样还原。
      后头那个 max 是给小株兜底 —— 一片 23px 的花瓣乘完只剩 10px，就看不见了。
@@ -768,7 +769,8 @@
   .cb .cy .g18{left:91.5%;bottom:7.9%;font-size:max(calc(23px * var(--gs,1)),14px)}
   /* 灯一点，这些也跟着沉到夜色里去，别比猫还扎眼 */
   .cb .cst.lit .cgrn{filter:saturate(.4) brightness(.5)}
-  .cb .cy .clamp{left:auto;right:9px;bottom:auto;top:9px;z-index:1;font-size:27px;
+  .cb .cy .clamp{left:auto;right:9px;bottom:auto;top:9px;z-index:1;
+    font-size:max(calc(27px * var(--gs,1)),17px);
     filter:grayscale(.8) brightness(.72);transition:filter .9s ease}
   .cb .cst.lit .clamp{filter:none;animation:nbglow 2.7s ease-in-out infinite}
   /* 灯点着，院子稍微暗一点 —— 暗的是底，猫和东西照旧亮着，还看得清清楚楚。
@@ -1951,7 +1953,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v98" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v99" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -3555,6 +3557,11 @@ const catSize = k => Math.round((54 + 30 * clamp(k, 0, 1)) * .85);
    原先窝、玩具、碗都写成 em，而那个 em 是猫的字号 —— 猫一胖，
    窝、玩具、碗跟着一起胀，成了整个院子在放大。它们该是死的。 */
 const CATBASE = 78;
+/* 院子里的东西一律写成「该有多少像素 × 一个总的缩放数」。--gs 由 catScale 现算：
+   摊开之后院子多大，就按 1160×664 那块（摆样用的那块 iPad 横屏）折算，
+   猫、窝、玩具、碗、灯、草木全乘同一个数 —— 整幅画等比缩放，不是只缩草木。
+   没摊开的时候是一：那块一百七十来高的小院子本来就是照常态尺寸调的 */
+const gsz = n => `calc(${Math.round(n)}px * var(--gs,1))`;
 /* 场子摆什么，只看这四样。这串一变才重搭场子 —— 不变就别动 DOM，
    一动 DOM 猫就得从头走起（这正是上一版「摸一把它弹回起点」的病根） */
 /* 场子只在「开门」的时候整搭一次。换窝、换玩具、饿了摆碗一概不重搭 ——
@@ -3565,7 +3572,7 @@ function catScene(){
   const g = G(), c = catState();
   const bed = BEDS[g.catbed] || BEDS.bed_cao, pet = PETS[g.catpet] || PETS.pet_no;
   const P = [];
-  const px = v => Math.round(v * CATBASE) + "px";
+  const px = v => gsz(v * CATBASE);
   if (bed.e) P.push(`<span class="cbed" style="font-size:${px(bedIn(bed).bw)}">${bed.e}</span>`);
   // 玩具的字号写在 .ctoy 自己身上：叼进嘴里的时候它会换个爹（挪进 .cem），
   // 写成 em 就会跟着猫的字号变一次大小
@@ -3591,7 +3598,7 @@ function catScene(){
      朝向原先跟位移写在同一个 transform 里 —— 走一段两秒的路，那个翻面
      就跟着摊成两秒，猫会慢慢地「压扁再翻过来」。拆出来给它自己一条
      一百六十毫秒的 transition，才是转身该有的利索劲儿。 */
-  P.push(`<span class="cwk" style="font-size:${catSize(c.f)}px"><span class="cfl"><span class="cem">`
+  P.push(`<span class="cwk" style="font-size:${gsz(catSize(c.f))}"><span class="cfl"><span class="cem">`
        + `<i class="cbd">🐈</i><i class="chd">${CATHEAD}</i><i class="cmd">${CATMADFACE}</i>`
        + `<span class="cz" hidden>💤</span></span></span></span>`);
   if (pet.laser) P.push(`<span class="clz"></span>`);
@@ -3604,7 +3611,7 @@ function catRefit(){
   const A = CA; if (!A || !A.el.cy) return;
   const g = G(), c = catState(), cy = A.el.cy, wk = A.el.wk;
   const bed = BEDS[g.catbed] || BEDS.bed_cao, pet = PETS[g.catpet] || PETS.pet_no;
-  const px = v => Math.round(v * CATBASE) + "px";
+  const px = v => gsz(v * CATBASE);
   const mk = (cls, before) => { const e = document.createElement("span");
     e.className = cls; cy.insertBefore(e, before || null); return e; };
 
@@ -4677,14 +4684,19 @@ function catGreenShow(){
 }
 /* 院子里那几株绿有多大，跟着猫和院子走 —— 猫吃胖了会变大，院子摊开还会变高。
    写死像素的话，猫一胖树反倒显得矮了。两个数交给 CSS 去算（见 .cgrn 那一段） */
-function catGreenSize(A){
-  if (!A || !A.el.y) return;
+function catScale(){
+  const y = $("#ctArt"); if (!y) return 1;
   /* 这一院子是在 1160×664 那块上摆的。换到别的屏上要缩多少：
      横竖两个方向各有一个缩放数，开方取中 —— 光按高算，手机上横着挤成一团；
      光按宽算，又缩成一撮草。两头一折中，摆样那块屏上正好还原成一。
-     两头夹一道：再小的屏也不缩到三成以下，再大的屏也不涨过一倍七 */
-  const gs = Math.sqrt((A.W || 260) / 1160 * ((A.H || 170) / 664));
-  A.el.y.style.setProperty("--gs", clamp(gs, .3, 1.7).toFixed(3));
+     两头夹一道：再小的屏也不缩到三成半以下，再大的屏也不涨过一倍七。
+     没摊开就是一 —— 那块小院子照的是另一套尺寸，缩下去猫就成了一只蚂蚁。
+     不看 CA：关了动效的人没有 CA，可他那个院子也得摆对 */
+  const wide = mask12.classList.contains("wide");
+  const W = y.clientWidth || 260, H = y.clientHeight || 170;
+  const gs = wide ? clamp(Math.sqrt(W / 1160 * (H / 664)), .35, 1.7) : 1;
+  y.style.setProperty("--gs", gs.toFixed(3));
+  return gs;
 }
 /* catStart 里 CA 还没赋值，catGreenShow 拿不到 —— 给它一个带参数的入口 */
 function catGreenShowFor(A){
@@ -4762,7 +4774,7 @@ function catStart(){
   A.x = (A.W - A.cw) / 2;
   put(A.el.wk, A.x, 0);
   catFlipInit(A);
-  catGreenSize(A);
+  catScale();
   catGreenShowFor(A);
   CA = A;
   catDepth();
@@ -5645,7 +5657,7 @@ let catKey = "";     // 上一回搭的是什么场子
 /* 只改数目字，不动场子 —— 喂一条鱼干走这条路，猫照走它的，不会弹回起点 */
 function paintCatBits(){
   const c = catState(), wk = $("#ctArt").querySelector(".cwk");
-  if (wk) wk.style.fontSize = catSize(c.f) + "px";        // 吃胖了就地长个儿，窝和玩具不动
+  if (wk) wk.style.fontSize = gsz(catSize(c.f));          // 吃胖了就地长个儿，窝和玩具不动
   if (CA && wk) CA.cw = CA.el.em.offsetWidth || CA.cw;   // 长了个儿，身宽跟着重量
   $("#ctBar").style.width = Math.round(c.f * 100) + "%";
   $("#ctFeed").innerHTML = `<b>🐟</b><span class="n">×${c.food}</span>`
@@ -5729,7 +5741,7 @@ function catRemeasure(){
   /* 草木那几个尺寸变量每回都重设一遍 —— 它便宜，而且不能跟着下面这道
      「没变化就不算了」一起被短路掉：开门那会儿量的是常态院子（一百七十来高），
      摊开之后要是这一趟没轮上，树就一直按老数算，小得像株苗 */
-  catGreenSize(A);
+  catScale();
   catGreenScan(A); catGreenDepth(A);               // 各株的根线跟着新尺寸重量一遍
   if (W === A.W && H === A.H) return;
   A.W = W; A.H = H;
@@ -5741,7 +5753,7 @@ function catRemeasure(){
   A.tyLo = toyTop(A);                            // 院子高了，能举的高度跟着长
   A.yLo = catDeep(A);                            // 猫能走的进深也跟着长
   A.y = clamp(A.y, A.yLo, A.yHi);
-  catGreenSize(A);                               // 尺寸变了，草木也跟着重算一遍
+  catScale();                                    // 尺寸变了，整院子的缩放重算一遍
   catGreenScan(A);                               // 字号一变根线就挪了，再量一遍
   A.bedX = A.pad + Math.max(0, (A.cw - A.bedW) / 2);
   A.bowlX = Math.max(A.pad, A.W * .3);
@@ -5772,9 +5784,12 @@ function catWide(on){
     try { ex && hush(ex.call(document)); } catch(e){}
   }
   /* 量两回：CSS 那一版排完是一回事，真全屏批下来（iPad 上）又会再排一次，
-     只量一回赶上早的那一次，量到的还是旧尺寸 */
-  setTimeout(catRemeasure, 60);
-  setTimeout(catRemeasure, 420);
+     只量一回赶上早的那一次，量到的还是旧尺寸。
+     catScale 单独再走一趟 —— 关了动效的人没有 CA，catRemeasure 头一句就退了，
+     可他那个院子照样得按新尺寸缩 */
+  const fit = () => { catScale(); catRemeasure(); };
+  setTimeout(fit, 60);
+  setTimeout(fit, 420);
 }
 $("#ctWide").onclick = () => catWide(!mask12.classList.contains("wide"));
 // 从系统那个全屏退出来（比如按了 Esc），按钮上的字得跟着退回去
