@@ -1927,7 +1927,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v94" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v95" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -3765,13 +3765,15 @@ function catStep(){
   const fast = mood === "perk";
   // 有玩具就常去扑；撒欢的时候更黏它
   if (A.el.toy && Math.random() < (fast ? .42 : .26)) return catPlay();
-  /* 摊开的院子里才有那几株绿。爬树、凑过去闻草，各给一成上下的机会 ——
-     比扑玩具低，不然玩具就没人理了 */
-  /* 爬树、闻草各给一小成机会。别给高了 —— 这两样一趟下来都是好几秒，
-     概率一高，猫就整天绕着草木转，玩具和窝反倒没人理 */
-  if (greenAt("g3") && Math.random() < (fast ? .11 : .07)) return catClimb();
-  const gr = pickGrass();
-  if (gr && Math.random() < (fast ? .12 : .08)) return catSniff(gr);
+  /* 摊开的院子里才有那几株绿。先问一句要不要去，再在两样里挑一样 ——
+     一样一样串着判的话，排在前头那个把机会先挑走了，
+     后头那个看着就像从来不去。总数压在一成多，比扑玩具低：
+     玩具才是正主，草木是顺路的 */
+  const tree = greenAt("g3"), gr = pickGrass();
+  if ((tree || gr) && Math.random() < (fast ? .22 : .15)){
+    const up = tree && (!gr || Math.random() < .5);
+    return up ? catClimb() : catSniff(gr);
+  }
   if (A.legs >= (fast ? 4 : 3)){
     A.legs = 0;
     // 走累了坐下歇；不撒欢的时候有三成就地打个盹（这盹会自己醒）
@@ -4500,10 +4502,15 @@ function catClimb(){
   catTell("climb");
   A.legs = 0;
   const tx = clamp(t.mid - A.cw / 2, A.pad, Math.max(A.pad, A.W - A.cw - A.pad));
-  catMove(tx, A.yLo + 4, 34, () => {
+  /* 走到树根那条线上，别往院子最里头走 —— 那儿本身已经很靠上，
+     再往上抬一整棵树的高，整只猫就飞出框外去了（院子越大飞得越远） */
+  catMove(tx, 0, 34, () => {
     if (!CA || CA !== A) return;
     A.el.cy.classList.remove("go");
-    A.lift = Math.round(t.h * .46);                 // 蹲到树冠那一带
+    /* 抬到树冠正中。树的底边距院子底 16%，所以树冠中线离院子顶是
+       .84H - h/2；猫的底边平时落在 .88H，两者一减就是该抬多少。
+       再封一道顶：抬到头也得让整只猫留在院子里 */
+    A.lift = Math.round(clamp(A.H * .04 + t.h * .5, 0, A.H * .88 - A.cw));
     A.el.wk.style.transitionDuration = ".75s";
     A.el.wk.style.transform = catXf(A);
     toast(`${catName()}三两下窜上了树，蹲在杈上不下来。`);
