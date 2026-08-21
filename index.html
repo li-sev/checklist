@@ -1953,7 +1953,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v101" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v102" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -5891,9 +5891,20 @@ mask12.addEventListener("click", e => {
 });
 /* 戳它。睡着的时候是叫醒 —— 要戳够那一到六下；醒着就是摸一把。
    摆了激光笔又亮着红点的时候，这一下是让它扑上去 */
+/* 点没点在猫身上。猫小的时候（院子一摊开它才三四十像素）正好按着不容易，
+   四周放宽四分之一，最少也留十八像素的余地 */
+function catHitSelf(cx, cy){
+  const wk = (CA && CA.el.wk) || $("#ctArt .cwk"); if (!wk) return false;
+  const r = wk.getBoundingClientRect();
+  const mx = Math.max(18, r.width * .25), my = Math.max(18, r.height * .25);
+  return cx >= r.left - mx && cx <= r.right + mx && cy >= r.top - my && cy <= r.bottom + my;
+}
 $("#ctArt").onclick = e => {
   const A = CA;
-  if (!A){ return toast(CATPUR[Math.floor(Math.random() * CATPUR.length)]); }
+  if (!A){                                        // 关了动效：静态的猫，点它才算摸
+    if (catHitSelf(e.clientX, e.clientY)) toast(CATPUR[Math.floor(Math.random() * CATPUR.length)]);
+    return;
+  }
   if (A.noClick || A.drag) return;                // 刚拖完玩具，手一松那下不算戳猫
   /* 拍窝：叫它回去躺着。它已经在里头了就当是戳它，照走底下那一路 */
   if (!A.inBed && e.target.closest(".cbed")) return catToBed();
@@ -5901,18 +5912,26 @@ $("#ctArt").onclick = e => {
     catFlash("pounce", 420);
     return toast(`${catName()}一爪按住那点红光 —— 抬起爪子，又没了。`);
   }
+  const onCat = catHitSelf(e.clientX, e.clientY);
   if (A.el.cy.classList.contains("zz")){
+    if (!onCat){                                  // 睡着的时候，点边上的草木还是打发它去
+      const g0 = greenHit(e.clientX, e.clientY);
+      if (g0){ catWake(true); return catAfter(420, () => catToPlant(g0)); }
+      return;                                     // 点空地：不算戳它
+    }
     A.poked++;
     if (--A.wake <= 0) return catWake(false);
     return toast(CATZZZ[Math.min(A.poked - 1, CATZZZ.length - 1)]);
   }
-  /* 点在哪一株草木上，就打发它去那边。点在猫自己身上还是摸一把 ——
-     草木一律 pointer-events:none（免得截了拖玩具、晃激光的手），
-     所以这儿不看 e.target，拿坐标去 A.grn 里现找 */
-  if (!e.target.closest(".cwk, .ctoyw, .cbw")){
+  /* 点在哪一株草木上，就打发它去那边。草木一律 pointer-events:none
+     （免得截了拖玩具、晃激光的手），所以这儿不看 e.target，拿坐标去 A.grn 里现找 */
+  if (!onCat && !e.target.closest(".ctoyw, .cbw")){
     const g = greenHit(e.clientX, e.clientY);
     if (g && catToPlant(g)) return;
   }
+  /* 点空地什么都不算 —— 得点在猫身上才是摸它。
+     原先院子里哪儿点一下都弹一句「呼噜呼噜」，草木多了之后更不像话 */
+  if (!onCat) return;
   catFlash("pet", 500);
   toast(CATPUR[Math.floor(Math.random() * CATPUR.length)]);
 };
