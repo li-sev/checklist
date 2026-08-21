@@ -1953,7 +1953,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v104" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v105" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -3744,11 +3744,33 @@ function catFace(d){
 // 走到 (tx,ty)，速度 px/秒。苹果那只猫脸朝左，往右走要 scaleX(-1) 翻过来
 /* face 给了就照它摆，不给才按走的方向摆。
    去扑玩具那一路要的就是这个 —— 脸得冲着玩具，不能跟着脚走 */
+/* 正走在半道上的时候，人其实还没到 A.x —— A.x 记的是「要去哪儿」。
+   拿它算路程的话，走到一半再下一道令（你连点几下、或者半路改主意），
+   算出来的路程接近零，时长也接近零，剩下的那段就「唰」地窜过去了。
+   所以现问一句浏览器：这一帧它渲在哪儿 */
+function catAt(A){
+  const el = A.el.wk;
+  if (!el) return {x:A.x, y:A.y};
+  const tf = getComputedStyle(el).transform;
+  if (!tf || tf === "none") return {x:A.x, y:A.y};
+  /* 猫这一层挂着 will-change:transform，浏览器把它提成了独立图层，
+     于是 getComputedStyle 给回来的常常是 matrix3d(16 个数) 而不是 matrix(6 个数)。
+     只认 matrix( 的话这儿会一路退回「拿目标当现在」，路程算成上一趟没走完的那一段，
+     时长跟着算错 —— 表现就是走走停停、忽快忽慢，连点几下更是唰地窜过去 */
+  const m = tf.match(/matrix(3d)?\(([^)]+)\)/);
+  if (!m) return {x:A.x, y:A.y};
+  const v = m[2].split(",").map(Number);
+  const x = m[1] ? v[12] : v[4], y = m[1] ? v[13] : v[5];
+  if (!isFinite(x) || !isFinite(y)) return {x:A.x, y:A.y};
+  // transform 里的纵坐标是「进深减抬高」，换回进深这一档
+  return {x, y: y + (A.lift || 0)};
+}
 function catMove(tx, ty, sp, then, face){
   const A = CA; if (!A) return;
   tx = clamp(tx, A.pad, Math.max(A.pad, A.W - A.cw - A.pad));
   ty = clamp(ty, A.yLo, A.yHi);
-  const d = Math.hypot(tx - A.x, ty - A.y), t = d < 1 ? 0 : d / sp;
+  const at = catAt(A);
+  const d = Math.hypot(tx - at.x, ty - at.y), t = d < 1 ? 0 : d / sp;
   if (face != null) A.dir = face;
   else if (Math.abs(tx - A.x) > 1) A.dir = tx > A.x ? -1 : 1;
   A.x = tx; A.y = ty;
@@ -4557,6 +4579,16 @@ function catGreenScan(A){
      它们都在同一层 z 上（挡不挡猫是另一档），同层就看谁在 DOM 里靠后。
      原先照着写在 HTML 里的顺序摆，于是最里头那块石头盖在了树冠上。
      顺序没变就别动 DOM —— 一挪位置，正在晃／正在长的那株动画会从头起 */
+  A.grn = out;
+  catStick(A);                                     // 长在树上的先钉好，再量一遍它们
+  const yr = A.el.y.getBoundingClientRect();
+  for (const g of out){
+    if (!ONTREE[g.cls]) continue;
+    const r = g.el.getBoundingClientRect();
+    g.x = r.left - yr.left; g.w = r.width; g.h = r.height;
+    g.mid = g.x + g.w / 2; g.root = yr.bottom - r.bottom;
+    g.top = r.top - yr.top; g.bot = r.bottom - yr.top;
+  }
   out.sort((a, b) => b.root - a.root);
   /* 长在别的东西身上的小株 —— 树冠里那几朵花、那片叶 —— 得跟着寄主走。
      光按根线排的话，它们比树根还靠里，会整个被树盖掉；
@@ -4589,6 +4621,32 @@ function greenAt(cls){
 function pickGrass(){
   const live = GRASS.map(greenAt).filter(Boolean);
   return live.length ? live[Math.floor(Math.random() * live.length)] : null;
+}
+/* 长在树上的那几株：钉在树身上的哪个位置（0~1，从树的左下角量起）。
+   这几个数是照摆样那块（1160×664）上量出来的。
+   为什么不能用院子的百分数：树的大小跟着 --gs 缩，位置却是按院子高的百分数摆的，
+   两者的比例一旦对不上（手机上院子又矮又窄，缩放 0.31 而院高只剩 0.58），
+   花就从树冠上滑下去、甚至飘到树顶外头 —— 手机版看到的就是这个。
+   钉在树身上就跟屏幕无关了：树多大，它就在树的那个位置上。 */
+const ONTREE = {
+  g14:{h:"g3", d:30, rx:.356, ry:.093},
+  g16:{h:"g3", d:56, rx:.433, ry:.610},
+  g17:{h:"g3", d:31, rx:.795, ry:.267},
+};
+function catStick(A){
+  const gs = parseFloat(getComputedStyle(A.el.y).getPropertyValue("--gs")) || 1;
+  for (const cls in ONTREE){
+    const o = ONTREE[cls];
+    const g = A.grn.find(x => x.cls === cls), h = A.grn.find(x => x.cls === o.h);
+    if (!g || !h) continue;
+    /* 跟着树缩，不吃「小株兜底」那一档 —— 兜底是给站在地上的小花小草的，
+       长在树上的要是不跟树一起缩，手机上就成了一朵比树冠还厚的花 */
+    const fs = Math.max(6, Math.round(o.d * gs)), w = fs * 1.37;
+    g.el.style.fontSize = fs + "px";
+    g.el.style.left = Math.round(h.x + o.rx * h.w - w / 2) + "px";
+    g.el.style.right = "auto";
+    g.el.style.bottom = Math.round(h.root + o.ry * h.h - fs / 2) + "px";
+  }
 }
 /* 手指点在院子里的哪一株上。
    emoji 的外框是个大方块，里头大半是透明的 —— 一棵椰子树的框能罩住左上一整片，
@@ -4694,7 +4752,7 @@ function catSniff(gr, opt){
     if (el){ el.classList.remove("sway"); void el.offsetWidth; el.classList.add("sway");
              setTimeout(() => el.classList.remove("sway"), 1700); }
     A.el.cy.classList.add("look");
-    catAfter(1500 + Math.random() * 1200, () => {
+    catAfter(thorn ? 500 : 1500 + Math.random() * 1200, () => {
       if (!CA || CA !== A) return;
       A.el.cy.classList.remove("look");
       if (thorn){                                    // 带刺的：扎一下，弹开
