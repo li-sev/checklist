@@ -1953,7 +1953,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v100" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v101" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -3804,7 +3804,7 @@ function catStep(){
      一样一样串着判的话，排在前头那个把机会先挑走了，
      后头那个看着就像从来不去。总数压在一成多，比扑玩具低：
      玩具才是正主，草木是顺路的 */
-  const tree = greenAt("g3"), gr = pickGrass();
+  const tree = greenAt(CLIMB), gr = pickGrass();
   if ((tree || gr) && Math.random() < (fast ? .22 : .15)){
     const up = tree && (!gr || Math.random() < .5);
     return up ? catClimb() : catSniff(gr);
@@ -4526,6 +4526,8 @@ const GREENS = Array.from({length: 18}, (_, i) => "g" + (i + 1));
 /* 能闻能啃的那两丛 —— 摆的时候标的（「摆院子」里每一株都能标猫拿它干嘛）。
    能爬的是 g3 那棵树，在 catClimb 里认死 */
 const GRASS = ["g2", "g5"];
+/* 能爬的那一棵（摆的时候标的） */
+const CLIMB = "g3";
 /* 量一遍院子里现有的绿。root 是这一株的根离院底多少像素 —— 前后关系、
    猫该走到多深，全从这个数来。CSS 里写的是 bottom 百分数，这儿不去解析它：
    现量一遍，字号一变、院子一撑大就自动跟上了。
@@ -4539,13 +4541,28 @@ function catGreenScan(A){
     const r = e.getBoundingClientRect();
     if (!r.width) continue;
     out.push({el:e, cls, x:r.left - y.left, w:r.width, h:r.height,
-              mid:r.left - y.left + r.width / 2, root:y.bottom - r.bottom});
+              mid:r.left - y.left + r.width / 2, root:y.bottom - r.bottom,
+              top:r.top - y.top, bot:r.bottom - y.top});
   }
   /* 草木之间也得分前后：根越靠里的越先画，后画的压在它上头。
      它们都在同一层 z 上（挡不挡猫是另一档），同层就看谁在 DOM 里靠后。
      原先照着写在 HTML 里的顺序摆，于是最里头那块石头盖在了树冠上。
      顺序没变就别动 DOM —— 一挪位置，正在晃／正在长的那株动画会从头起 */
   out.sort((a, b) => b.root - a.root);
+  /* 长在别的东西身上的小株 —— 树冠里那几朵花、那片叶 —— 得跟着寄主走。
+     光按根线排的话，它们比树根还靠里，会整个被树盖掉；
+     可摆的时候本来就是当「开在树上的花」摆的。
+     判定不靠人工标：个头不到人家一半、整个落在人家框里，那就是长在人家身上。
+     跟着寄主的，深浅也算寄主那一档 —— 猫要去闻它，走到树根那条线就够着了 */
+  const inside = (a, b) => b.w > a.w * 2 &&
+    a.x >= b.x - 2 && a.x + a.w <= b.x + b.w + 2 &&
+    a.top >= b.top - 2 && a.bot <= b.bot + 2;
+  out.forEach((a, i) => { a.host = out.find((b, j) => j > i && inside(a, b)) || null; });
+  out.filter(o => o.host).forEach(a => {
+    out.splice(out.indexOf(a), 1);
+    out.splice(out.indexOf(a.host) + 1, 0, a);
+    a.root = a.host.root + .5;                    // 前后关系跟着寄主算
+  });
   const now = [...A.el.cy.querySelectorAll(".cgrn")].filter(e => out.some(o => o.el === e));
   if (out.some((o, i) => now[i] !== o.el)){
     const f = document.createDocumentFragment();
@@ -4564,6 +4581,28 @@ function pickGrass(){
   const live = GRASS.map(greenAt).filter(Boolean);
   return live.length ? live[Math.floor(Math.random() * live.length)] : null;
 }
+/* 手指点在院子里的哪一株上。A.grn 是按「先画的在前」排好的，
+   所以从后往前找，头一个套住这个点的就是眼下压在最上头那一株 */
+function greenHit(cx, cy){
+  const A = CA; if (!A || !A.grn || !A.grn.length) return null;
+  const y = A.el.y.getBoundingClientRect();
+  const x = cx - y.left, v = cy - y.top;
+  for (let i = A.grn.length - 1; i >= 0; i--){
+    const g = A.grn[i];
+    if (x >= g.x && x <= g.x + g.w && v >= g.top && v <= g.bot) return g;
+  }
+  return null;
+}
+/* 你点了哪一株，它就朝哪一株去。能爬的就爬上去，别的凑过去闻 */
+function catToPlant(g){
+  const A = CA; if (!A || !g) return false;
+  clearTimeout(A.timer);
+  A.chasing = 0;
+  catCalmFace(); catOut();
+  if (g.cls === CLIMB && !g.host) catClimb(true);
+  else catSniff(g, {eat:GRASS.includes(g.cls), called:true});
+  return true;
+}
 /* 猫脚这会儿踩在离院底多高的地方。院里的东西都是 bottom:12% 起底，
    y 往里是负的 —— 越往里走，脚在画面上越高 */
 const catFoot = A => A.H * .12 - A.y;
@@ -4576,21 +4615,21 @@ function catGreenDepth(A){
   A = A || CA; if (!A || !A.grn) return;
   const foot = catFoot(A);
   for (const g of A.grn){
-    if (A.climb && g.cls === "g3"){ g.el.classList.remove("pf"); continue; }
+    if (A.climb && g.cls === CLIMB){ g.el.classList.remove("pf"); continue; }
     const on = g.el.classList.contains("pf");
     g.el.classList.toggle("pf", foot > g.root + (on ? -6 : 6));
   }
 }
 /* 爬树。走到树底下，再抬上去 —— 抬高走的是 lift 那一层（躺窝里也是它），
    所以横坐标、朝向、前后关系一概照旧，只是人在半空 */
-function catClimb(){
-  const A = CA, t = greenAt("g3"); if (!A || !t) return catStep();
+function catClimb(hurry){
+  const A = CA, t = greenAt(CLIMB); if (!A || !t) return catStep();
   catTell("climb");
   A.legs = 0;
   const tx = clamp(t.mid - A.cw / 2, A.pad, Math.max(A.pad, A.W - A.cw - A.pad));
   /* 走到这棵树自己的根那条线上 —— 不是院子最外头也不是最里头。
      从哪儿来就从哪儿过去，中间不折返（catMove 走的是直线） */
-  catMove(tx, catAtRoot(A, t.root), 34, () => {
+  catMove(tx, catAtRoot(A, t.root), hurry ? 82 : 34, () => {
     if (!CA || CA !== A) return;
     A.el.cy.classList.remove("go");
     A.climb = 1;
@@ -4616,16 +4655,19 @@ function catClimb(){
 }
 /* 凑过去闻草。草平时一动不动，猫到跟前了才晃两下。
    小概率一口啃掉 —— 啃了就空一块，第二天自己长回来 */
-function catSniff(gr){
+function catSniff(gr, opt){
   const A = CA; if (!A || !gr) return catStep();
+  const o = opt || {}, eat = o.eat !== false && GRASS.includes(gr.cls);
   catTell("sniff");
+  if (!eat) $("#ctSay").textContent = `${catName()}小跑过去，想看看那是什么。`;
+  if (o.called) toast(`${catName()}抬头看了一眼，朝那边去了。`);
   A.legs = 0;
   /* 站到草边上、跟它一样深，不是踩在草上头也不是隔着半个院子闻。
      从哪边过去看它这会儿在哪边 —— 就近站，不必绕到对面去 */
   const side = (A.x + A.cw / 2) < gr.mid ? -1 : 1;
   const tx = clamp(gr.mid + side * (gr.w * .5 + A.cw * .34) - A.cw / 2,
                    A.pad, Math.max(A.pad, A.W - A.cw - A.pad));
-  catMove(tx, catAtRoot(A, gr.root), 30, () => {
+  catMove(tx, catAtRoot(A, gr.root), o.called ? 78 : 30, () => {
     if (!CA || CA !== A) return;
     A.el.cy.classList.remove("go");
     catFace(gr.mid < A.x + A.cw / 2 ? 1 : -1);       // 脸冲着那丛草
@@ -4636,9 +4678,12 @@ function catSniff(gr){
     catAfter(1500 + Math.random() * 1200, () => {
       if (!CA || CA !== A) return;
       A.el.cy.classList.remove("look");
-      if (Math.random() < .12){                      // 一成二：连叶带茎啃了
+      if (eat && Math.random() < .12){               // 一成二：连叶带茎啃了
         catEatGrass(gr.cls);
         catFlash("pet", 420);
+      } else if (!eat && o.called){                  // 啃不动的，就蹭两下
+        catFlash("pet", 420);
+        toast(`${catName()}凑过去闻了闻，又拿脸蹭了两下。`);
       }
       catAfter(600, catStep);
     });
@@ -5860,6 +5905,13 @@ $("#ctArt").onclick = e => {
     A.poked++;
     if (--A.wake <= 0) return catWake(false);
     return toast(CATZZZ[Math.min(A.poked - 1, CATZZZ.length - 1)]);
+  }
+  /* 点在哪一株草木上，就打发它去那边。点在猫自己身上还是摸一把 ——
+     草木一律 pointer-events:none（免得截了拖玩具、晃激光的手），
+     所以这儿不看 e.target，拿坐标去 A.grn 里现找 */
+  if (!e.target.closest(".cwk, .ctoyw, .cbw")){
+    const g = greenHit(e.clientX, e.clientY);
+    if (g && catToPlant(g)) return;
   }
   catFlash("pet", 500);
   toast(CATPUR[Math.floor(Math.random() * CATPUR.length)]);
