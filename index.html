@@ -1953,7 +1953,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v105" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v106" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -3772,7 +3772,10 @@ function catMove(tx, ty, sp, then, face){
   const at = catAt(A);
   const d = Math.hypot(tx - at.x, ty - at.y), t = d < 1 ? 0 : d / sp;
   if (face != null) A.dir = face;
-  else if (Math.abs(tx - A.x) > 1) A.dir = tx > A.x ? -1 : 1;
+  /* 朝哪边看，也得按「人这会儿在哪儿」算，不能按「上一趟要去哪儿」算 ——
+     走到一半改主意的时候，拿旧目标一比，脸会朝反方向，
+     看着就是倒着跑（跟上头那个时长算错是同一个根） */
+  else if (Math.abs(tx - at.x) > 1) A.dir = tx > at.x ? -1 : 1;
   A.x = tx; A.y = ty;
   catBob(sp > 200 ? .17 : sp > 50 ? .32 : .5);   // 疯跑 / 快走 / 溜达
   A.el.cy.classList.toggle("go", t > 0);
@@ -4657,12 +4660,16 @@ function greenHit(cx, cy){
   const A = CA; if (!A || !A.grn || !A.grn.length) return null;
   const y = A.el.y.getBoundingClientRect();
   const x = cx - y.left, v = cy - y.top;
-  let best = null, small = Infinity;
+  let best = null, near = Infinity;
   for (const g of A.grn){
-    const mx = g.w * .06, my = (g.bot - g.top) * .06;
+    const h = g.bot - g.top, mx = g.w * .06, my = h * .06;
     if (x < g.x + mx || x > g.x + g.w - mx || v < g.top + my || v > g.bot - my) continue;
-    const area = g.w * (g.bot - g.top);
-    if (area < small){ small = area; best = g; }   // 一样大就算先画的那个（下头不覆盖）
+    /* 谁的正中离你点的地方最近就算谁（按各自的大小折算：0 是正中、1 是框边）。
+       光挑最小的那株不行 —— 椰子树的框罩住半个院子，
+       你点它的树冠，会被判给恰好也罩在那儿的仙人掌，猫跑去扎一爪 */
+    const d = Math.max(Math.abs(x - (g.x + g.w / 2)) / (g.w / 2),
+                       Math.abs(v - (g.top + h / 2)) / (h / 2));
+    if (d < near){ near = d; best = g; }
   }
   return best;
 }
@@ -4706,6 +4713,7 @@ function catClimb(hurry){
      现在摊开的院子有一千多宽，横穿一趟要二十六秒，看着像在磨蹭 */
   catMove(tx, catAtRoot(A, t.root), hurry ? CATSPD.call : CATSPD.errand, () => {
     if (!CA || CA !== A) return;
+    catCalmFace();                                 // 同上：歪着身子上不了树
     A.el.cy.classList.remove("go");
     A.climb = 1;
     catGreenDepth(A);                               // 蹲在杈上，这棵别再挡着它
@@ -4746,6 +4754,7 @@ function catSniff(gr, opt){
                    A.pad, Math.max(A.pad, A.W - A.cw - A.pad));
   catMove(tx, catAtRoot(A, gr.root), o.called ? CATSPD.call : CATSPD.errand, () => {
     if (!CA || CA !== A) return;
+    catCalmFace();                                 // 打滚翻到一半被打断的话，别歪着身子闻
     A.el.cy.classList.remove("go");
     catFace(gr.mid < A.x + A.cw / 2 ? 1 : -1);       // 脸冲着那丛草
     const el = greenAt(gr.cls) && gr.el;
@@ -4865,7 +4874,13 @@ const CATSPD = {
    摊开之后高出来的那一截，八成让给它走：不然四百多高的院子里，
    猫还困在底下四十像素那一条带子上，看着像贴着框底爬。
    玩具举到半空，它就是这么一路走上去的 —— 走到够得着了才跳，不是原地干扑 */
-const catDeep = A => -Math.round(34 + Math.max(0, A.H - 170) * .8);
+/* 猫能往里走到多深。原先是「34 + 高出常态院子的那截 × 0.8」——
+   那是照「猫恒定九十五像素」定的死公式，可猫现在跟着院子缩，公式没跟着变：
+   手机上院子只有 388 高，算出来才 208，猫的脚顶多到院底往上六成五，
+   最里头那几株（玫瑰 81.6%、那丛草 78.7%）它一辈子够不着 —— 看着就还是有条地平线。
+   改成按院子和猫的身量现算：整只留在院子里的前提下，能走多里头就走多里头。
+   常态那块一百七十来高的小院子仍有个下限，不然它贴着框底那一条带子爬 */
+const catDeep = A => -Math.round(Math.max(34, A.H * .84 - (A.cw || 70)));
 /* 往上扑那一下窜多高：按还差多少算，封顶一个半身位。
    剩下的路靠它自己走上去，不能一跳四百像素 */
 function catJump(){
