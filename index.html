@@ -755,7 +755,7 @@
   .cb .cy .g4{left:6.5%;bottom:45.1%;font-size:max(calc(34px * var(--gs,1)),21px);opacity:0.85}
   .cb .cy .g5{left:auto;right:20.2%;bottom:78.7%;font-size:max(calc(46px * var(--gs,1)),29px);--rot:-44deg;opacity:0.9}                    /* 草·能闻能啃 */
   .cb .cy .g6{left:auto;right:9.7%;bottom:8.3%;font-size:max(calc(25px * var(--gs,1)),16px);opacity:0.75}
-  .cb .cy .g7{left:72.2%;bottom:81.6%;font-size:max(calc(64px * var(--gs,1)),34px);--rot:36deg}
+  .cb .cy .g7{left:72.2%;bottom:81.6%;font-size:max(calc(64px * var(--gs,1)),34px)}
   .cb .cy .g8{left:67.9%;bottom:77.0%;font-size:max(calc(56px * var(--gs,1)),34px);--rot:-47deg}
   .cb .cy .g9{left:69.7%;bottom:76.7%;font-size:max(calc(56px * var(--gs,1)),34px)}
   .cb .cy .g10{left:76.1%;bottom:76.4%;font-size:max(calc(56px * var(--gs,1)),34px)}
@@ -1953,7 +1953,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v103" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v104" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -3834,13 +3834,13 @@ function catStep(){
     tx = A.bedX + A.cw * (tx < A.bedX ? -.95 : .95);
     if (Math.random() < .5) toast(CATHOT[Math.floor(Math.random() * CATHOT.length)]);
   }
-  catMove(tx, ty, fast ? 54 : 32);
+  catMove(tx, ty, fast ? CATSPD.perk : CATSPD.walk);
 }
 // 饿到守碗：挪到碗边上，脸朝着碗，不再溜达
 function catGuardBowl(){
   const A = CA; if (!A) return;
   catTell("wait");
-  catMove(A.bowlX + A.bowlW * .85, 0, 26, () => {
+  catMove(A.bowlX + A.bowlW * .85, 0, CATSPD.bowl, () => {
     A.el.cy.classList.remove("go");
     catFace(1);                                   // 不翻面才脸朝左，正对着左手边的碗
     catAfter(3200, catStep);
@@ -4529,6 +4529,14 @@ const GREENS = Array.from({length: 18}, (_, i) => "g" + (i + 1));
 const GRASS = ["g2", "g5"];
 /* 能爬的那一棵（摆的时候标的） */
 const CLIMB = "g3";
+/* 碰不得的：一爪按上去全是刺。凑得过去，蹭不了 */
+const THORN = ["g12"];
+const CATTHORN = [
+  "「嗷」—— 一爪按上去全是刺，甩着爪子退了两步。",
+  "鼻子刚凑上去就缩了回来 —— 那东西扎人。",
+  "伸爪子探了探，扎了一下，坐在原地舔爪子。",
+  "围着转了半圈，找不着能挨的地方，悻悻走开了。",
+];
 /* 量一遍院子里现有的绿。root 是这一株的根离院底多少像素 —— 前后关系、
    猫该走到多深，全从这个数来。CSS 里写的是 bottom 百分数，这儿不去解析它：
    现量一遍，字号一变、院子一撑大就自动跟上了。
@@ -4638,7 +4646,7 @@ function catClimb(hurry){
      从哪儿来就从哪儿过去，中间不折返（catMove 走的是直线） */
   /* 自己去爬那一趟原先走 34 —— 那是照一百七十来高的小院子定的。
      现在摊开的院子有一千多宽，横穿一趟要二十六秒，看着像在磨蹭 */
-  catMove(tx, catAtRoot(A, t.root), hurry ? 82 : 52, () => {
+  catMove(tx, catAtRoot(A, t.root), hurry ? CATSPD.call : CATSPD.errand, () => {
     if (!CA || CA !== A) return;
     A.el.cy.classList.remove("go");
     A.climb = 1;
@@ -4667,8 +4675,10 @@ function catClimb(hurry){
 function catSniff(gr, opt){
   const A = CA; if (!A || !gr) return catStep();
   const o = opt || {}, eat = o.eat !== false && GRASS.includes(gr.cls);
+  const thorn = THORN.includes(gr.cls);
   catTell("sniff");
-  if (!eat) $("#ctSay").textContent = `${catName()}小跑过去，想看看那是什么。`;
+  if (thorn) $("#ctSay").textContent = `${catName()}朝那丛带刺的过去了。`;
+  else if (!eat) $("#ctSay").textContent = `${catName()}小跑过去，想看看那是什么。`;
   if (o.called) toast(`${catName()}抬头看了一眼，朝那边去了。`);
   A.legs = 0;
   /* 站到草边上、跟它一样深，不是踩在草上头也不是隔着半个院子闻。
@@ -4676,7 +4686,7 @@ function catSniff(gr, opt){
   const side = (A.x + A.cw / 2) < gr.mid ? -1 : 1;
   const tx = clamp(gr.mid + side * (gr.w * .5 + A.cw * .34) - A.cw / 2,
                    A.pad, Math.max(A.pad, A.W - A.cw - A.pad));
-  catMove(tx, catAtRoot(A, gr.root), o.called ? 78 : 42, () => {
+  catMove(tx, catAtRoot(A, gr.root), o.called ? CATSPD.call : CATSPD.errand, () => {
     if (!CA || CA !== A) return;
     A.el.cy.classList.remove("go");
     catFace(gr.mid < A.x + A.cw / 2 ? 1 : -1);       // 脸冲着那丛草
@@ -4687,6 +4697,18 @@ function catSniff(gr, opt){
     catAfter(1500 + Math.random() * 1200, () => {
       if (!CA || CA !== A) return;
       A.el.cy.classList.remove("look");
+      if (thorn){                                    // 带刺的：扎一下，弹开
+        catFlash("pounce", 420);
+        toast(catName() + CATTHORN[Math.floor(Math.random() * CATTHORN.length)]);
+        $("#ctSay").textContent = `${catName()}被扎了一下，坐在旁边舔爪子。`;
+        // 弹开半个身位，别贴着它坐
+        const away = clamp(A.x + (gr.mid > A.x + A.cw / 2 ? -1 : 1) * A.cw * .8,
+                           A.pad, Math.max(A.pad, A.W - A.cw - A.pad));
+        A.x = away;
+        A.el.wk.style.transitionDuration = ".38s";
+        A.el.wk.style.transform = catXf(A);
+        return catAfter(1600, catStep);
+      }
       if (eat && Math.random() < .12){               // 一成二：连叶带茎啃了
         catEatGrass(gr.cls);
         catFlash("pet", 420);
@@ -4768,6 +4790,18 @@ function catScale(){
 function catGreenShowFor(A){
   const save0 = CA; CA = A; try { catGreenShow(); } finally { CA = save0; }
 }
+/* ── 走多快，就这四档 ──
+   原先各处随手写数：溜达 32、撒欢 54、去闻草 30、去爬树 34、你叫它 78/82，
+   看着就是一会儿快一会儿慢，没个准。归拢成一张表，各处照这儿取：
+   溜达是闲步，自己想去哪一株是「有事要办」，你叫它才小跑。
+   （追激光、发疯、扑玩具那几路另有各自的劲头，不走这张表） */
+const CATSPD = {
+  walk: 38,     // 没事溜达
+  perk: 58,     // 撒欢那阵子
+  errand: 50,   // 自己要去闻草／爬树
+  call: 76,     // 你点了哪一株，它小跑过去
+  bowl: 30,     // 守着碗挪两步
+};
 /* 猫能往里退多深。院子一百七十来高的时候就是原先那三十四 ——
    那个数是照这个高度定的，多退一点就显得飘。
    摊开之后高出来的那一截，八成让给它走：不然四百多高的院子里，
