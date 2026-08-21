@@ -1944,7 +1944,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v96" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v97" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -3805,12 +3805,12 @@ function catStep(){
   catTell("walk");
   /* 从这会儿站的地方往外挪一段，不是每回都在整个院子里重新掷一个点 ——
      那样看着像每走完一件事就先回原地，再重新出发。
-     进深只在地面那一截里走（catGround）：再往里就越过树根线，
-     人从树顶上头飘过去了。够高处的玩具是往上够，不走这条路 */
-  const gLo = catGround(A), span = A.W * .42;
+     进深整块院子都走得：这院子是它的，哪儿都去得。
+     走到东西后头去会被挡住，前后关系交给 catGreenDepth 排 */
+  const span = A.W * .42;
   let tx = clamp(A.x + (Math.random() * 2 - 1) * span,
                  A.pad, Math.max(A.pad, A.W - A.cw - A.pad));
-  const ty = clamp(A.y + (Math.random() * 2 - 1) * (A.yHi - gLo) * .55, gLo, A.yHi);
+  const ty = clamp(A.y + (Math.random() * 2 - 1) * (A.yHi - A.yLo) * .55, A.yLo, A.yHi);
   // 炭盆烫。溜达也别往那儿凑，凑近了推开，还得叫它一声
   const hot = A.el.bed && bedIn(BEDS[G().catbed]).hot;
   if (hot && Math.abs(tx - A.bedX) < A.cw * .75){
@@ -4683,12 +4683,6 @@ function catGreenShowFor(A){
    猫还困在底下四十像素那一条带子上，看着像贴着框底爬。
    玩具举到半空，它就是这么一路走上去的 —— 走到够得着了才跳，不是原地干扑 */
 const catDeep = A => -Math.round(34 + Math.max(0, A.H - 170) * .8);
-/* 地面到哪儿为止。上头那条 catDeep 是「够得着的最里头」，为了让它能一路走上去
-   够半空里的玩具，几乎放到了院子顶 —— 可平时溜达也走那么高的话，
-   人就飘到树冠上头去了。溜达只在这一截里走：往里最多到院子高的三成半，
-   那条线正落在里头那几株的根附近，看着才是一块地，不是一片天 */
-const catGround = A => Math.max(A.yLo,
-  -Math.round(clamp(34 + Math.max(0, A.H - 170) * .42, 34, A.H * .34)));
 /* 往上扑那一下窜多高：按还差多少算，封顶一个半身位。
    剩下的路靠它自己走上去，不能一跳四百像素 */
 function catJump(){
