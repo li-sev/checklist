@@ -1953,7 +1953,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v106" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v107" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -4776,7 +4776,9 @@ function catSniff(gr, opt){
         A.el.wk.style.transform = catXf(A);
         return catAfter(1600, catStep);
       }
-      if (eat && Math.random() < .12){               // 一成二：连叶带茎啃了
+      /* 啃掉的概率：自己溜达过去撞上的一成二；你亲手点它去的两成五 ——
+         点了就是想看它干点什么，撞八回才见一回太闷 */
+      if (eat && Math.random() < (o.called ? .25 : .12)){
         catEatGrass(gr.cls);
         catFlash("pet", 420);
       } else if (!eat && o.called){                  // 啃不动的，就蹭两下
