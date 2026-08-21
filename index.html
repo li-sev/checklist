@@ -1953,7 +1953,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v99" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v100" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -4541,6 +4541,17 @@ function catGreenScan(A){
     out.push({el:e, cls, x:r.left - y.left, w:r.width, h:r.height,
               mid:r.left - y.left + r.width / 2, root:y.bottom - r.bottom});
   }
+  /* 草木之间也得分前后：根越靠里的越先画，后画的压在它上头。
+     它们都在同一层 z 上（挡不挡猫是另一档），同层就看谁在 DOM 里靠后。
+     原先照着写在 HTML 里的顺序摆，于是最里头那块石头盖在了树冠上。
+     顺序没变就别动 DOM —— 一挪位置，正在晃／正在长的那株动画会从头起 */
+  out.sort((a, b) => b.root - a.root);
+  const now = [...A.el.cy.querySelectorAll(".cgrn")].filter(e => out.some(o => o.el === e));
+  if (out.some((o, i) => now[i] !== o.el)){
+    const f = document.createDocumentFragment();
+    out.forEach(o => f.appendChild(o.el));
+    A.el.cy.appendChild(f);            // 挪回院子那一层里去，不是挪到 #ctArt 上
+  }
   A.grn = out;
   return out;
 }
@@ -4687,14 +4698,15 @@ function catGreenShow(){
 function catScale(){
   const y = $("#ctArt"); if (!y) return 1;
   /* 这一院子是在 1160×664 那块上摆的。换到别的屏上要缩多少：
-     横竖两个方向各有一个缩放数，开方取中 —— 光按高算，手机上横着挤成一团；
-     光按宽算，又缩成一撮草。两头一折中，摆样那块屏上正好还原成一。
-     两头夹一道：再小的屏也不缩到三成半以下，再大的屏也不涨过一倍七。
-     没摊开就是一 —— 那块小院子照的是另一套尺寸，缩下去猫就成了一只蚂蚁。
+     横竖各算一个缩放数，取小的那个 —— 也就是「装得下」。
+     原先取的是两个数折中（开方），横竖比例一偏就按不住：
+     宽屏上横的那个数把整体顶大，高度跟着超出去，树顶、石头就全捅出框了。
+     取小的，画面在哪块屏上都跟摆样那块一模一样，只是整体大小不同。
+     没摊开就是一 —— 那块一百七十来高的小院子照的是另一套尺寸。
      不看 CA：关了动效的人没有 CA，可他那个院子也得摆对 */
   const wide = mask12.classList.contains("wide");
   const W = y.clientWidth || 260, H = y.clientHeight || 170;
-  const gs = wide ? clamp(Math.sqrt(W / 1160 * (H / 664)), .35, 1.7) : 1;
+  const gs = wide ? clamp(Math.min(W / 1160, H / 664), .28, 2.6) : 1;
   y.style.setProperty("--gs", gs.toFixed(3));
   return gs;
 }
@@ -5792,6 +5804,17 @@ function catWide(on){
   setTimeout(fit, 420);
 }
 $("#ctWide").onclick = () => catWide(!mask12.classList.contains("wide"));
+/* 窗口一变就重量一遍院子 —— 转屏、拖窗口边、手机地址栏收放、分屏，
+   都会让院子换个尺寸。原先只有「摊开／收起」那一下量，别的时候一概不管：
+   拖大浏览器窗口，草木还按旧尺寸摆着，树顶就捅出框了。
+   连着来的 resize 一秒能有几十个，压到最后一下再算 */
+let catReT = 0;
+const catFitSoon = () => {
+  clearTimeout(catReT);
+  catReT = setTimeout(() => { if (mask12.classList.contains("on")){ catScale(); catRemeasure(); } }, 140);
+};
+addEventListener("resize", catFitSoon);
+addEventListener("orientationchange", catFitSoon);
 // 从系统那个全屏退出来（比如按了 Esc），按钮上的字得跟着退回去
 document.addEventListener("fullscreenchange", () => {
   if (!document.fullscreenElement && mask12.classList.contains("wide")) catWide(false);
