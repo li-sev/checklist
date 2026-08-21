@@ -1953,7 +1953,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v107" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v108" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -2024,10 +2024,34 @@ function md(s){
 
 /* ============ 保存 ============ */
 let saveTimer = null;
+/* 存满了／快满了，各吼一次就够，别每四百毫秒吼一遍 */
+let saveFull = 0, saveWarn = 0;
+/* 浏览器给一个网页的地儿是死的：实测 Edge/Chrome 内核约 5 MiB
+   （写到 5,218,304 个字符抛 QuotaExceededError）。按「字符个数」算 ——
+   中文字和字母一样，各算一个，不是中文双倍；键名也占份额。
+   满了它直接抛异常，不会自己腾地方。
+   原先这儿是 catch(e){} 一声不吭：那一次改动就悄悄丢了，人还以为存住了。 */
+const SAVEMAX = 5218304, SAVEWARN = SAVEMAX * .85;
 function save(now){
   clearTimeout(saveTimer);
   const go = () => {
-    try { localStorage.setItem(KEY, JSON.stringify(D)); } catch(e){}
+    try {
+      const txt = JSON.stringify(D);
+      localStorage.setItem(KEY, txt);
+      saveFull = 0;
+      // 还没撞墙就先打个招呼 —— 撞上了才说就晚了，那一下已经丢了
+      if (txt.length > SAVEWARN && !saveWarn){
+        saveWarn = 1;
+        toast(`存档快满了：${(txt.length / 1048576).toFixed(1)}M，浏览器只给约 5M。`
+            + `找时间在「更多 → 导出」存一份，再清些旧东西。`);
+      }
+    } catch(e){
+      if (!saveFull){
+        saveFull = 1;
+        toast("存不下了 —— 浏览器给这个网页的地方满了，这一次的改动没能存住。"
+            + "请先在「更多 → 导出」存一份，再清掉些旧东西。");
+      }
+    }
     schedulePush();                                // 接了驿传就顺手往云上送一趟
   };
   if (now) go(); else saveTimer = setTimeout(go, 400);
@@ -3804,7 +3828,7 @@ function catOut(){
     A.el.cy.classList.remove("head");
     A.x = clamp(A.x - (A.cw - (A.headW || A.cw)) / 2, A.pad, Math.max(A.pad, A.W - A.cw - A.pad));
   }
-  A.inBed = 0; A.lift = 0; A.climb = 0;           // 半道被打断的话，也算下了树
+  A.inBed = 0; A.lift = 0; A.climb = "";          // 半道被打断的话，也算下了树
   catDepth();
 }
 /* 一步走完了，下一步干什么。心气儿（catPose）定倾向，这儿掷骰子 */
@@ -3830,10 +3854,10 @@ function catStep(){
      一样一样串着判的话，排在前头那个把机会先挑走了，
      后头那个看着就像从来不去。总数压在一成多，比扑玩具低：
      玩具才是正主，草木是顺路的 */
-  const tree = greenAt(CLIMB), gr = pickGrass();
+  const tree = pickTree(), gr = pickGrass();
   if ((tree || gr) && Math.random() < (fast ? .22 : .15)){
     const up = tree && (!gr || Math.random() < .5);
-    return up ? catClimb() : catSniff(gr);
+    return up ? catClimb(false, tree.cls) : catSniff(gr);
   }
   if (A.legs >= (fast ? 4 : 3)){
     A.legs = 0;
@@ -4552,8 +4576,16 @@ const GREENS = Array.from({length: 18}, (_, i) => "g" + (i + 1));
 /* 能闻能啃的那两丛 —— 摆的时候标的（「摆院子」里每一株都能标猫拿它干嘛）。
    能爬的是 g3 那棵树，在 catClimb 里认死 */
 const GRASS = ["g2", "g5"];
-/* 能爬的那一棵（摆的时候标的） */
-const CLIMB = "g3";
+/* 能爬的几棵，各自蹲／扒在树身的几成高（摆的时候标的）。
+   圆树蹲在树冠正中；椰子树的叶子在顶上，爪子扒在树干高处才像回事 */
+const CLIMB = {g3:.45, g15:.66};
+const CLIMBS = Object.keys(CLIMB);
+const canClimb = g => g && CLIMB[g.cls] != null && !g.host;
+/* 院里现在有哪几棵爬得上去，随便挑一棵 */
+function pickTree(){
+  const live = CLIMBS.map(greenAt).filter(canClimb);
+  return live.length ? live[Math.floor(Math.random() * live.length)] : null;
+}
 /* 碰不得的：一爪按上去全是刺。凑得过去，蹭不了 */
 const THORN = ["g12"];
 const CATTHORN = [
@@ -4679,7 +4711,7 @@ function catToPlant(g){
   clearTimeout(A.timer);
   A.chasing = 0;
   catCalmFace(); catOut();
-  if (g.cls === CLIMB && !g.host) catClimb(true);
+  if (canClimb(g)) catClimb(true, g.cls);
   else catSniff(g, {eat:GRASS.includes(g.cls), called:true});
   return true;
 }
@@ -4695,15 +4727,17 @@ function catGreenDepth(A){
   A = A || CA; if (!A || !A.grn) return;
   const foot = catFoot(A);
   for (const g of A.grn){
-    if (A.climb && g.cls === CLIMB){ g.el.classList.remove("pf"); continue; }
+    if (A.climb === g.cls){ g.el.classList.remove("pf"); continue; }   // 正扒在这棵上，别挡着它
     const on = g.el.classList.contains("pf");
     g.el.classList.toggle("pf", foot > g.root + (on ? -6 : 6));
   }
 }
 /* 爬树。走到树底下，再抬上去 —— 抬高走的是 lift 那一层（躺窝里也是它），
    所以横坐标、朝向、前后关系一概照旧，只是人在半空 */
-function catClimb(hurry){
-  const A = CA, t = greenAt(CLIMB); if (!A || !t) return catStep();
+function catClimb(hurry, which){
+  const A = CA; if (!A) return catStep();
+  const t = which ? greenAt(which) : pickTree();
+  if (!t) return catStep();
   catTell("climb");
   A.legs = 0;
   const tx = clamp(t.mid - A.cw / 2, A.pad, Math.max(A.pad, A.W - A.cw - A.pad));
@@ -4715,19 +4749,21 @@ function catClimb(hurry){
     if (!CA || CA !== A) return;
     catCalmFace();                                 // 同上：歪着身子上不了树
     A.el.cy.classList.remove("go");
-    A.climb = 1;
+    A.climb = t.cls;
     catGreenDepth(A);                               // 蹲在杈上，这棵别再挡着它
     /* 抬到树冠里头。脚站在根那条线上，往上抬树高的四成半，正落在枝杈那一带。
        再封一道顶：抬到头也得让整只猫留在院子里 */
-    A.lift = Math.round(clamp(t.h * .45, 0,
+    A.lift = Math.round(clamp(t.h * (CLIMB[t.cls] || .45), 0,
                         Math.max(0, A.H * .88 - A.cw - Math.max(0, -A.y))));
     A.el.wk.style.transitionDuration = ".75s";
     A.el.wk.style.transform = catXf(A);
-    toast(`${catName()}三两下窜上了树，蹲在杈上不下来。`);
+    toast(t.cls === "g15"
+      ? `${catName()}两三下窜上去，四只爪子扒着树干，赖着不下来。`
+      : `${catName()}三两下窜上了树，蹲在杈上不下来。`);
     catAfter(2600 + Math.random() * 3000, () => {          // 蹲一会儿就下来
       if (!CA || CA !== A) return;
       A.lift = 0;                                   // 跳下来
-      A.climb = 0;
+      A.climb = "";
       A.el.wk.style.transitionDuration = ".32s";
       A.el.wk.style.transform = catXf(A);
       catFlash("pounce", 420);
@@ -4750,7 +4786,11 @@ function catSniff(gr, opt){
   /* 站到草边上、跟它一样深，不是踩在草上头也不是隔着半个院子闻。
      从哪边过去看它这会儿在哪边 —— 就近站，不必绕到对面去 */
   const side = (A.x + A.cw / 2) < gr.mid ? -1 : 1;
-  const tx = clamp(gr.mid + side * (gr.w * .5 + A.cw * .34) - A.cw / 2,
+  /* 站到它旁边 —— 让开的距离按「它自己的半宽」和「一个猫身」两个里取小的。
+     不封这一道的话，一株几百像素宽的大树会把猫顶出去大半个院子，
+     看着不是凑过去闻，是隔着老远张望（这也是点椰子树时那副样子） */
+  const gap = Math.min(gr.w * .5, A.cw * 1.05) + A.cw * .3;
+  const tx = clamp(gr.mid + side * gap - A.cw / 2,
                    A.pad, Math.max(A.pad, A.W - A.cw - A.pad));
   catMove(tx, catAtRoot(A, gr.root), o.called ? CATSPD.call : CATSPD.errand, () => {
     if (!CA || CA !== A) return;
@@ -4912,7 +4952,7 @@ function catStart(){
         toyw:cy.querySelector(".ctoyw"), toy:cy.querySelector(".ctoy"),
         bowl:cy.querySelector(".cbw"), lz:cy.querySelector(".clz")},
     x:0, y:0, dir:1, lift:0, inBed:0, headW:0, bob:0, reT:0, zoom:0, legs:0, wake:0, poked:0,
-    grn:[], climb:0,
+    grn:[], climb:"",
     laserOn:0, chasing:0, drag:0, moved:0, noClick:0, lzX:null, lzY:null, kicked:0,
     lzHit:0, lzT0:0, lzRest:0, playSide:-1, rollBounce:0,
     wakes:0, angryAt:3 + Math.floor(Math.random() * 3),   // 吵醒三到五回它就翻脸
