@@ -750,8 +750,8 @@
      后头那个 max 是给小株兜底 —— 一片 23px 的花瓣乘完只剩 10px，就看不见了。
      位置和转角是用户摆的，一个数都没动 */
   .cb .cy .g1{left:auto;right:30.5%;bottom:5.0%;font-size:max(calc(74px * var(--gs,1)),34px)}                    /* 盆栽 */
-  .cb .cy .g2{left:3.6%;bottom:25.9%;font-size:max(calc(58px * var(--gs,1)),34px);--rot:-38deg}                    /* 草·能闻能啃 */
-  .cb .cy .g3{left:auto;right:-5%;bottom:13.5%;font-size:max(calc(356px * var(--gs,1)),34px)}                    /* 树·能爬 */
+  .cb .cy .g2{left:6%;bottom:25.9%;font-size:max(calc(58px * var(--gs,1)),34px);--rot:-38deg}                    /* 草·能闻能啃 */
+  .cb .cy .g3{left:auto;right:0%;bottom:13.5%;font-size:max(calc(356px * var(--gs,1)),34px)}                    /* 树·能爬 */
   .cb .cy .g4{left:6.5%;bottom:45.1%;font-size:max(calc(34px * var(--gs,1)),21px);opacity:0.85}
   .cb .cy .g5{left:auto;right:20.2%;bottom:78.7%;font-size:max(calc(46px * var(--gs,1)),29px);--rot:-44deg;opacity:0.9}                    /* 草·能闻能啃 */
   .cb .cy .g6{left:auto;right:9.7%;bottom:8.3%;font-size:max(calc(25px * var(--gs,1)),16px);opacity:0.75}
@@ -763,7 +763,7 @@
   .cb .cy .g12{left:32.0%;bottom:79.5%;font-size:max(calc(128px * var(--gs,1)),34px)}                    /* 仙人掌 */
   .cb .cy .g13{left:74.6%;bottom:8.9%;font-size:max(calc(33px * var(--gs,1)),20px)}
   .cb .cy .g14{left:71.2%;bottom:16.2%;font-size:max(calc(30px * var(--gs,1)),19px)}
-  .cb .cy .g15{left:-5%;bottom:46.2%;font-size:max(calc(372px * var(--gs,1)),34px)}                    /* 椰子树 */
+  .cb .cy .g15{left:0%;bottom:43.6%;font-size:max(calc(372px * var(--gs,1)),34px)}                    /* 椰子树 */
   .cb .cy .g16{left:72.9%;bottom:42.0%;font-size:max(calc(56px * var(--gs,1)),34px)}
   .cb .cy .g17{left:89.5%;bottom:25.4%;font-size:max(calc(31px * var(--gs,1)),19px)}
   .cb .cy .g18{left:91.5%;bottom:7.9%;font-size:max(calc(23px * var(--gs,1)),14px)}
@@ -1953,7 +1953,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v102" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v103" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -3588,9 +3588,10 @@ function catScene(){
      这十八株的位置、转角、大小是用户在「摆院子」那张台子上自己摆的
      （tools/院子摆样.html，摆样用的是 iPad 横过来那块 1160×664 的院子）。
      位置和转角照搬，大小换算成跟屏走 —— 见 .cgrn 那一段。
-     🪻 要 iOS 16.4 以上，旧机器上是豆腐块，就这一株认了：它是用户挑的 */
+     原先第七株是 🪻 风信子 —— 风信子对猫有毒，换成玫瑰（对猫无毒），
+     顺带也躲开了「🪻 要 iOS 16.4 以上」那个坑 */
   P.push([
-    "🪴","🌿","🌳","🍃","🌿","🍃","🪻","🌿","🌿",
+    "🪴","🌿","🌳","🍃","🌿","🍃","🌹","🌿","🌿",
     "🌿","🪨","🌵","🍂","🍃","🌴","🌸","🌸","🌸",
   ].map((c, i) => `<span class="cgrn g${i + 1}">${c}</span>`).join(""));
   // 只有猫自己吃胖了要变大 —— 字号挂在它这一层，不挂在院子上
@@ -4581,17 +4582,23 @@ function pickGrass(){
   const live = GRASS.map(greenAt).filter(Boolean);
   return live.length ? live[Math.floor(Math.random() * live.length)] : null;
 }
-/* 手指点在院子里的哪一株上。A.grn 是按「先画的在前」排好的，
-   所以从后往前找，头一个套住这个点的就是眼下压在最上头那一株 */
+/* 手指点在院子里的哪一株上。
+   emoji 的外框是个大方块，里头大半是透明的 —— 一棵椰子树的框能罩住左上一整片，
+   照「谁画在上头算谁」来判，点仙人掌打中的会是那棵椰子树。
+   所以套住这个点的里头挑**最小的那一株**：小东西才是你真正瞄的，
+   大树的框大半是空的。四边各收进去一点，免得蹭着边也算数。 */
 function greenHit(cx, cy){
   const A = CA; if (!A || !A.grn || !A.grn.length) return null;
   const y = A.el.y.getBoundingClientRect();
   const x = cx - y.left, v = cy - y.top;
-  for (let i = A.grn.length - 1; i >= 0; i--){
-    const g = A.grn[i];
-    if (x >= g.x && x <= g.x + g.w && v >= g.top && v <= g.bot) return g;
+  let best = null, small = Infinity;
+  for (const g of A.grn){
+    const mx = g.w * .06, my = (g.bot - g.top) * .06;
+    if (x < g.x + mx || x > g.x + g.w - mx || v < g.top + my || v > g.bot - my) continue;
+    const area = g.w * (g.bot - g.top);
+    if (area < small){ small = area; best = g; }   // 一样大就算先画的那个（下头不覆盖）
   }
-  return null;
+  return best;
 }
 /* 你点了哪一株，它就朝哪一株去。能爬的就爬上去，别的凑过去闻 */
 function catToPlant(g){
@@ -4629,7 +4636,9 @@ function catClimb(hurry){
   const tx = clamp(t.mid - A.cw / 2, A.pad, Math.max(A.pad, A.W - A.cw - A.pad));
   /* 走到这棵树自己的根那条线上 —— 不是院子最外头也不是最里头。
      从哪儿来就从哪儿过去，中间不折返（catMove 走的是直线） */
-  catMove(tx, catAtRoot(A, t.root), hurry ? 82 : 34, () => {
+  /* 自己去爬那一趟原先走 34 —— 那是照一百七十来高的小院子定的。
+     现在摊开的院子有一千多宽，横穿一趟要二十六秒，看着像在磨蹭 */
+  catMove(tx, catAtRoot(A, t.root), hurry ? 82 : 52, () => {
     if (!CA || CA !== A) return;
     A.el.cy.classList.remove("go");
     A.climb = 1;
@@ -4667,7 +4676,7 @@ function catSniff(gr, opt){
   const side = (A.x + A.cw / 2) < gr.mid ? -1 : 1;
   const tx = clamp(gr.mid + side * (gr.w * .5 + A.cw * .34) - A.cw / 2,
                    A.pad, Math.max(A.pad, A.W - A.cw - A.pad));
-  catMove(tx, catAtRoot(A, gr.root), o.called ? 78 : 30, () => {
+  catMove(tx, catAtRoot(A, gr.root), o.called ? 78 : 42, () => {
     if (!CA || CA !== A) return;
     A.el.cy.classList.remove("go");
     catFace(gr.mid < A.x + A.cw / 2 ? 1 : -1);       // 脸冲着那丛草
