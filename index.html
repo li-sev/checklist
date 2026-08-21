@@ -709,16 +709,22 @@
      摆得越靠里（bottom 越大）就越小越淡，看着才像退在后头。
      一律 pointer-events:none —— 拖玩具、晃激光的时候别让它们截了手 */
   .cb .cy .cgrn{display:none;pointer-events:none;z-index:0;line-height:1;
-    transition:filter .9s ease,opacity .5s ease}
+    transition:filter .9s ease,opacity .5s ease;
+    /* 歪多少是摆的时候定的（--rot）。原点钉在根那条线上 —— 绕着根歪才像被风压着，
+       绕着自己中心转就成了浮在半空打圈。
+       底下几条动画都得把这个角度带上，不然一晃／一蔫就把歪度顶回零 */
+    transform-origin:50% 100%;transform:rotate(var(--rot,0deg))}
   .mask.wide .cy .cgrn{display:block}
   /* 被猫啃掉的那一丛。.mask.wide 那条 display:block 压得过 UA 的 [hidden]，得补一条 */
   .mask.wide .cy .cgrn[hidden]{display:none}
   /* 草平时一动不动 —— 猫凑到跟前才晃两下。摇的是自己这一层，
      位置在 left/bottom 上，不在 transform 上，两下不打架 */
-  .cb .cy .cgrn.sway{animation:grsway 1.6s ease-in-out;transform-origin:50% 100%}
-  @keyframes grsway{0%,100%{transform:rotate(0)}
-    18%{transform:rotate(-7deg)}42%{transform:rotate(5deg)}
-    66%{transform:rotate(-3deg)}84%{transform:rotate(2deg)}}
+  .cb .cy .cgrn.sway{animation:grsway 1.6s ease-in-out}
+  @keyframes grsway{0%,100%{transform:rotate(var(--rot,0deg))}
+    18%{transform:rotate(calc(var(--rot,0deg) - 7deg))}
+    42%{transform:rotate(calc(var(--rot,0deg) + 5deg))}
+    66%{transform:rotate(calc(var(--rot,0deg) - 3deg))}
+    84%{transform:rotate(calc(var(--rot,0deg) + 2deg))}}
   /* 前后关系。猫走到哪一株的根线里头去了，那一株就得挡住它 —— 不然一棵大树
      只是贴在底下的一张画，猫从树顶上头飘过去。谁在前谁在后由 catGreenDepth
      现算（拿各自的根离院底多高比），这儿只管两档 z：4 在猫（3）前头，
@@ -726,39 +732,40 @@
   .cb .cy .cgrn.pf{z-index:4}
   /* 啃掉那一下：蔫下去、缩下去，不是凭空少一块。
      长回来是先拱出一株芽，撑开了才是原来那一丛 */
-  .cb .cy .cgrn.wilt{animation:grwilt .8s ease-in forwards;transform-origin:50% 100%}
-  .cb .cy .cgrn.grow{animation:grgrow 2.6s cubic-bezier(.25,1.1,.4,1);transform-origin:50% 100%}
-  @keyframes grwilt{0%{transform:scale(1) rotate(0);opacity:1}
-    30%{transform:scale(1.04,.92) rotate(-9deg)}
-    100%{transform:scale(.7,.1) rotate(7deg);opacity:0}}
-  @keyframes grgrow{0%{transform:scale(.06);opacity:0}
-    18%{opacity:1}55%{transform:scale(1.1)}78%{transform:scale(.96)}
-    100%{transform:scale(1)}}
-  /* 大小一律跟着猫走，不写死像素 —— 猫吃胖了会变大，院子摊开还会变高。
-     --cat 是猫的身宽、--yard 是院子高，两个都由 catRemeasure 现量现给。
-     emoji 渲出来的宽约是字号的 1.17 倍，所以「跟猫一般大」是 cat×0.85。
-     树封个顶（院子高的六成），不然横屏那种矮院子里一棵树顶到天 */
-  /* 盆栽和草跟猫挂钩（--cat 是猫的身宽）—— 它们是「案头那一号」的东西，
-     猫多大它们多大才配得上。树不跟猫走：真院子里的树不会因为猫胖了就显矮，
-     它只认院子（--yard 高 / --yardw 宽） */
-  .cb .cy .g1{left:auto;right:12%;bottom:7%;
-    font-size:calc(var(--cat,70px) * .73)}                        /* 盆栽：跟猫一般宽 */
-  .cb .cy .g2{left:28%;bottom:6%;
-    font-size:calc(var(--cat,70px) * .72)}                        /* 草：跟猫差不多 */
-  /* 树。要像真院子里那一棵 —— 占掉大半个院子的高。两道封顶按院子算，
-     emoji 渲出来的宽是字号的一点四倍上下，宽这一道不设就横着捅出去 */
-  .cb .cy .g3{left:auto;right:20%;bottom:16%;
-    font-size:min(calc(var(--yard,170px) * .58), calc(var(--yardw,260px) * .55))}
-  .cb .cy .g4{left:20%;bottom:30%;opacity:.85;
-    font-size:calc(var(--cat,70px) * .42)}
-  .cb .cy .g5{left:auto;right:4%;bottom:31%;opacity:.9;
-    font-size:calc(var(--cat,70px) * .58)}
-  /* 再往里两株。猫现在走得到院子上半截，那儿不该是一片空白。
-     远近靠大小分，不靠透明 —— 淡成一团影子反倒像脏东西 */
-  .cb .cy .g6{left:8%;bottom:48%;opacity:.8;
-    font-size:min(calc(var(--yard,170px) * .26), calc(var(--yardw,260px) * .24))}
-  .cb .cy .g7{left:auto;right:22%;bottom:44%;opacity:.75;
-    font-size:calc(var(--cat,70px) * .32)}
+  .cb .cy .cgrn.wilt{animation:grwilt .8s ease-in forwards}
+  .cb .cy .cgrn.grow{animation:grgrow 2.6s cubic-bezier(.25,1.1,.4,1)}
+  @keyframes grwilt{0%{transform:rotate(var(--rot,0deg)) scale(1);opacity:1}
+    30%{transform:rotate(calc(var(--rot,0deg) - 9deg)) scale(1.04,.92)}
+    100%{transform:rotate(calc(var(--rot,0deg) + 7deg)) scale(.7,.1);opacity:0}}
+  @keyframes grgrow{0%{transform:rotate(var(--rot,0deg)) scale(.06);opacity:0}
+    18%{opacity:1}
+    55%{transform:rotate(var(--rot,0deg)) scale(1.1)}
+    78%{transform:rotate(var(--rot,0deg)) scale(.96)}
+    100%{transform:rotate(var(--rot,0deg)) scale(1)}}
+  /* 这十八株的大小：每一株记的是它在「摆院子」那块 1160×664 的院子上该有多少像素，
+     再乘一个总的缩放数 --gs（catGreenSize 现算：两个方向的缩放开方取中）。
+     为什么不各自跟院子高／宽挂钩：手机上院子只有 362×388，光按高算会横着挤成一团，
+     光按宽算又缩成一撮草。开方取中两头都顾得上，摆样那块屏上则原样还原。
+     后头那个 max 是给小株兜底 —— 一片 23px 的花瓣乘完只剩 10px，就看不见了。
+     位置和转角是用户摆的，一个数都没动 */
+  .cb .cy .g1{left:auto;right:30.5%;bottom:5.0%;font-size:max(calc(74px * var(--gs,1)),34px)}                    /* 盆栽 */
+  .cb .cy .g2{left:3.6%;bottom:25.9%;font-size:max(calc(58px * var(--gs,1)),34px);--rot:-38deg}                    /* 草·能闻能啃 */
+  .cb .cy .g3{left:auto;right:-5%;bottom:13.5%;font-size:max(calc(356px * var(--gs,1)),34px)}                    /* 树·能爬 */
+  .cb .cy .g4{left:6.5%;bottom:45.1%;font-size:max(calc(34px * var(--gs,1)),21px);opacity:0.85}
+  .cb .cy .g5{left:auto;right:20.2%;bottom:78.7%;font-size:max(calc(46px * var(--gs,1)),29px);--rot:-44deg;opacity:0.9}                    /* 草·能闻能啃 */
+  .cb .cy .g6{left:auto;right:9.7%;bottom:8.3%;font-size:max(calc(25px * var(--gs,1)),16px);opacity:0.75}
+  .cb .cy .g7{left:72.2%;bottom:81.6%;font-size:max(calc(64px * var(--gs,1)),34px);--rot:36deg}
+  .cb .cy .g8{left:67.9%;bottom:77.0%;font-size:max(calc(56px * var(--gs,1)),34px);--rot:-47deg}
+  .cb .cy .g9{left:69.7%;bottom:76.7%;font-size:max(calc(56px * var(--gs,1)),34px)}
+  .cb .cy .g10{left:76.1%;bottom:76.4%;font-size:max(calc(56px * var(--gs,1)),34px)}
+  .cb .cy .g11{left:78.5%;bottom:75.6%;font-size:max(calc(162px * var(--gs,1)),34px)}                    /* 石头 */
+  .cb .cy .g12{left:32.0%;bottom:79.5%;font-size:max(calc(128px * var(--gs,1)),34px)}                    /* 仙人掌 */
+  .cb .cy .g13{left:74.6%;bottom:8.9%;font-size:max(calc(33px * var(--gs,1)),20px)}
+  .cb .cy .g14{left:71.2%;bottom:16.2%;font-size:max(calc(30px * var(--gs,1)),19px)}
+  .cb .cy .g15{left:-5%;bottom:46.2%;font-size:max(calc(372px * var(--gs,1)),34px)}                    /* 椰子树 */
+  .cb .cy .g16{left:72.9%;bottom:42.0%;font-size:max(calc(56px * var(--gs,1)),34px)}
+  .cb .cy .g17{left:89.5%;bottom:25.4%;font-size:max(calc(31px * var(--gs,1)),19px)}
+  .cb .cy .g18{left:91.5%;bottom:7.9%;font-size:max(calc(23px * var(--gs,1)),14px)}
   /* 灯一点，这些也跟着沉到夜色里去，别比猫还扎眼 */
   .cb .cst.lit .cgrn{filter:saturate(.4) brightness(.5)}
   .cb .cy .clamp{left:auto;right:9px;bottom:auto;top:9px;z-index:1;font-size:27px;
@@ -1944,7 +1951,7 @@ const KEY = DEMO ? "checklist_v1_demo" : "checklist_v1";
 /* 进出演武场都走这里。不能写 "./?demo" —— 双击打开的那份是 file://，
    "./" 指的是桌面那个文件夹，浏览器会去列目录。认自己这个文件的路径才稳 */
 const selfURL = demo => location.pathname + (demo ? "?demo" : "");
-const BUILD = "v97" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
+const BUILD = "v98" + (DEMO ? " · 演武场" : "");  // 跟 sw.js 的 VERSION 一致，菜单里看得见
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -3569,14 +3576,16 @@ function catScene(){
   /* 夜课那盏灯。一直摆在院子右下角，灭的时候是冷的、点着了才亮。
      位置靠 CSS 钉死（right），不进 A.* 那套排位 —— 猫和玩具怎么走都不必管它 */
   P.push(`<span class="clamp">🪔</span>`);
-  /* 摊开之后院子空得慌，摆几样绿的当背景。常态院子才一百七十来高，塞不下，
-     所以只在摊开时露面。全在最底下一层，猫和玩具从它们前头过。
-     挑的都是老字号 emoji —— 🌿🌳🍃 是 Emoji 1.0、🪴 是 13.0（2020），
-     iOS 上都有。🪻 得 iOS 16.4 以上、🪷 要 15.4，机器旧一点就是豆腐块，不用 */
-  P.push(`<span class="cgrn g1">🪴</span><span class="cgrn g2">🌿</span>`
-       + `<span class="cgrn g3">🌳</span><span class="cgrn g4">🍃</span>`
-       + `<span class="cgrn g5">🌿</span><span class="cgrn g6">🌳</span>`
-       + `<span class="cgrn g7">🍃</span>`);
+  /* 摊开之后院子空得慌，摆一院子绿的。常态院子才一百七十来高，塞不下，
+     所以只在摊开时露面。
+     这十八株的位置、转角、大小是用户在「摆院子」那张台子上自己摆的
+     （tools/院子摆样.html，摆样用的是 iPad 横过来那块 1160×664 的院子）。
+     位置和转角照搬，大小换算成跟屏走 —— 见 .cgrn 那一段。
+     🪻 要 iOS 16.4 以上，旧机器上是豆腐块，就这一株认了：它是用户挑的 */
+  P.push([
+    "🪴","🌿","🌳","🍃","🌿","🍃","🪻","🌿","🌿",
+    "🌿","🪨","🌵","🍂","🍃","🌴","🌸","🌸","🌸",
+  ].map((c, i) => `<span class="cgrn g${i + 1}">${c}</span>`).join(""));
   // 只有猫自己吃胖了要变大 —— 字号挂在它这一层，不挂在院子上
   /* 三层，各管各的：.cwk 管走到哪、.cfl 管脸朝哪、.cem 管扑打滚这些动作。
      朝向原先跟位移写在同一个 transform 里 —— 走一段两秒的路，那个翻面
@@ -4506,8 +4515,9 @@ function catHalt(){
 /* ── 院子里那几株绿，猫跟它们的来往 ──
    位置全在 CSS 里按百分比写死，JS 不排它们的位置 —— 要用的时候现量。
    量不到（常态院子里它们 display:none）就当没有这回事 */
-const GREENS = ["g1", "g2", "g3", "g4", "g5", "g6", "g7"];
-/* 能闻的草：近处那两丛。远处那些太小，猫走不到那么里头 */
+const GREENS = Array.from({length: 18}, (_, i) => "g" + (i + 1));
+/* 能闻能啃的那两丛 —— 摆的时候标的（「摆院子」里每一株都能标猫拿它干嘛）。
+   能爬的是 g3 那棵树，在 catClimb 里认死 */
 const GRASS = ["g2", "g5"];
 /* 量一遍院子里现有的绿。root 是这一株的根离院底多少像素 —— 前后关系、
    猫该走到多深，全从这个数来。CSS 里写的是 bottom 百分数，这儿不去解析它：
@@ -4669,9 +4679,12 @@ function catGreenShow(){
    写死像素的话，猫一胖树反倒显得矮了。两个数交给 CSS 去算（见 .cgrn 那一段） */
 function catGreenSize(A){
   if (!A || !A.el.y) return;
-  A.el.y.style.setProperty("--cat", Math.round(A.cw || 70) + "px");
-  A.el.y.style.setProperty("--yard", Math.round(A.H || 170) + "px");
-  A.el.y.style.setProperty("--yardw", Math.round(A.W || 260) + "px");
+  /* 这一院子是在 1160×664 那块上摆的。换到别的屏上要缩多少：
+     横竖两个方向各有一个缩放数，开方取中 —— 光按高算，手机上横着挤成一团；
+     光按宽算，又缩成一撮草。两头一折中，摆样那块屏上正好还原成一。
+     两头夹一道：再小的屏也不缩到三成以下，再大的屏也不涨过一倍七 */
+  const gs = Math.sqrt((A.W || 260) / 1160 * ((A.H || 170) / 664));
+  A.el.y.style.setProperty("--gs", clamp(gs, .3, 1.7).toFixed(3));
 }
 /* catStart 里 CA 还没赋值，catGreenShow 拿不到 —— 给它一个带参数的入口 */
 function catGreenShowFor(A){
